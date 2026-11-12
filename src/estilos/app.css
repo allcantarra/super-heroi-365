@@ -8,6 +8,7 @@
   --azul: #3a86ff;
   --violeta: #7b2cbf;
   --apagado: #c9c3e6;
+  --erro: #ff9aa5;
   --titulo: 'Anton', 'Arial Narrow', sans-serif;
   --texto: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
   --barra: 68px;
@@ -151,6 +152,7 @@ p {
 
 .selos {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-top: 10px;
 }
