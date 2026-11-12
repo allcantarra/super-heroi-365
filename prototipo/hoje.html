@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>PROTÓTIPO descartável: tela Hoje</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..900&family=Fraunces:opsz,wght@9..144,400..700&family=Instrument+Sans:wght@400..700&family=Anton&family=Barlow+Condensed:ital,wght@0,500;0,700;1,700;1,800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0}
+svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+#app{max-width:430px;margin:0 auto;min-height:100vh;padding:76px 16px 110px;position:relative}
+.proto{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;gap:6px;align-items:center;justify-content:center;padding:6px;background:#3b0764;color:#fff;font:600 12px system-ui}
+.proto a{color:#fff;text-decoration:none;padding:5px 12px;border-radius:99px;border:1px solid #ffffff55}
+.proto a.on{background:#fff;color:#3b0764}
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(4,1fr);max-width:430px;margin:0 auto;padding:8px 8px calc(10px + env(safe-area-inset-bottom))}
+.nav button{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;min-height:48px;justify-content:center}
+:focus-visible{outline:2px solid #fff;outline-offset:2px}
+
+/* ============ A: Anéis ============ */
+body.v-a{background:#000;color:#f2f2f4;font:15px/1.4 "Archivo",system-ui;font-stretch:100%}
+.v-a .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.v-a .date{color:#9a9ba3;font-weight:500}
+.v-a .streak{display:flex;gap:6px;align-items:center;background:#1c1408;color:#ffb23e;padding:7px 12px;border-radius:99px;font-weight:700}
+.v-a .hero{display:grid;grid-template-columns:150px 1fr;gap:18px;align-items:center}
+.v-a .leg div{margin-bottom:10px}.v-a .leg b{display:block;font-size:22px;font-weight:800;font-stretch:112%;line-height:1.1}
+.v-a .leg span{color:#9a9ba3;font-size:13px}
+.v-a .c1{color:#ffb23e}.v-a .c2{color:#4cc9f0}.v-a .c3{color:#ff4d7e}
+.v-a .year{margin:20px 0 22px}.v-a .year .track{height:4px;background:#1d1e22;border-radius:9px;position:relative}
+.v-a .year .track i{position:absolute;left:0;top:0;bottom:0;background:#f2f2f4;border-radius:9px}
+.v-a .year .track u{position:absolute;top:-3px;width:2px;height:10px;background:#55565e}
+.v-a .year p{margin:8px 0 0;color:#9a9ba3;font-size:13px;display:flex;justify-content:space-between}
+.v-a .now{background:#ffb23e;color:#1a1000;border-radius:26px;padding:18px}
+.v-a .now small{font-weight:700;font-size:13px}
+.v-a .now h2{margin:2px 0 4px;font-size:30px;font-weight:900;font-stretch:118%;line-height:1}
+.v-a .now p{margin:0 0 14px;font-weight:500}
+.v-a .now button{width:100%;background:#1a1000;color:#ffb23e;border-radius:16px;min-height:56px;font-weight:800;font-size:16px;display:flex;gap:8px;align-items:center;justify-content:center}
+.v-a .bento{display:grid;grid-template-columns:1fr 1.25fr;grid-template-rows:auto auto;gap:10px;margin:10px 0 22px}
+.v-a .tile{background:#141518;border-radius:22px;padding:14px}
+.v-a .water{grid-row:span 2;position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;min-height:210px}
+.v-a .water .lvl{position:absolute;left:0;right:0;bottom:0;background:#0f3b4d;transition:height .35s}
+.v-a .water>*{position:relative}
+.v-a .water b{font-size:30px;font-weight:900;font-stretch:115%;color:#4cc9f0;display:block;line-height:1}
+.v-a .water button{align-self:flex-end;width:56px;height:56px;border-radius:50%;background:#4cc9f0;color:#00222e;display:grid;place-items:center}
+.v-a .tile h3{margin:0;font-size:15px;font-weight:700}.v-a .tile p{margin:3px 0 0;color:#9a9ba3;font-size:13px}
+.v-a .caf b{color:#7ee0a1}
+.v-a h4{margin:0 0 6px;color:#9a9ba3;font-weight:600;font-size:13px}
+.v-a .rowi{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid #1d1e22;width:100%;text-align:left;min-height:56px}
+.v-a .rowi .ck{width:28px;height:28px;border-radius:50%;border:2px solid #44454d;display:grid;place-items:center;color:transparent;flex:none}
+.v-a .rowi.done .ck{background:#ffb23e;border-color:#ffb23e;color:#1a1000}
+.v-a .rowi.done .tt{color:#6d6e76;text-decoration:line-through}
+.v-a .rowi .hh{margin-left:auto;color:#9a9ba3;font-variant-numeric:tabular-nums;font-size:13px}
+.v-a .nav{background:#000;border-top:1px solid #1d1e22;color:#6d6e76}.v-a .nav .on{color:#f2f2f4}
+
+/* ============ B: Linha do tempo ============ */
+body.v-b{background:#10161f;color:#ece7dc;font:15px/1.45 "Instrument Sans",system-ui}
+.v-b h1{font:600 34px/1.05 "Fraunces",serif;margin:6px 0 6px;letter-spacing:-.01em}
+.v-b .sub{color:#a3acba;margin:0 0 18px}
+.v-b .meters{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid #2a3443;border-bottom:1px solid #2a3443;margin-bottom:22px}
+.v-b .meters div{padding:12px 0}.v-b .meters div+div{border-left:1px solid #2a3443;padding-left:12px}
+.v-b .meters b{font:600 24px/1 "Fraunces",serif;display:block}.v-b .meters span{color:#a3acba;font-size:12.5px}
+.v-b .tl{position:relative}
+.v-b .tl::before{content:"";position:absolute;left:61px;top:8px;bottom:8px;width:2px;background:#2a3443}
+.v-b .ev{display:grid;grid-template-columns:50px 24px 1fr;gap:0;align-items:start;padding:9px 0;width:100%;text-align:left}
+.v-b .ev .hr{font:500 15px/24px "Fraunces",serif;color:#a3acba;font-variant-numeric:tabular-nums}
+.v-b .ev .dot{width:24px;height:24px;border-radius:50%;background:#10161f;border:2px solid #4b586b;position:relative;z-index:1;display:grid;place-items:center;color:transparent}
+.v-b .ev .dot svg{width:14px;height:14px;stroke-width:3}
+.v-b .ev .bd{padding-left:12px}.v-b .ev .tt{font-weight:600;line-height:24px}.v-b .ev .ds{color:#a3acba;font-size:13.5px}
+.v-b .ev.done .dot{background:#8fd3a8;border-color:#8fd3a8;color:#10161f}
+.v-b .ev.done .tt{color:#77818f;font-weight:500}.v-b .ev.done .ds{display:none}
+.v-b .ev.now .dot{border-color:#f2c36b;box-shadow:0 0 0 5px #f2c36b33}
+.v-b .card{background:#ece7dc;color:#151a22;border-radius:18px;padding:16px;margin-top:2px}
+.v-b .card .tt{font:600 22px/1.15 "Fraunces",serif}.v-b .card .ds{color:#4a5260;margin:4px 0 12px}
+.v-b .card ul{margin:0 0 14px;padding:0;list-style:none;font-size:14px}.v-b .card li{padding:5px 0;border-top:1px solid #d6cfc0;display:flex;justify-content:space-between}
+.v-b .card .go{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:54px;border-radius:14px;background:#151a22;color:#ece7dc;font-weight:700}
+.v-b .cut{display:grid;grid-template-columns:50px 24px 1fr;padding:6px 0;color:#e98b7b;font-size:13px;align-items:center}
+.v-b .cut i{height:2px;background:#e98b7b;position:relative;z-index:1}.v-b .cut span{padding-left:12px}
+.v-b .wbar{position:fixed;left:12px;right:12px;bottom:calc(74px + env(safe-area-inset-bottom));max-width:406px;margin:0 auto;background:#1b2430;border:1px solid #2a3443;border-radius:16px;padding:8px 8px 8px 14px;display:flex;align-items:center;gap:12px;z-index:21}
+.v-b .wbar .seg{flex:1;display:flex;gap:3px}.v-b .wbar .seg i{flex:1;height:10px;border-radius:3px;background:#2a3443}.v-b .wbar .seg i.f{background:#7fb8e6}
+.v-b .wbar button{background:#7fb8e6;color:#0c1a26;font-weight:700;border-radius:11px;min-height:44px;padding:0 14px;display:flex;gap:6px;align-items:center}
+.v-b #pad{height:70px}
+.v-b .nav{background:#10161f;border-top:1px solid #2a3443;color:#77818f}.v-b .nav .on{color:#ece7dc}
+
+/* ============ C: Quadrinho ============ */
+body.v-c{background:#15122e;color:#fff8e7;font:500 17px/1.3 "Barlow Condensed",system-ui;
+  background-image:radial-gradient(#ffffff12 1.2px,transparent 1.3px);background-size:9px 9px}
+.v-c .head{position:relative;margin:4px 0 26px}
+.v-c .dia{display:inline-block;background:#ffd60a;color:#15122e;font:400 76px/.9 "Anton";padding:8px 16px 6px;transform:rotate(-3deg);box-shadow:7px 7px 0 #e63946}
+.v-c .of{margin:16px 0 0;font-size:20px;font-weight:700;font-style:italic}
+.v-c .burst{position:absolute;right:0;top:6px;width:96px;height:96px;background:#e63946;display:grid;place-items:center;text-align:center;font:400 15px/1 "Anton";transform:rotate(8deg);
+  clip-path:polygon(50% 0,61% 14%,79% 7%,80% 26%,98% 30%,88% 46%,100% 62%,82% 68%,84% 88%,65% 84%,54% 100%,42% 85%,23% 92%,22% 72%,3% 67%,13% 50%,1% 34%,20% 28%,20% 9%,39% 15%)}
+.v-c .burst b{font-size:32px;display:block}
+.v-c .panel{background:#e63946;border:4px solid #fff8e7;padding:16px;box-shadow:7px 7px 0 #000;position:relative;margin-bottom:26px;
+  background-image:radial-gradient(#00000030 1.5px,transparent 1.6px);background-size:8px 8px}
+.v-c .panel .tag{position:absolute;top:-16px;left:12px;background:#fff8e7;color:#15122e;font:400 15px/1 "Anton";padding:6px 10px;transform:rotate(-2deg)}
+.v-c .panel h2{font:400 40px/1 "Anton";margin:8px 0 6px}
+.v-c .panel p{margin:0 0 14px;font-size:19px;font-weight:700}
+.v-c .panel button{width:100%;min-height:58px;background:#ffd60a;color:#15122e;font:400 24px/1 "Anton";border:4px solid #15122e;box-shadow:5px 5px 0 #15122e;display:flex;align-items:center;justify-content:center;gap:10px}
+.v-c .panel button:active{transform:translate(4px,4px);box-shadow:1px 1px 0 #15122e}
+.v-c .pw{display:grid;grid-template-columns:74px 1fr 52px;gap:10px;align-items:center;margin-bottom:10px;font-weight:800;font-style:italic;font-size:19px}
+.v-c .pw .bar{height:22px;border:3px solid #fff8e7;background:#0b0920;transform:skewX(-12deg)}
+.v-c .pw .bar i{display:block;height:100%;background:repeating-linear-gradient(-45deg,var(--c),var(--c) 8px,#ffffff40 8px,#ffffff40 11px);transition:width .3s}
+.v-c .pw span:last-child{text-align:right}
+.v-c .pw button{grid-column:2/4;justify-self:start;background:#3a86ff;border:3px solid #fff8e7;padding:8px 14px;font:400 16px/1 "Anton";box-shadow:4px 4px 0 #000;display:flex;gap:6px;align-items:center;min-height:44px}
+.v-c h3{font:400 24px/1 "Anton";margin:26px 0 10px;color:#ffd60a}
+.v-c .ms{display:flex;gap:12px;align-items:center;width:100%;text-align:left;padding:10px 0;border-bottom:3px dashed #ffffff30;min-height:58px}
+.v-c .ms .bx{width:32px;height:32px;border:3px solid #fff8e7;display:grid;place-items:center;color:transparent;flex:none;background:#0b0920}
+.v-c .ms.done .bx{background:#ffd60a;color:#15122e;border-color:#ffd60a}
+.v-c .ms .tt{font-size:21px;font-weight:700;line-height:1.05}.v-c .ms .ds{font-size:15px;color:#c9c3e6;font-weight:500}
+.v-c .ms.done .tt{text-decoration:line-through;opacity:.5}
+.v-c .ms .hh{margin-left:auto;font:400 17px "Anton";color:#ffd60a}
+.v-c .lock{background:#0b0920;border:3px solid #3a86ff;padding:10px 12px;margin-top:18px;font-weight:700;display:flex;gap:10px;align-items:center}
+.v-c .nav{background:#0b0920;border-top:4px solid #fff8e7;color:#8d86b8;font-weight:700;font-size:14px}.v-c .nav .on{color:#ffd60a}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="proto">Protótipo descartável <a href="?v=a" data-v="a">A Anéis</a><a href="?v=b" data-v="b">B Linha do tempo</a><a href="?v=c" data-v="c">C Quadrinho</a></div>
+<div id="app"></div>
+<script>
+const I={check:'<path d="M20 6 9 17l-5-5"/>',flame:'<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',plus:'<path d="M5 12h14M12 5v14"/>',drop:'<path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/>',today:'<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',food:'<path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/>',gym:'<path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/>',chart:'<path d="m22 7-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/>',lock:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>'};
+const ic=n=>`<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${I[n]}</svg>`;
+// Estado em memória, simulando quinta-feira, dia 12, às 12h40
+const S={water:5,goal:12,streak:11,items:[
+{id:'cafe',h:'07:00',t:'Café reforçado',d:'Ovos mexidos, pão de forma e leite',done:true},
+{id:'lanche',h:'10:00',t:'Lanche da manhã',d:'Vitamina de Farinha Láctea',done:true},
+{id:'almoco',h:'12:30',t:'Almoço',d:'Arroz, bife e batata frita',ing:[['Arroz','130 g'],['Bife de alcatra','95 g'],['Batata frita','100 g'],['Ovo frito','1 un']]},
+{id:'pre',h:'14:30',t:'Pré-treino',d:'Pão com pasta de amendoim, banana e beterraba em pó'},
+{id:'treino',h:'16:30',t:'Treino A',d:'Peito, ombro e tríceps, 35 min',treino:true},
+{id:'pos',h:'17:30',t:'Pós-treino',d:'Whey, leite, banana e creatina'},
+{id:'jantar',h:'20:00',t:'Jantar',d:'Macarrão com frango e queijo'},
+{id:'ceia',h:'22:00',t:'Ceia',d:'Vitamina de Mucilon'}]};
+const v=new URLSearchParams(location.search).get('v')||'a';
+document.body.className='v-'+v;
+document.querySelectorAll('.proto a').forEach(a=>a.classList.toggle('on',a.dataset.v===v));
+const meals=()=>S.items.filter(i=>!i.treino),md=()=>meals().filter(i=>i.done).length,td=()=>S.items.find(i=>i.treino).done?1:0,now=()=>S.items.find(i=>!i.done);
+const litros=()=>(S.water*.25).toFixed(2).replace('.',',');
+const nav=`<nav class="nav"><button class="on">${ic('today')}Hoje</button><button>${ic('food')}Cardápio</button><button>${ic('gym')}Treino</button><button>${ic('chart')}Evolução</button></nav>`;
+const ring=(r,p,c)=>{const C=2*Math.PI*r;return `<circle cx="75" cy="75" r="${r}" fill="none" stroke="${c}" stroke-opacity=".18" stroke-width="13"/><circle cx="75" cy="75" r="${r}" fill="none" stroke="${c}" stroke-width="13" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-Math.min(1,p))}" transform="rotate(-90 75 75)" style="transition:stroke-dashoffset .4s"/>`};
+const V={
+a(){const n=now();return `<div class="top"><span class="date">Quinta, 12 de novembro</span><span class="streak">${ic('flame')}${S.streak} dias</span></div>
+<div class="hero"><svg viewBox="0 0 150 150" role="img" aria-label="Progresso do dia">${ring(66,md()/7,'#ffb23e')}${ring(49,S.water/S.goal,'#4cc9f0')}${ring(32,td(),'#ff4d7e')}</svg>
+<div class="leg"><div><b class="c1">${md()} de 7</b><span>refeições</span></div><div><b class="c2">${litros()} L</b><span>de 3 L de água</span></div><div><b class="c3">${td()?'Feito':'16:30'}</b><span>treino A</span></div></div></div>
+<div class="year"><div class="track"><i style="width:${12/365*100}%"></i><u style="left:8.2%"></u><u style="left:32.9%"></u><u style="left:65.8%"></u></div><p><span>Dia 12 de 365</span><span>Fase 1 termina em 18 dias</span></p></div>
+${n?`<div class="now"><small>Agora, ${n.h}</small><h2>${n.t}</h2><p>${n.d}</p><button data-tog="${n.id}">${ic('check')}Marcar como feito</button></div>`:`<div class="now"><h2>Dia completo</h2><p>Tudo marcado. Durma 8 horas.</p></div>`}
+<div class="bento"><div class="tile water"><div class="lvl" style="height:${S.water/S.goal*100}%"></div><div><b>${litros()} L</b><span>faltam ${Math.max(0,S.goal-S.water)} copos</span></div><button data-water aria-label="Adicionar um copo de água">${ic('plus')}</button></div>
+<div class="tile"><h3>Treino A</h3><p>Peito, ombro e tríceps. 6 exercícios, 35 min.</p></div>
+<div class="tile caf"><h3>Guaraná <b>liberado</b></h3><p>Até 15:00. Faltam 2 h 20.</p></div></div>
+<h4>Resto do dia</h4>${S.items.map(i=>`<button class="rowi ${i.done?'done':''}" data-tog="${i.id}"><span class="ck">${ic('check')}</span><span class="tt">${i.t}</span><span class="hh">${i.h}</span></button>`).join('')}${nav}`},
+b(){const n=now();return `<p class="sub" style="margin:0">Quinta, 12 de novembro</p><h1>Dia 12 do seu ano</h1><p class="sub">Protocolo de Choque. Faltam 18 dias para a fase 2.</p>
+<div class="meters"><div><b>${md()} de 7</b><span>refeições</span></div><div><b>${td()?'Feito':'16:30'}</b><span>treino A</span></div><div><b>${S.streak}</b><span>dias seguidos</span></div></div>
+<div class="tl">${S.items.map(i=>{const cur=n&&i.id===n.id;const cut=i.id==='treino'?`<div class="cut"><b></b><i></i><span>15:00, fim da cafeína por hoje</span></div>`:'';
+return cut+(cur?`<div class="ev now"><span class="hr">${i.h}</span><span class="dot"></span><div class="bd"><div class="card"><div class="tt">${i.t}</div><div class="ds">${i.d}</div>${i.ing?`<ul>${i.ing.map(x=>`<li><span>${x[0]}</span><span>${x[1]}</span></li>`).join('')}</ul>`:''}<button class="go" data-tog="${i.id}">${ic('check')}Marcar como feito</button></div></div></div>`
+:`<button class="ev ${i.done?'done':''}" data-tog="${i.id}"><span class="hr">${i.h}</span><span class="dot">${ic('check')}</span><span class="bd"><div class="tt">${i.t}</div><div class="ds">${i.d}</div></span></button>`)}).join('')}</div><div id="pad"></div>
+<div class="wbar">${ic('drop')}<div style="flex:1"><div style="font-size:13px;margin-bottom:5px">Água: ${litros()} de 3 L</div><div class="seg">${Array.from({length:S.goal},(_,k)=>`<i class="${k<S.water?'f':''}"></i>`).join('')}</div></div><button data-water>${ic('plus')}Copo</button></div>${nav}`},
+c(){const n=now();return `<div class="head"><div class="dia">DIA 12</div><div class="burst"><div><b>${S.streak}</b>SEGUIDOS</div></div><p class="of">de 365. Fase 1: Protocolo de Choque.</p></div>
+${n?`<div class="panel"><span class="tag">MISSÃO DE AGORA, ${n.h}</span><h2>${n.t.toUpperCase()}</h2><p>${n.d}</p><button data-tog="${n.id}">${ic('check')}FEITO</button></div>`:`<div class="panel"><h2>DIA VENCIDO</h2><p>Tudo marcado. Durma 8 horas.</p></div>`}
+<div class="pw"><span>Comida</span><div class="bar"><i style="--c:#ffd60a;width:${md()/7*100}%"></i></div><span>${md()}/7</span></div>
+<div class="pw"><span>Água</span><div class="bar"><i style="--c:#3a86ff;width:${S.water/S.goal*100}%"></i></div><span>${litros()} L</span><button data-water>${ic('plus')}UM COPO</button></div>
+<div class="pw"><span>Treino</span><div class="bar"><i style="--c:#e63946;width:${td()*100}%"></i></div><span>${td()}/1</span></div>
+<div class="lock">${ic('lock')}Guaraná e café liberados até 15:00</div>
+<h3>MISSÕES DO DIA</h3>${S.items.map(i=>`<button class="ms ${i.done?'done':''}" data-tog="${i.id}"><span class="bx">${ic('check')}</span><span><div class="tt">${i.t}</div><div class="ds">${i.d}</div></span><span class="hh">${i.h}</span></button>`).join('')}${nav}`}};
+const render=()=>{document.getElementById('app').innerHTML=(V[v]||V.a)()};
+document.addEventListener('click',e=>{const t=e.target.closest('[data-tog]'),w=e.target.closest('[data-water]');
+if(t){const i=S.items.find(x=>x.id===t.dataset.tog);i.done=!i.done;render()}else if(w){S.water=Math.min(S.goal,S.water+1);render()}});
+render();
+</script>
+</body>
+</html>

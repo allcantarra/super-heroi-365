@@ -1,0 +1,12 @@
+.playwright-mcp/
+.claude/
+node_modules/
+dist/
+dev-dist/
+test-results/
+playwright-report/
+*.tsbuildinfo
+
+# ficam só no disco: o repositório é público
+legado/
+docs/specs/

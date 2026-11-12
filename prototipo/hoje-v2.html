@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>PROTÓTIPO descartável v2: Hoje em quadrinho, com avatar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:ital,wght@0,500;0,700;1,700;1,800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#15122e;--deep:#0b0920;--paper:#fff8e7;--red:#e63946;--yel:#ffd60a;--blue:#3a86ff;--vio:#7b2cbf}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{background:var(--ink);color:var(--paper);font:500 17px/1.3 "Barlow Condensed",system-ui;background-image:radial-gradient(#ffffff12 1.2px,transparent 1.3px);background-size:9px 9px}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0}
+svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;flex:none}
+:focus-visible{outline:3px solid var(--yel);outline-offset:2px}
+.proto{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;gap:6px;align-items:center;justify-content:center;padding:6px;background:#3b0764;color:#fff;font:600 12px system-ui}
+.proto button{padding:5px 11px;border-radius:99px;border:1px solid #ffffff55}.proto button.on{background:#fff;color:#3b0764}
+#app{max-width:430px;margin:0 auto;padding:54px 16px 110px}
+.anton{font-family:"Anton";font-weight:400}
+
+/* cartão do herói */
+.hero{display:grid;grid-template-columns:150px 1fr;gap:14px;align-items:end;margin-bottom:24px}
+.frame{background:var(--yel);border:4px solid var(--paper);box-shadow:6px 6px 0 #000;transform:rotate(-2deg);position:relative;overflow:hidden;
+  background-image:radial-gradient(#e6394655 2px,transparent 2.2px);background-size:10px 10px}
+.frame svg{display:block;width:100%}
+.frame.f1{background-color:#9aa0b8;background-image:radial-gradient(#00000022 2px,transparent 2.2px)}.frame.f3{background-color:#ffb703}.frame.f4{background-color:#e63946;background-image:none}
+.dia{display:inline-block;background:var(--paper);color:var(--ink);font:400 22px/1 "Anton";padding:6px 10px;transform:rotate(2deg);margin-bottom:10px}
+.lvl{font:400 44px/.95 "Anton";color:var(--yel)}
+.title{font-style:italic;font-weight:800;font-size:22px;margin-bottom:8px}
+.xp{height:18px;border:3px solid var(--paper);background:var(--deep);transform:skewX(-12deg)}
+.xp i{display:block;height:100%;background:var(--yel);transition:width .35s}
+.xpt{display:flex;justify-content:space-between;font-weight:700;font-size:15px;margin-top:4px}
+.badges{display:flex;gap:8px;margin-top:10px}
+.bdg{display:flex;gap:5px;align-items:center;background:var(--deep);border:3px solid var(--paper);padding:5px 8px;font-weight:800;font-size:16px}
+.bdg.fire{color:var(--yel)}.bdg.shield{color:#8ec5ff}
+
+/* chefão */
+.boss{display:grid;grid-template-columns:1fr 92px;gap:10px;align-items:center;background:#2a0f4a;border:4px solid var(--vio);padding:12px;margin-bottom:26px;box-shadow:6px 6px 0 #000}
+.boss small{font-weight:800;font-style:italic;color:#d9b8ff;font-size:15px}
+.boss h2{font:400 26px/1 "Anton";margin:2px 0 8px}
+.hp{height:20px;border:3px solid var(--paper);background:var(--deep)}
+.hp i{display:block;height:100%;background:repeating-linear-gradient(-45deg,var(--red),var(--red) 8px,#ff7b86 8px,#ff7b86 11px);transition:width .35s}
+.boss p{margin:5px 0 0;font-weight:700;font-size:15px}
+.boss svg{width:100%}
+.boss.hit svg{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-5px) rotate(-4deg)}75%{transform:translateX(5px) rotate(4deg)}}
+
+/* missão de agora */
+.panel{background:var(--red);border:4px solid var(--paper);padding:16px;box-shadow:7px 7px 0 #000;position:relative;margin-bottom:22px;background-image:radial-gradient(#00000030 1.5px,transparent 1.6px);background-size:8px 8px}
+.panel .tag{position:absolute;top:-16px;left:12px;background:var(--paper);color:var(--ink);font:400 15px/1 "Anton";padding:6px 10px;transform:rotate(-2deg)}
+.panel h2{font:400 38px/1 "Anton";margin:8px 0 4px}
+.panel p{margin:0 0 6px;font-size:19px;font-weight:700}
+.panel .rw{font-style:italic;font-weight:800;color:var(--yel);margin-bottom:12px}
+.panel button{width:100%;min-height:58px;background:var(--yel);color:var(--ink);font:400 24px/1 "Anton";border:4px solid var(--ink);box-shadow:5px 5px 0 var(--ink);display:flex;align-items:center;justify-content:center;gap:10px}
+.panel button:active{transform:translate(4px,4px);box-shadow:1px 1px 0 var(--ink)}
+
+.pw{display:grid;grid-template-columns:74px 1fr 56px;gap:10px;align-items:center;margin-bottom:10px;font-weight:800;font-style:italic;font-size:19px}
+.pw .bar{height:20px;border:3px solid var(--paper);background:var(--deep);transform:skewX(-12deg)}
+.pw .bar i{display:block;height:100%;background:var(--c);transition:width .3s}
+.pw span:last-child{text-align:right}
+.cup{display:flex;gap:8px;align-items:center;background:var(--blue);border:3px solid var(--paper);padding:0 16px;font:400 17px/1 "Anton";box-shadow:4px 4px 0 #000;min-height:48px;margin:2px 0 14px 84px}
+h3{font:400 24px/1 "Anton";margin:26px 0 8px;color:var(--yel)}
+.ms{display:flex;gap:12px;align-items:center;width:100%;text-align:left;padding:10px 0;border-bottom:3px dashed #ffffff30;min-height:58px}
+.ms .bx{width:32px;height:32px;border:3px solid var(--paper);display:grid;place-items:center;color:transparent;flex:none;background:var(--deep)}
+.ms.done .bx{background:var(--yel);color:var(--ink);border-color:var(--yel)}
+.ms .tt{font-size:21px;font-weight:700;line-height:1.05}.ms .ds{font-size:15px;color:#c9c3e6}
+.ms.done .tt{text-decoration:line-through;opacity:.5}
+.ms .hh{margin-left:auto;text-align:right;font:400 17px "Anton";color:var(--yel)}
+.ms .hh small{display:block;font:800 13px "Barlow Condensed";font-style:italic;color:#c9c3e6}
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(4,1fr);max-width:430px;margin:0 auto;padding:8px 8px calc(10px + env(safe-area-inset-bottom));background:var(--deep);border-top:4px solid var(--paper);color:#8d86b8;font-weight:700;font-size:14px}
+.nav button{display:flex;flex-direction:column;align-items:center;gap:3px;min-height:48px;justify-content:center}.nav .on{color:var(--yel)}
+
+/* onomatopeia */
+.pow{position:fixed;left:50%;top:42%;z-index:60;width:230px;height:230px;margin:-115px 0 0 -115px;background:var(--yel);color:var(--ink);display:grid;place-items:center;text-align:center;pointer-events:none;
+  clip-path:polygon(50% 0,61% 14%,79% 7%,80% 26%,98% 30%,88% 46%,100% 62%,82% 68%,84% 88%,65% 84%,54% 100%,42% 85%,23% 92%,22% 72%,3% 67%,13% 50%,1% 34%,20% 28%,20% 9%,39% 15%);
+  animation:pow .75s cubic-bezier(.2,1.4,.4,1) forwards}
+.pow b{font:400 58px/1 "Anton";display:block;color:var(--red);-webkit-text-stroke:2px var(--ink)}
+.pow span{font:400 22px/1 "Anton"}
+@keyframes pow{0%{transform:scale(.2) rotate(-25deg);opacity:0}25%{transform:scale(1.1) rotate(-8deg);opacity:1}75%{transform:scale(1) rotate(-8deg);opacity:1}100%{transform:scale(1.25) rotate(-8deg);opacity:0}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation-duration:.01s!important}}
+</style>
+</head>
+<body>
+<div class="proto">Evolução do avatar <button data-stage="1">Dia 1</button><button data-stage="2">Fase 1</button><button data-stage="3">Fase 3</button><button data-stage="4">Dia 365</button></div>
+<div id="app"></div>
+<script src="avatar3.js"></script>
+<script>
+const I={check:'<path d="M20 6 9 17l-5-5"/>',flame:'<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',shield:'<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>',plus:'<path d="M5 12h14M12 5v14"/>',today:'<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',food:'<path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/>',gym:'<path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/>',chart:'<path d="m22 7-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/>'};
+const ic=n=>`<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${I[n]}</svg>`;
+const OUT='#15122e';
+
+const villain=`<svg viewBox="0 0 120 92" role="img" aria-label="A Preguiça"><path d="M8 84Q2 32 38 24Q60 4 86 24Q118 32 112 84Z" fill="#7b2cbf" stroke="${OUT}" stroke-width="4" stroke-linejoin="round"/><path d="M34 48q9 7 18 0M68 48q9 7 18 0" fill="none" stroke="${OUT}" stroke-width="4" stroke-linecap="round"/><ellipse cx="60" cy="67" rx="9" ry="7" fill="${OUT}"/><text x="88" y="18" font-family="Anton" font-size="17" fill="#fff8e7">Zzz</text></svg>`;
+
+// Estado em memória. Simula quinta, dia 12, 12h40.
+const TIT=['Civil','Recruta','Vigilante','Lenda'],LV=[1,4,22,50];
+const S={stage:2,xp:340,need:500,boss:61,water:5,goal:12,streak:11,shields:1,hit:false,items:[
+{id:'cafe',h:'07:00',t:'Café reforçado',d:'Ovos mexidos, pão de forma e leite',xp:40,done:true},
+{id:'lanche',h:'10:00',t:'Lanche da manhã',d:'Vitamina de Farinha Láctea',xp:40,done:true},
+{id:'almoco',h:'12:30',t:'Almoço',d:'Arroz, bife e batata frita',xp:40},
+{id:'pre',h:'14:30',t:'Pré-treino',d:'Pão com pasta de amendoim, banana e beterraba',xp:40},
+{id:'treino',h:'16:30',t:'Treino A',d:'Peito, ombro e tríceps, 35 min',xp:120,treino:true},
+{id:'pos',h:'17:30',t:'Pós-treino',d:'Whey, leite, banana e creatina',xp:40},
+{id:'jantar',h:'20:00',t:'Jantar',d:'Macarrão com frango e queijo',xp:40},
+{id:'ceia',h:'22:00',t:'Ceia',d:'Vitamina de Mucilon',xp:40}]};
+const meals=()=>S.items.filter(i=>!i.treino),md=()=>meals().filter(i=>i.done).length,td=()=>S.items.find(i=>i.treino).done?1:0,now=()=>S.items.find(i=>!i.done);
+const litros=()=>(S.water*.25).toFixed(2).replace('.',',');
+function render(){
+  if(location.search.includes('evo')){
+    const sel=(k,o)=>`<label style="display:block;font-weight:700">${k[0]}<select data-av="${k[1]}" style="display:block;width:100%;min-height:46px;font:inherit;background:var(--deep);color:var(--paper);border:3px solid var(--paper);padding:0 8px;margin-top:4px">${Object.entries(o).map(([n,v])=>`<option value="${v}" ${AV[k[1]]===v?'selected':''}>${n}</option>`).join('')}</select></label>`;
+    document.getElementById('app').innerHTML=`<h3>EVOLUÇÃO DO HERÓI</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:22px 18px;padding:8px">${[1,2,3,4].map(s=>`<div><div class="frame f${s}">${avatar(s)}</div><div class="title" style="margin-top:12px">Nível ${LV[s-1]}, ${TIT[s-1]}</div></div>`).join('')}</div>
+    <h3>PERSONALIZAR</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">${sel(['Pele','skin'],SKINS)}${sel(['Cabelo','hair'],HAIRS)}${sel(['Uniforme','suit'],SUITS)}${sel(['Corte','style'],Object.fromEntries(STYLES.map(x=>[x,x])))}</div>
+    <h3>POSE DE DIA VENCIDO</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;padding:8px"><div class="frame f2">${avatar(2,'flex')}</div><div class="frame f4">${avatar(4,'flex')}</div></div>`;return}
+  const n=now();
+  document.querySelectorAll('.proto button').forEach(b=>b.classList.toggle('on',+b.dataset.stage===S.stage));
+  document.getElementById('app').innerHTML=`
+  <div class="hero"><div class="frame f${S.stage}">${avatar(S.stage,n?null:(S.stage>1?'flex':null))}</div>
+  <div><span class="dia">DIA 12 DE 365</span><div class="lvl">NÍVEL ${LV[S.stage-1]}</div><div class="title">${TIT[S.stage-1]}</div>
+  <div class="xp"><i style="width:${S.xp/S.need*100}%"></i></div><div class="xpt"><span>${S.xp} XP</span><span>${S.need}</span></div>
+  <div class="badges"><span class="bdg fire">${ic('flame')}${S.streak}</span><span class="bdg shield">${ic('shield')}${S.shields}</span></div></div></div>
+  <div class="boss ${S.hit?'hit':''}"><div><small>Chefão da Fase 1</small><h2>A PREGUIÇA</h2><div class="hp"><i style="width:${S.boss}%"></i></div><p>Vida ${S.boss}%. Cada missão cumprida é um golpe.</p></div>${villain}</div>
+  ${n?`<div class="panel"><span class="tag">MISSÃO DE AGORA, ${n.h}</span><h2>${n.t.toUpperCase()}</h2><p>${n.d}</p><div class="rw">Recompensa: +${n.xp} XP</div><button data-tog="${n.id}">${ic('check')}FEITO</button></div>`
+     :`<div class="panel"><h2>DIA VENCIDO</h2><p>Todas as missões cumpridas. Durma 8 horas.</p></div>`}
+  <div class="pw"><span>Comida</span><div class="bar"><i style="--c:#ffd60a;width:${md()/7*100}%"></i></div><span>${md()}/7</span></div>
+  <div class="pw"><span>Água</span><div class="bar"><i style="--c:#3a86ff;width:${S.water/S.goal*100}%"></i></div><span>${litros()} L</span></div>
+  <button class="cup" data-water>${ic('plus')}UM COPO, +10 XP</button>
+  <div class="pw"><span>Treino</span><div class="bar"><i style="--c:#e63946;width:${td()*100}%"></i></div><span>${td()}/1</span></div>
+  <h3>MISSÕES DO DIA</h3>${S.items.map(i=>`<button class="ms ${i.done?'done':''}" data-tog="${i.id}"><span class="bx">${ic('check')}</span><span><div class="tt">${i.t}</div><div class="ds">${i.d}</div></span><span class="hh">${i.h}<small>+${i.xp} XP</small></span></button>`).join('')}
+  <nav class="nav"><button class="on">${ic('today')}Hoje</button><button>${ic('food')}Cardápio</button><button>${ic('gym')}Treino</button><button>${ic('chart')}Evolução</button></nav>`;
+  S.hit=false;
+}
+let ac;
+function blip(){try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();const o=ac.createOscillator(),g=ac.createGain();o.type='square';o.frequency.setValueAtTime(220,ac.currentTime);o.frequency.exponentialRampToValueAtTime(880,ac.currentTime+.12);g.gain.setValueAtTime(.12,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.2);o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+.2)}catch(e){}}
+function pow(word,xp){const d=document.createElement('div');d.className='pow';d.innerHTML=`<div><b>${word}</b><span>+${xp} XP</span></div>`;document.body.appendChild(d);setTimeout(()=>d.remove(),800)}
+function gain(xp){S.xp+=xp;if(S.xp>=S.need){S.xp-=S.need;if(S.stage<4)S.stage++;setTimeout(()=>pow('SUBIU!',0),850)}}
+document.addEventListener('change',e=>{const k=e.target.dataset.av;if(k){AV[k]=e.target.value;render()}});
+document.addEventListener('click',e=>{
+  const st=e.target.closest('[data-stage]'),t=e.target.closest('[data-tog]'),w=e.target.closest('[data-water]');
+  if(st){S.stage=+st.dataset.stage;render()}
+  else if(t){const i=S.items.find(x=>x.id===t.dataset.tog);i.done=!i.done;
+    if(i.done){gain(i.xp);S.boss=Math.max(0,S.boss-(i.treino?9:3));S.hit=true;blip();pow(['POW!','BAM!','ZAP!'][Math.floor(Math.random()*3)],i.xp)}
+    else{S.xp=Math.max(0,S.xp-i.xp);S.boss=Math.min(100,S.boss+(i.treino?9:3))}
+    render()}
+  else if(w&&S.water<S.goal){S.water++;gain(10);blip();render()}
+});
+render();
+</script>
+</body>
+</html>
