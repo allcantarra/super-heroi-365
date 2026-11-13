@@ -17,6 +17,7 @@ Testes: Vitest (jsdom, fake-indexeddb) e Playwright (375 px). Lint: oxlint.
 - `src/dominio/`: regras puras (jogo, fases, macros). Sem React, sem acesso a dados. Toda regra tem teste.
 - `src/dados/`: banco local (Dexie) e hooks de leitura e escrita.
 - `src/heroi/`: avatar vetorial, geometria e aparência.
+- `src/conteudo/`: alimentos, pratos, receitas e fichas de treino, em dados tipados e validados por teste.
 - `src/telas/`: uma tela por seção do app. `src/ui/`: componentes compartilhados.
 - `src/estilos/app.css`: identidade visual (tokens e classes).
 - `prototipo/` e `legado/`: referência descartável. Não importar daqui.
@@ -31,8 +32,11 @@ Testes: Vitest (jsdom, fake-indexeddb) e Playwright (375 px). Lint: oxlint.
 - Seleção de opção conhecida: lista suspensa. Alvo de toque de 44 px ou mais.
 - Tela nova só é pronta depois de aberta em 375 px, tocada e capturada em `docs/capturas/`.
 - Cardápio: todo tipo de refeição tem pelo menos 30 pratos. Prato novo entra em `scripts/gerar-pratos.ts`; depois rode `node scripts/gerar-pratos.ts` (grava `src/conteudo/pratos.ts`) e `npx vite-node scripts/relatorio-macros.ts`.
+- Treino: exercício e ficha novos entram em `src/conteudo/treinos.ts` (o teste em `src/dominio/treino.test.ts` barra treino acima de 40 minutos, exercício sem descrição e semana sem algum grupo). Regras em `src/dominio/treino.ts`.
+- A missão `treino` de um dia é derivada da sessão concluída (`diasComTreino`); nunca marcar `treino` em `feitas` por código novo. Marca antiga, feita à mão, continua valendo.
+- Tempo de descanso e de cronômetro é sempre a diferença entre instantes (`Date.now()`), nunca contagem de tiques: o iPhone congela temporizador em segundo plano.
 - O servidor de desenvolvimento já serviu arquivo antigo depois de edição por script. Se a tela não bater com o código, reinicie o `npm run dev` antes de investigar. Os roteiros `e2e` rodam contra o build e não sofrem disso.
 
 ## Etapas
-1. Fundação, 2. Primeira abertura e tela Hoje, 3. Cardápio dos 365 dias, receitas e compras: feitas.
-4. Treino. 5. Evolução. 6. Jogo completo, lembretes e backup.
+1. Fundação, 2. Primeira abertura e tela Hoje, 3. Cardápio dos 365 dias, receitas e compras, 4. Treino: feitas.
+5. Evolução. 6. Jogo completo, lembretes e backup.

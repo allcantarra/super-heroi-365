@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { abrirEm, concluirAbertura } from './apoio'
+import { aba, abrirEm, concluirAbertura, marcarTreinoComoNaEtapa3, treinoRapido } from './apoio'
 
 const semEstouro = async (page: Page) =>
   expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBe(0)
@@ -65,7 +65,9 @@ test.describe('dia de missões', () => {
     await expect(page.getByRole('heading', { name: 'PRÉ-TREINO' })).toBeVisible()
     await feito(page).tap()
     await expect(page.locator('.pow')).toContainText('+40 XP')
-    await expect(page.getByRole('heading', { name: 'TREINO', exact: true })).toBeVisible()
+    // são 10h: o treino das 06:15 já cedeu a vez para a refeição seguinte e continua pendente na lista
+    await expect(page.getByRole('heading', { name: 'CAFÉ REFORÇADO' })).toBeVisible()
+    await expect(page.getByRole('button', { name: /Treino.*06:15/ })).toHaveAttribute('aria-pressed', 'false')
     await expect(page.getByText('40 XP', { exact: true })).toBeVisible()
     await page.reload()
     await expect(page.getByRole('button', { name: /Pré-treino/ })).toHaveAttribute('aria-pressed', 'true')
@@ -94,7 +96,13 @@ test.describe('dia de missões', () => {
   })
 
   test('vencer o dia sobe de nível, conta a sequência e fecha com dia completo', async ({ page }) => {
-    for (let i = 0; i < 9; i++) await feito(page).tap()
+    for (let i = 0; i < 8; i++) await feito(page).tap()
+    // sobrou só o treino: ele não se marca com um toque, e sem ele o dia não está vencido
+    await expect(page.getByRole('heading', { name: 'TREINO', exact: true })).toBeVisible()
+    await expect(feito(page)).toHaveCount(0)
+    await expect(page.getByText(/Para vencer o dia/)).toBeVisible()
+    await treinoRapido(page)
+    await aba(page, 'Hoje').tap()
     await expect(page.getByRole('heading', { name: 'DIA COMPLETO' })).toBeVisible()
     // 8 x 40 + 120 + 80 de bônus = 520 XP: passa do nível 1 (400) e sobram 120
     await expect(page.getByText('NÍVEL 2')).toBeVisible()
@@ -110,6 +118,10 @@ test.describe('dia de missões', () => {
   })
 
   test('à meia-noite o dia vira sozinho e a sequência de ontem continua', async ({ page }) => {
+    // treino marcado à mão, como na etapa 3: continua valendo para vencer o dia
+    await marcarTreinoComoNaEtapa3(page, '2026-11-09')
+    await page.reload()
+    await expect(page.getByRole('button', { name: /Treino.*06:15/ })).toHaveAttribute('aria-pressed', 'true')
     for (let i = 0; i < 7; i++) await feito(page).tap()
     await expect(page.getByText(/Dia vencido\./)).toBeVisible()
     await page.clock.fastForward('14:01:00')

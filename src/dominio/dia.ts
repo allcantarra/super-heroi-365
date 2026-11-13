@@ -1,5 +1,5 @@
 import { missoesDoDia, type IdMissao, type Missao, type Rotina } from './rotina'
-import { somarDias } from './tempo'
+import { minutos, somarDias } from './tempo'
 
 /** O que o usuário marcou em um dia. É o único dado gravado; todo o resto é calculado daqui. */
 export interface RegistroDia {
@@ -51,9 +51,16 @@ export function resumoDoDia(registro: RegistroDia, missoes: Missao[]): ResumoDia
   }
 }
 
-/** Primeira missão pendente na ordem do dia; null quando tudo foi feito. */
-export function missaoDeAgora(registro: RegistroDia, missoes: Missao[]): Missao | null {
-  return missoes.find((m) => !registro.feitas.includes(m.id)) ?? null
+/**
+ * Primeira missão pendente na ordem do dia; null quando tudo foi feito.
+ * O treino não se marca com um toque: passada a hora da missão que vem depois dele, cede a vez às refeições
+ * e continua na lista. Só volta a ser a missão de agora quando não sobrar refeição pendente.
+ */
+export function missaoDeAgora(registro: RegistroDia, missoes: Missao[], hora?: string): Missao | null {
+  const pendentes = missoes.filter((m) => !registro.feitas.includes(m.id))
+  const depoisDoTreino = missoes[missoes.findIndex((m) => m.tipo === 'treino') + 1]
+  if (pendentes[0]?.tipo === 'treino' && pendentes[1] && hora && depoisDoTreino && minutos(hora) >= minutos(depoisDoTreino.hora)) return pendentes[1]
+  return pendentes[0] ?? null
 }
 
 export function alternarMissao(registro: RegistroDia, id: IdMissao): RegistroDia {

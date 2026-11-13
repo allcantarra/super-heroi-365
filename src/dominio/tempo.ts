@@ -71,3 +71,14 @@ export function faseDoDia(numero: number): Fase {
   if (numero <= FASES[3].ultimoDia) return 3
   return 4
 }
+
+/** "16/11". */
+export function dataCurta(data: string): string {
+  const [, m, d] = data.split('-')
+  return `${d}/${m}`
+}
+
+/** Segunda-feira da semana da data. */
+export function segundaDaSemana(data: string): string {
+  return somarDias(data, -((diaDaSemana(data) + 6) % 7))
+}

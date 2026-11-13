@@ -37,3 +37,55 @@ export function perfilGravado(page: Page): Promise<{ trocas?: Record<string, str
       }),
   )
 }
+
+export interface SessaoGravada { fim: number | null; series: { exercicio: string; valor: number }[] }
+
+/** Sessão de treino de uma data, lida direto do banco do navegador. Quem vai recarregar espera por ela. */
+export function sessaoGravada(page: Page, data: string): Promise<SessaoGravada | null> {
+  return page.evaluate(
+    (dia) =>
+      new Promise<SessaoGravada | null>((resolver) => {
+        const pedido = indexedDB.open('super-heroi-365')
+        pedido.onsuccess = () => {
+          const leitura = pedido.result.transaction('sessoes').objectStore('sessoes').get(dia)
+          leitura.onsuccess = () => {
+            resolver((leitura.result as SessaoGravada | undefined) ?? null)
+            pedido.result.close()
+          }
+        }
+      }),
+    data,
+  )
+}
+
+/** Grava a missão de treino como a etapa 3 fazia: marcada à mão, sem sessão. Precisa recarregar para a tela enxergar. */
+export function marcarTreinoComoNaEtapa3(page: Page, data: string): Promise<void> {
+  return page.evaluate(
+    (dia) =>
+      new Promise<void>((resolver) => {
+        const pedido = indexedDB.open('super-heroi-365')
+        pedido.onsuccess = () => {
+          const tx = pedido.result.transaction('dias', 'readwrite')
+          tx.objectStore('dias').put({ data: dia, feitas: ['treino'], copos: 0 })
+          tx.oncomplete = () => {
+            pedido.result.close()
+            resolver()
+          }
+        }
+      }),
+    data,
+  )
+}
+
+export const aba = (page: Page, nome: 'Hoje' | 'Cardápio' | 'Treino' | 'Evolução') => page.getByRole('navigation').getByRole('button', { name: nome })
+
+/** Treino mínimo que conta como feito: uma série registrada e conclusão antes do fim. Termina na tela Treino. */
+export async function treinoRapido(page: Page) {
+  await aba(page, 'Treino').tap()
+  await page.getByRole('button', { name: /COMEÇAR TREINO|CONTINUAR TREINO/ }).tap()
+  await page.getByRole('button', { name: 'Registrar série' }).tap()
+  await page.getByRole('button', { name: 'Pular descanso' }).tap()
+  await page.getByRole('button', { name: 'Concluir treino antes do fim' }).tap()
+  await page.getByRole('button', { name: 'Concluir agora' }).tap()
+  await page.getByRole('heading', { name: 'TREINO CONCLUÍDO' }).waitFor()
+}

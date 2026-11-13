@@ -1,11 +1,14 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { RegistroDia } from '../dominio/dia'
-import { lerDias, lerPerfil, mudarDia, salvarPerfil, type Perfil } from './banco'
+import type { Sessao } from '../dominio/treino'
+import { lerDias, lerPerfil, lerSessoes, mudarDia, mudarSessao, salvarPerfil, type Perfil } from './banco'
 
 export interface Dados {
   perfil: Perfil
   dias: Map<string, RegistroDia>
+  /** Treinos registrados, por data. */
+  sessoes: Map<string, Sessao>
 }
 
 type Estado = { fase: 'carregando' } | { fase: 'erro' } | { fase: 'pronto'; dados: Dados }
@@ -16,8 +19,8 @@ export function useDados() {
   const lido = useLiveQuery<Estado, Estado>(
     async () => {
       try {
-        const [perfil, dias] = await Promise.all([lerPerfil(), lerDias()])
-        return { fase: 'pronto', dados: { perfil, dias } }
+        const [perfil, dias, sessoes] = await Promise.all([lerPerfil(), lerDias(), lerSessoes()])
+        return { fase: 'pronto', dados: { perfil, dias, sessoes } }
       } catch {
         return { fase: 'erro' }
       }
@@ -28,11 +31,20 @@ export function useDados() {
   const [erroAoSalvar, setErroAoSalvar] = useState(false)
   // Perfil recém-salvo, mostrado na hora: lista suspensa e caixa de marcar não podem "voltar" enquanto o banco grava.
   const [perfilPendente, setPerfilPendente] = useState<Perfil | null>(null)
+  // O mesmo vale para a sessão de treino: a série registrada aparece no toque, sem esperar o banco.
+  const [sessaoPendente, setSessaoPendente] = useState<Sessao | null>(null)
+  const ultimaSessao = useRef<Sessao | null>(null)
+  const sessoesLidas = useRef<Map<string, Sessao>>(new Map())
   const gravando = useRef(0)
 
   useEffect(() => {
+    if (lido.fase === 'pronto') sessoesLidas.current = lido.dados.sessoes
     // chegou leitura nova do banco e não há gravação em curso: o banco volta a mandar
-    if (gravando.current === 0) setPerfilPendente(null)
+    if (gravando.current === 0) {
+      setPerfilPendente(null)
+      setSessaoPendente(null)
+      ultimaSessao.current = null
+    }
   }, [lido])
 
   const gravarPerfil = useCallback((perfil: Perfil) => {
@@ -54,7 +66,29 @@ export function useDados() {
     return mudarDia(data, mudanca).catch(() => setErroAoSalvar(true))
   }, [])
 
-  const estado: Estado = lido.fase === 'pronto' && perfilPendente ? { fase: 'pronto', dados: { ...lido.dados, perfil: perfilPendente } } : lido
+  const gravarSessao = useCallback((data: string, nova: Sessao, mudanca: (s: Sessao) => Sessao) => {
+    setErroAoSalvar(false)
+    const base = (ultimaSessao.current?.data === data ? ultimaSessao.current : null) ?? sessoesLidas.current.get(data) ?? nova
+    const prevista = mudanca(base)
+    ultimaSessao.current = prevista
+    setSessaoPendente(prevista)
+    gravando.current++
+    return mudarSessao(data, nova, mudanca)
+      .catch(() => {
+        ultimaSessao.current = null
+        setSessaoPendente(null)
+        setErroAoSalvar(true)
+      })
+      .finally(() => {
+        gravando.current--
+      })
+  }, [])
+
+  const estado = useMemo<Estado>(() => {
+    if (lido.fase !== 'pronto' || (!perfilPendente && !sessaoPendente)) return lido
+    const sessoes = sessaoPendente ? new Map(lido.dados.sessoes).set(sessaoPendente.data, sessaoPendente) : lido.dados.sessoes
+    return { fase: 'pronto', dados: { ...lido.dados, perfil: perfilPendente ?? lido.dados.perfil, sessoes } }
+  }, [lido, perfilPendente, sessaoPendente])
 
   return {
     estado,
@@ -62,5 +96,6 @@ export function useDados() {
     tentarDeNovo: useCallback(() => setTentativa((t) => t + 1), []),
     salvarPerfil: gravarPerfil,
     mudarDia: gravarDia,
+    mudarSessao: gravarSessao,
   }
 }

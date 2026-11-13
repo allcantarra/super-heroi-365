@@ -2,7 +2,8 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { alternarMissao, mudarCopos } from '../dominio/dia'
 import { ROTINA_PADRAO } from '../dominio/rotina'
 import { APARENCIA_PADRAO } from '../heroi/aparencia'
-import { banco, lerDias, lerPerfil, mudarDia, normalizarDia, normalizarPerfil, salvarPerfil, type Perfil } from './banco'
+import { concluir, registrarSerie, sessaoNova } from '../dominio/treino'
+import { banco, lerDias, lerPerfil, lerSessoes, mudarDia, mudarSessao, normalizarDia, normalizarPerfil, salvarPerfil, type Perfil } from './banco'
 
 const PESSOA = { pesoInicial: 60, metaPeso: 70, altura: 175, idade: 30 }
 const PERFIL: Perfil = { id: 'eu', aparencia: { pele: 'Morena', cabelo: 'Preto', uniforme: 'Grafite', corte: 'Curto' }, pessoa: PESSOA, rotina: ROTINA_PADRAO, diaUm: '2026-11-12', som: false, trocas: { '2026-11-16:jantar': 'jantar7', 's1:A': 'almoco2' }, comprados: ['arroz'] }
@@ -10,6 +11,7 @@ const PERFIL: Perfil = { id: 'eu', aparencia: { pele: 'Morena', cabelo: 'Preto',
 beforeEach(async () => {
   await banco.perfil.clear()
   await banco.dias.clear()
+  await banco.sessoes.clear()
 })
 
 describe('perfil no aparelho', () => {
@@ -67,5 +69,30 @@ describe('registro dos dias', () => {
   it('descarta missão desconhecida, repetida e copos inválidos', () => {
     expect(normalizarDia({ feitas: ['cafe', 'cafe', 'hack', 7], copos: 99 }, '2026-11-12')).toEqual({ data: '2026-11-12', feitas: ['cafe'], copos: 0 })
     expect(normalizarDia(undefined, '2026-11-12')).toEqual({ data: '2026-11-12', feitas: [], copos: 0 })
+  })
+})
+
+describe('sessões de treino', () => {
+  const DATA = '2026-11-12'
+  const nova = sessaoNova(DATA, 'choque-D', 1_800_000_000_000)
+
+  it('grava série por série e lê de volta', async () => {
+    await mudarSessao(DATA, nova, (s) => s)
+    await mudarSessao(DATA, nova, (s) => registrarSerie(s, 'agachamento', 10))
+    await mudarSessao(DATA, nova, (s) => concluir(registrarSerie(s, 'agachamento', 9), nova.inicio + 60_000))
+    expect((await lerSessoes()).get(DATA)).toEqual({ data: DATA, treino: 'choque-D', inicio: nova.inicio, fim: nova.inicio + 60_000, series: [{ exercicio: 'agachamento', valor: 10 }, { exercicio: 'agachamento', valor: 9 }] })
+  })
+
+  it('toques simultâneos não perdem série', async () => {
+    await Promise.all([8, 7, 6].map((valor) => mudarSessao(DATA, nova, (s) => registrarSerie(s, 'afundo', valor))))
+    expect((await lerSessoes()).get(DATA)!.series.map((s) => s.valor).sort()).toEqual([6, 7, 8])
+  })
+
+  it('ignora registro corrompido sem derrubar a leitura', async () => {
+    await banco.sessoes.put({ data: DATA, treino: 'choque-D', inicio: 'x', series: 'y' } as never)
+    await banco.sessoes.put({ data: '2026-11-13', treino: 'choque-E', inicio: 5, fim: null, series: [{ exercicio: 'pike', valor: 4 }, { exercicio: 'nada', valor: 4 }] } as never)
+    const lidas = await lerSessoes()
+    expect([...lidas.keys()]).toEqual(['2026-11-13'])
+    expect(lidas.get('2026-11-13')!.series).toEqual([{ exercicio: 'pike', valor: 4 }])
   })
 })

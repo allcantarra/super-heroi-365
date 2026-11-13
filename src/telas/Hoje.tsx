@@ -1,4 +1,4 @@
-import { Check, Coffee, Flame, Minus, Plus, Settings, Shield } from 'lucide-react'
+import { Check, Coffee, Dumbbell, Flame, Minus, Plus, Settings, Shield } from 'lucide-react'
 import { useRef, useState, type CSSProperties } from 'react'
 import { alimento, textoQuantidade } from '../conteudo/alimentos'
 import type { IdRefeicao } from '../conteudo/cardapio'
@@ -7,7 +7,8 @@ import { cardapioDaData, macrosDoPrato, prato } from '../dominio/cardapio'
 import { META_COPOS, ML_POR_COPO, XP_COPO, alternarMissao, cafeinaLiberada, jornada, missaoDeAgora, mudarCopos, registroVazio, resumoDoDia, type RegistroDia } from '../dominio/dia'
 import { TITULOS, estagioDoNivel, progressoDe } from '../dominio/jogo'
 import { missoesDoDia, type Missao } from '../dominio/rotina'
-import { FASES, faseDoDia, numeroDoDia } from '../dominio/tempo'
+import { FASES, faseDoDia, horaLocal, numeroDoDia } from '../dominio/tempo'
+import { duracaoEstimada, treinoDaData, treinoFeito } from '../dominio/treino'
 import { Avatar } from '../heroi/Avatar'
 import { Pow, type Golpe } from '../ui/Pow'
 import { tocarAcerto } from '../ui/som'
@@ -19,13 +20,14 @@ interface Props {
   erroAoSalvar: boolean
   mudarDia: (data: string, mudanca: (r: RegistroDia) => RegistroDia) => void
   abrirAjustes: () => void
+  abrirTreino: () => void
 }
 
 const PALAVRAS = ['POW!', 'BAM!', 'ZAP!']
 const litros = (copos: number) => ((copos * ML_POR_COPO) / 1000).toFixed(2).replace('.', ',')
 
-export function Hoje({ dados, hoje, agora, erroAoSalvar, mudarDia, abrirAjustes }: Props) {
-  const { perfil, dias } = dados
+export function Hoje({ dados, hoje, agora, erroAoSalvar, mudarDia, abrirAjustes, abrirTreino }: Props) {
+  const { perfil, dias, sessoes } = dados
   const diaUm = perfil.diaUm!
   const [golpe, setGolpe] = useState<Golpe | null>(null)
   const serie = useRef(0)
@@ -38,7 +40,11 @@ export function Hoje({ dados, hoje, agora, erroAoSalvar, mudarDia, abrirAjustes 
   const estagio = estagioDoNivel(progresso.nivel)
   const numero = numeroDoDia(diaUm, hoje)
   const fase = faseDoDia(numero)
-  const proxima = missaoDeAgora(registro, missoes)
+  const proxima = missaoDeAgora(registro, missoes, horaLocal(agora))
+  const treino = treinoDaData(diaUm, hoje)
+  const sessao = sessoes.get(hoje)
+  /** Marca de treino feita à mão, antes de existir a tela de treino: continua valendo e pode ser desfeita com um toque. */
+  const treinoMarcadoAMao = registro.feitas.includes('treino') && !treinoFeito(sessao)
   const cafeina = cafeinaLiberada(agora)
   const cardapio = cardapioDaData(diaUm, hoje, perfil.trocas)
   /** O que comer na missão: prato do cardápio do dia; o treino não tem prato. */
@@ -58,7 +64,8 @@ export function Hoje({ dados, hoje, agora, erroAoSalvar, mudarDia, abrirAjustes 
     }
     mudarDia(hoje, mudanca)
   }
-  const alternar = (m: Missao) => aplicar((r) => alternarMissao(r, m.id), !registro.feitas.includes(m.id))
+  // O treino se cumpre registrando séries: o toque leva para a tela de treino em vez de marcar.
+  const alternar = (m: Missao) => (m.tipo === 'treino' && !treinoMarcadoAMao ? abrirTreino() : aplicar((r) => alternarMissao(r, m.id), !registro.feitas.includes(m.id)))
 
   return (
     <>
@@ -97,11 +104,15 @@ export function Hoje({ dados, hoje, agora, erroAoSalvar, mudarDia, abrirAjustes 
                 })}
               </ul>
             </>
+          ) : treino ? (
+            <p>{treino.nome}: {treino.foco.toLowerCase()}. {treino.itens.length} exercícios, cerca de {duracaoEstimada(treino.itens)} minutos.</p>
           ) : (
             <p>{proxima.detalhe}</p>
           )}
           <div className="recompensa">Recompensa: +{proxima.xp} XP{pratoAgora ? `, ${Math.round(macrosDoPrato(cardapio[proxima.id as IdRefeicao], fase).kcal)} kcal` : ''}</div>
-          <button className="botao largo" onClick={() => alternar(proxima)}><Check aria-hidden />FEITO</button>
+          {proxima.tipo === 'treino'
+            ? <button className="botao largo" onClick={abrirTreino}><Dumbbell aria-hidden />{sessao && sessao.series.length > 0 ? 'CONTINUAR TREINO' : 'COMEÇAR TREINO'}</button>
+            : <button className="botao largo" onClick={() => alternar(proxima)}><Check aria-hidden />FEITO</button>}
         </section>
       ) : (
         <section className="painel" aria-label="Missão de agora">
@@ -148,7 +159,7 @@ export function Hoje({ dados, hoje, agora, erroAoSalvar, mudarDia, abrirAjustes 
             <span className="caixa"><Check aria-hidden /></span>
             <span>
               <span className="nome">{m.nome}</span>
-              <span className="detalhe">{pratoDa(m)?.nome ?? m.detalhe}</span>
+              <span className="detalhe">{pratoDa(m)?.nome ?? (treino ? `${treino.nome}: ${treino.foco.toLowerCase()}` : m.detalhe)}</span>
             </span>
             <span className="quando">{m.hora}<small>+{m.xp} XP</small></span>
           </button>

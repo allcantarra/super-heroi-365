@@ -4,6 +4,7 @@ import { normalizarTrocas, type Trocas } from '../dominio/cardapio'
 import { META_COPOS, registroVazio, type RegistroDia } from '../dominio/dia'
 import { normalizarRotina, type IdMissao, type Rotina } from '../dominio/rotina'
 import { dataValida } from '../dominio/tempo'
+import { normalizarSessao, type Sessao } from '../dominio/treino'
 import { normalizarAparencia, type Aparencia } from '../heroi/aparencia'
 
 export interface Pessoa {
@@ -31,12 +32,14 @@ export interface Perfil {
 class Banco extends Dexie {
   perfil!: Table<Perfil, 'eu'>
   dias!: Table<RegistroDia, string>
+  sessoes!: Table<Sessao, string>
 
   constructor() {
     super('super-heroi-365')
     // Cada etapa acrescenta coleções com uma nova versão; nunca edite uma versão já publicada.
     this.version(1).stores({ perfil: 'id' })
     this.version(2).stores({ perfil: 'id', dias: 'data' })
+    this.version(3).stores({ perfil: 'id', dias: 'data', sessoes: 'data' })
   }
 }
 
@@ -101,6 +104,23 @@ export async function mudarDia(data: string, mudanca: (r: RegistroDia) => Regist
   await banco.transaction('rw', banco.dias, async () => {
     const atual = normalizarDia(await banco.dias.get(data), data)
     await banco.dias.put(normalizarDia(mudanca(atual), data))
+  })
+}
+
+export async function lerSessoes(): Promise<Map<string, Sessao>> {
+  const todas = (await banco.sessoes.toArray()).flatMap((r) => normalizarSessao(r) ?? [])
+  return new Map(todas.map((s) => [s.data, s]))
+}
+
+/**
+ * Aplica uma mudança à sessão de treino de um dia, dentro de uma transação.
+ * `nova` é usada quando ainda não há sessão na data. Sessão que fica sem série e em aberto continua gravada: é o treino em andamento.
+ */
+export async function mudarSessao(data: string, nova: Sessao, mudanca: (s: Sessao) => Sessao): Promise<void> {
+  await banco.transaction('rw', banco.sessoes, async () => {
+    const atual = normalizarSessao(await banco.sessoes.get(data)) ?? nova
+    const depois = normalizarSessao({ ...mudanca(atual), data })
+    if (depois) await banco.sessoes.put(depois)
   })
 }
 

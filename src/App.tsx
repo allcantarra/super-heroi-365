@@ -1,15 +1,17 @@
 import { CalendarCheck, Dumbbell, TrendingUp, Utensils, type LucideIcon } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useDados } from './dados/useDados'
 import { dataLocal } from './dominio/tempo'
+import { diasComTreino } from './dominio/treino'
 import { Cardapio } from './telas/Cardapio'
 import { Hoje } from './telas/Hoje'
 import { PrimeiraAbertura } from './telas/PrimeiraAbertura'
+import { Treino } from './telas/Treino'
 import { AvisoInstalar } from './ui/AvisoInstalar'
 import { useAgora } from './ui/useAgora'
 
 type Aba = 'hoje' | 'cardapio' | 'treino' | 'evolucao'
-type AbaEmBreve = 'treino' | 'evolucao'
+type AbaEmBreve = 'evolucao'
 
 const ABAS: { id: Aba; nome: string; icone: LucideIcon }[] = [
   { id: 'hoje', nome: 'Hoje', icone: CalendarCheck },
@@ -19,7 +21,6 @@ const ABAS: { id: Aba; nome: string; icone: LucideIcon }[] = [
 ]
 
 const EM_BREVE: Record<AbaEmBreve, { titulo: string; texto: string }> = {
-  treino: { titulo: 'Ficha em montagem', texto: 'O treino guiado, com cronômetro e registro de séries, chega na etapa 4.' },
   evolucao: { titulo: 'Sem registros ainda', texto: 'Peso, medidas e fotos em quadrinho chegam na etapa 5.' },
 }
 
@@ -31,7 +32,7 @@ function abaDoEndereco(): Aba {
 export function App() {
   const [aba, setAba] = useState<Aba>(abaDoEndereco)
   const [ajustando, setAjustando] = useState(false)
-  const { estado, erroAoSalvar, tentarDeNovo, salvarPerfil, mudarDia } = useDados()
+  const { estado, erroAoSalvar, tentarDeNovo, salvarPerfil, mudarDia, mudarSessao } = useDados()
   const agora = useAgora()
   const hoje = dataLocal(agora)
 
@@ -45,6 +46,9 @@ export function App() {
     location.hash = id
     window.scrollTo(0, 0)
   }
+
+  // A missão de treino de cada dia vem das sessões registradas; o resto do app lê os dias já com ela.
+  const diasDoJogo = useMemo(() => (estado.fase === 'pronto' ? diasComTreino(estado.dados.dias, estado.dados.sessoes, hoje) : null), [estado, hoje])
 
   if (estado.fase === 'carregando') {
     return <main className="app"><p role="status">Abrindo seu gibi...</p></main>
@@ -91,9 +95,11 @@ export function App() {
     <>
       <main className="app">
         {aba === 'hoje' ? (
-          <Hoje dados={dados} hoje={hoje} agora={agora} erroAoSalvar={erroAoSalvar} mudarDia={(d, m) => void mudarDia(d, m)} abrirAjustes={() => { setAjustando(true); window.scrollTo(0, 0) }} />
+          <Hoje dados={{ ...dados, dias: diasDoJogo! }} hoje={hoje} agora={agora} erroAoSalvar={erroAoSalvar} mudarDia={(d, m) => void mudarDia(d, m)} abrirAjustes={() => { setAjustando(true); window.scrollTo(0, 0) }} abrirTreino={() => ir('treino')} />
         ) : aba === 'cardapio' ? (
-          <Cardapio perfil={dados.perfil} feitasHoje={dados.dias.get(hoje)?.feitas ?? []} hoje={hoje} salvarPerfil={(p) => void salvarPerfil(p)} />
+          <Cardapio perfil={dados.perfil} feitasHoje={diasDoJogo!.get(hoje)?.feitas ?? []} hoje={hoje} salvarPerfil={(p) => void salvarPerfil(p)} />
+        ) : aba === 'treino' ? (
+          <Treino dados={dados} hoje={hoje} erroAoSalvar={erroAoSalvar} mudarSessao={(d, n, m) => void mudarSessao(d, n, m)} irParaHoje={() => ir('hoje')} />
         ) : (
           <div className="vazio">
             <atual.icone aria-hidden />

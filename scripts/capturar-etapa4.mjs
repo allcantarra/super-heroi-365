@@ -1,0 +1,91 @@
+// Captura as telas da etapa 4 (treino) em 375 px.
+// Rodar com o app no ar: `npm run build && npx vite preview --port 4367` e depois `node scripts/capturar-etapa4.mjs`.
+import { chromium } from '@playwright/test'
+
+const URL = process.argv[2] ?? 'http://localhost:4367/'
+const navegador = await chromium.launch()
+const contexto = await navegador.newContext({ viewport: { width: 375, height: 812 }, deviceScaleFactor: 2, hasTouch: true, isMobile: true })
+const pagina = await contexto.newPage()
+// segunda-feira, 06:20: hora do treino
+await pagina.clock.install({ time: new Date(2026, 10, 9, 6, 20, 0) })
+const foto = (nome, inteira = false) => pagina.screenshot({ path: `docs/capturas/${nome}.png`, fullPage: inteira })
+const botao = (nome) => pagina.getByRole('button', { name: nome })
+
+await pagina.goto(URL)
+await pagina.getByLabel('Peso de hoje (kg)').fill('60,5')
+await pagina.getByLabel('Meta de peso (kg)').fill('70')
+await pagina.getByLabel('Altura (cm)').fill('175')
+await pagina.getByLabel('Idade').fill('30')
+await botao('Continuar').click()
+await pagina.getByLabel('Acordo às').fill('05:30')
+await botao('Continuar').click()
+await botao('Começar').click()
+await pagina.getByText('DIA 1 DE 365').waitFor()
+await botao('FEITO').click()
+await pagina.locator('.pow').waitFor({ state: 'detached' })
+await foto('etapa4-hoje-missao-treino')
+
+await botao('COMEÇAR TREINO').click()
+await pagina.getByRole('heading', { name: 'EMPURRAR' }).waitFor()
+await foto('etapa4-treino-do-dia', true)
+
+await botao('COMEÇAR TREINO').click()
+await pagina.getByRole('heading', { name: 'Flexão com as mãos no sofá' }).waitFor()
+await foto('etapa4-execucao-registrar')
+await botao('Mais 1').click()
+await botao('Mais 1').click()
+await botao('Registrar série').click()
+await pagina.clock.fastForward(14_000)
+await foto('etapa4-execucao-descanso')
+await botao('Pular descanso').click()
+await botao('Registrar série').click()
+await botao('Pular descanso').click()
+for (let n = 0; n < 6; n++) {
+  await botao('Registrar série').click()
+  await botao('Pular descanso').click()
+}
+await pagina.getByRole('heading', { name: 'Prancha', exact: true }).waitFor()
+await botao(/Cronometrar/).click()
+await pagina.clock.fastForward(22_000)
+await foto('etapa4-execucao-cronometro')
+await botao('Parar e anotar').click()
+await botao('Registrar série').click()
+await botao('Pular descanso').click()
+await botao('Concluir treino antes do fim').click()
+await foto('etapa4-execucao-concluir-antes')
+await botao('Continuar treinando').click()
+await botao('Registrar série').click()
+await pagina.getByRole('heading', { name: 'TREINO CONCLUÍDO' }).waitFor()
+await pagina.waitForTimeout(250)
+await foto('etapa4-treino-concluido-pow')
+await pagina.locator('.pow').waitFor({ state: 'detached' })
+await foto('etapa4-treino-concluido', true)
+await botao('VER MEU DIA').click()
+await foto('etapa4-hoje-treino-cumprido', true)
+
+// semana seguinte: último treino igual e recorde
+await pagina.clock.fastForward(7 * 24 * 3_600_000)
+await pagina.getByRole('navigation').getByRole('button', { name: 'Treino' }).click()
+await botao('COMEÇAR TREINO').click()
+await botao('Mais 1').click()
+await botao('Registrar série').click()
+await foto('etapa4-execucao-recorde')
+await botao('Pular descanso').click()
+await foto('etapa4-execucao-ultima-vez')
+
+// domingo
+await botao('Sair do treino sem concluir').click()
+await pagina.clock.fastForward(6 * 24 * 3_600_000)
+await pagina.getByRole('heading', { name: 'DESCANSO' }).waitFor()
+await foto('etapa4-treino-domingo', true)
+
+// tela baixa (iPhone SE)
+await pagina.setViewportSize({ width: 375, height: 667 })
+await pagina.clock.fastForward(24 * 3_600_000)
+await botao('COMEÇAR TREINO').click()
+await foto('etapa4-execucao-tela-baixa')
+await botao('Registrar série').click()
+await foto('etapa4-execucao-descanso-tela-baixa')
+
+await navegador.close()
+console.log('capturas da etapa 4 salvas em docs/capturas')
