@@ -70,7 +70,7 @@ export function chaveDaTroca(diaUm: string, data: string, refeicao: IdRefeicao):
 }
 
 export function pratoServe(id: unknown, refeicao: IdRefeicao): id is IdPrato {
-  return typeof id === 'string' && id in PRATOS && PRATOS[id as IdPrato].categoria === CATEGORIA_DA_REFEICAO[refeicao]
+  return typeof id === 'string' && Object.hasOwn(PRATOS, id) && PRATOS[id as IdPrato].categoria === CATEGORIA_DA_REFEICAO[refeicao]
 }
 
 /**

@@ -46,6 +46,18 @@ export interface ConteudoRestauravel {
 
 export class ErroDeBackup extends Error {}
 
+/** Foto reduzida pelo app fica em torno de 200 KB; 3 MB por foto já é folga demais. */
+const BYTES_MAXIMOS_POR_FOTO = 3 * 1024 * 1024
+
+/** Confere os primeiros bytes contra o tipo declarado: um arquivo editado não engana o app sobre o que é a imagem. */
+function assinaturaConfere(bytes: Uint8Array, tipo: string): boolean {
+  const comeca = (...b: number[]) => b.every((x, i) => bytes[i] === x)
+  if (tipo === 'image/jpeg') return comeca(0xff, 0xd8, 0xff)
+  if (tipo === 'image/png') return comeca(0x89, 0x50, 0x4e, 0x47)
+  if (tipo === 'image/webp') return comeca(0x52, 0x49, 0x46, 0x46) && String.fromCharCode(...bytes.subarray(8, 12)) === 'WEBP'
+  return false
+}
+
 async function paraBase64(blob: Blob): Promise<string> {
   const bytes = new Uint8Array(await blob.arrayBuffer())
   let binario = ''
@@ -53,11 +65,12 @@ async function paraBase64(blob: Blob): Promise<string> {
   return btoa(binario)
 }
 
-function deBase64(texto: string, tipo: string): Blob {
+function deBase64(texto: string, tipo: string): Blob | null {
+  if (texto.length > Math.ceil(BYTES_MAXIMOS_POR_FOTO / 3) * 4) return null
   const binario = atob(texto)
   const bytes = new Uint8Array(binario.length)
   for (let i = 0; i < binario.length; i++) bytes[i] = binario.charCodeAt(i)
-  return new Blob([bytes], { type: tipo })
+  return assinaturaConfere(bytes, tipo) ? new Blob([bytes], { type: tipo }) : null
 }
 
 /** Lê tudo do banco e monta o arquivo. */
@@ -119,18 +132,24 @@ export function lerArquivoDeBackup(texto: string): ConteudoRestauravel {
     const f = (x ?? {}) as Partial<FotoNoArquivo>
     if (typeof f.base64 !== 'string' || typeof f.tipo !== 'string' || !/^image\/(jpeg|png|webp)$/.test(f.tipo)) return null
     try {
-      return normalizarFoto({ mes: f.mes, data: f.data, imagem: deBase64(f.base64, f.tipo) })
+      const imagem = deBase64(f.base64, f.tipo)
+      return imagem ? normalizarFoto({ mes: f.mes, data: f.data, imagem }) : null
     } catch {
       return null
     }
   })
+  const unicos = <T>(itens: T[], chave: (x: T) => string | number): T[] => {
+    const porChave = new Map(itens.map((x) => [chave(x), x]))
+    descartados += itens.length - porChave.size
+    return [...porChave.values()]
+  }
   return {
     perfil,
-    dias,
-    sessoes: filtrar(lista(d.sessoes), normalizarSessao),
-    pesagens: filtrar(lista(d.pesagens), normalizarPesagem),
-    medidas: filtrar(lista(d.medidas), normalizarMedida),
-    fotos,
+    dias: unicos(dias, (x) => x.data),
+    sessoes: unicos(filtrar(lista(d.sessoes), normalizarSessao), (x) => x.data),
+    pesagens: unicos(filtrar(lista(d.pesagens), normalizarPesagem), (x) => x.data),
+    medidas: unicos(filtrar(lista(d.medidas), normalizarMedida), (x) => x.data),
+    fotos: unicos(fotos, (x) => x.mes),
     descartados,
   }
 }

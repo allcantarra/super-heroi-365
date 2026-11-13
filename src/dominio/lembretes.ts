@@ -18,7 +18,7 @@ export function opcoesDeLembrete(rotina: Rotina): OpcaoDeLembrete[] {
   return missoesDoDia(rotina, '2026-11-09').map((m) => ({ id: m.id, nome: m.id === 'pre' ? 'Pré-treino ou lanche ao acordar' : m.nome, hora: m.hora }))
 }
 
-const escapar = (t: string) => t.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n')
+const escapar = (t: string) => t.replace(/\r\n?/g, '\n').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n')
 const compacta = (data: string) => data.replace(/-/g, '')
 
 /** Quebra linhas acima de 75 bytes, como o formato pede (linha seguinte começa com espaço). */

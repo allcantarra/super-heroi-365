@@ -9,7 +9,8 @@ const PERFIL: Perfil = { id: 'eu', aparencia: APARENCIA_PADRAO, pessoa: { pesoIn
 /** Blob do Node: o do jsdom vira objeto vazio no banco de teste e não tem arrayBuffer. */
 async function imagem(conteudo: string): Promise<Blob> {
   const { Blob: BlobDoNode } = await import(/* @vite-ignore */ ['node', 'buffer'].join(':'))
-  return new BlobDoNode([conteudo], { type: 'image/jpeg' }) as Blob
+  // começa com a assinatura de JPEG, como uma foto de verdade
+  return new BlobDoNode([new Uint8Array([0xff, 0xd8, 0xff, 0xe0]), conteudo], { type: 'image/jpeg' }) as Blob
 }
 
 async function preencher() {
@@ -35,7 +36,7 @@ describe('backup', () => {
     expect(await resumoDoAparelho()).toEqual({ dias: 0, treinos: 0, pesagens: 0, medidas: 0, fotos: 0 })
     const conteudo = lerArquivoDeBackup(texto)
     expect(conteudo.descartados).toBe(0)
-    expect(conteudo.fotos.map((f) => [f.mes, f.imagem.type, f.imagem.size])).toEqual([[1, 'image/jpeg', 'foto do mês 1'.length + 1]])
+    expect(conteudo.fotos.map((f) => [f.mes, f.imagem.type, f.imagem.size])).toEqual([[1, 'image/jpeg', 4 + new TextEncoder().encode('foto do mês 1').length]])
     await restaurar(conteudo)
     expect(await lerPerfil()).toEqual(PERFIL)
     expect((await lerDias()).get('2026-11-09')).toEqual({ data: '2026-11-09', feitas: ['pre', 'cafe'], copos: 5 })
@@ -77,6 +78,23 @@ describe('backup', () => {
     expect(c.fotos).toHaveLength(0)
     // 1 dia sem data, 1 sessão quebrada, 1 peso impossível, 1 SVG (tipo não aceito) e 1 base64 inválido
     expect(c.descartados).toBe(5)
+  })
+
+  it('recusa foto grande demais ou com bytes que não batem com o tipo, e conta repetidos como descartados', () => {
+    const jpeg = btoa(String.fromCharCode(0xff, 0xd8, 0xff, 0xe0) + 'resto')
+    const arquivo = {
+      app: APP, versao: 1, exportadoEm: 'x', perfil: PERFIL, dias: [], sessoes: [], medidas: [],
+      pesagens: [{ data: '2026-11-16', kg: 61 }, { data: '2026-11-16', kg: 62 }],
+      fotos: [
+        { mes: 1, data: '2026-11-09', tipo: 'image/jpeg', base64: jpeg },
+        { mes: 2, data: '2026-12-09', tipo: 'image/jpeg', base64: btoa('<html>não é imagem</html>') },
+        { mes: 3, data: '2027-01-09', tipo: 'image/jpeg', base64: 'A'.repeat(5 * 1024 * 1024) },
+      ],
+    }
+    const c = lerArquivoDeBackup(JSON.stringify(arquivo))
+    expect(c.fotos.map((f) => f.mes)).toEqual([1])
+    expect(c.pesagens).toEqual([{ data: '2026-11-16', kg: 62 }])
+    expect(c.descartados).toBe(3)
   })
 
   it('o nome do arquivo leva a data, sem dado pessoal', () => {

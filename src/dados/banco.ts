@@ -80,7 +80,7 @@ export function normalizarPerfil(dado: unknown): Perfil {
     diaUm: pessoa ? diaUm : null,
     som: d.som !== false,
     trocas: normalizarTrocas(d.trocas),
-    comprados: Array.isArray(d.comprados) ? [...new Set(d.comprados.filter((x): x is string => typeof x === 'string' && x in ALIMENTOS))] : [],
+    comprados: Array.isArray(d.comprados) ? [...new Set(d.comprados.filter((x): x is string => typeof x === 'string' && Object.hasOwn(ALIMENTOS, x)))] : [],
   }
 }
 

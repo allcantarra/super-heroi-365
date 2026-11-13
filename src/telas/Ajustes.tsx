@@ -1,6 +1,6 @@
-import { ArrowLeft, CalendarPlus, Download, Upload, UserCog } from 'lucide-react'
+import { ArrowLeft, CalendarPlus, Download, Save, Upload, UserCog } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import { ErroDeBackup, lerArquivoDeBackup, montarBackup, nomeDoArquivo, restaurar, resumoDoAparelho, type ConteudoRestauravel } from '../dados/backup'
+import { ErroDeBackup, TAMANHO_MAXIMO, lerArquivoDeBackup, montarBackup, nomeDoArquivo, restaurar, resumoDoAparelho, type ConteudoRestauravel } from '../dados/backup'
 import type { Perfil } from '../dados/banco'
 import { gerarIcs, opcoesDeLembrete } from '../dominio/lembretes'
 import type { IdMissao } from '../dominio/rotina'
@@ -29,7 +29,7 @@ export function Ajustes({ perfil, hoje, voltar, editarPerfil }: Props) {
       <section className="painel escuro ajuste">
         <span className="aba">ROTINA, PERFIL E HERÓI</span>
         <p>Horários do dia, peso e meta, aparência do herói, dia 1 e som.</p>
-        <button className="botao largo" onClick={editarPerfil}><UserCog aria-hidden />Editar rotina, perfil e herói</button>
+        <button className="botao largo" onClick={editarPerfil}><UserCog aria-hidden />Editar rotina e perfil</button>
       </section>
 
       <Lembretes perfil={perfil} hoje={hoje} />
@@ -76,6 +76,8 @@ function Backup({ hoje }: { hoje: string }) {
   const [aparelho, setAparelho] = useState<Resumo | null>(null)
   const [ultimo, setUltimo] = useState(ultimoBackup)
   const [exportando, setExportando] = useState(false)
+  /** Arquivo pronto, esperando o segundo toque: o iPhone só abre a folha de compartilhar direto de um toque. */
+  const [pronto, setPronto] = useState<{ nome: string; texto: string; data: string } | null>(null)
   const [erroExportar, setErroExportar] = useState<string | null>(null)
   const [restauracao, setRestauracao] = useState<Restauracao>({ fase: 'nada' })
   const entrada = useRef<HTMLInputElement>(null)
@@ -88,27 +90,35 @@ function Backup({ hoje }: { hoje: string }) {
     }
   }, [restauracao.fase])
 
-  const exportar = async () => {
+  const montar = async () => {
     setExportando(true)
     setErroExportar(null)
     try {
       const agora = new Date()
-      const arquivo = await montarBackup(agora)
-      const r = await entregarArquivo(nomeDoArquivo(agora), 'application/json', JSON.stringify(arquivo))
-      if (r !== 'cancelado') {
-        registrarBackup(dataLocal(agora))
-        setUltimo(dataLocal(agora))
-      }
+      setPronto({ nome: nomeDoArquivo(agora), texto: JSON.stringify(await montarBackup(agora)), data: dataLocal(agora) })
     } catch {
       setErroExportar('Não consegui montar o backup. Tente de novo.')
     } finally {
       setExportando(false)
     }
   }
+  const salvar = async () => {
+    if (!pronto) return
+    const r = await entregarArquivo(pronto.nome, 'application/json', pronto.texto)
+    if (r === 'cancelado') return
+    // só conta como feito quando o arquivo saiu do app
+    registrarBackup(pronto.data)
+    setUltimo(pronto.data)
+    setPronto(null)
+  }
 
   const escolher = async (arquivo: File | undefined) => {
     if (entrada.current) entrada.current.value = ''
     if (!arquivo) return
+    if (arquivo.size > TAMANHO_MAXIMO * 1.4) {
+      setRestauracao({ fase: 'erro', mensagem: 'Arquivo grande demais para ser um backup deste app.' })
+      return
+    }
     try {
       setRestauracao({ fase: 'confirmar', conteudo: lerArquivoDeBackup(await lerTexto(arquivo)) })
     } catch (e) {
@@ -132,7 +142,14 @@ function Backup({ hoje }: { hoje: string }) {
       <p>Tudo fica só neste aparelho. O backup junta dias, treinos, pesos, medidas e fotos num arquivo para guardar no iCloud Drive ou no computador.</p>
       {aparelho && <p className="nota" style={{ marginTop: 0 }}>Neste aparelho: {descrever(aparelho)}.</p>}
       <p className="nota" style={{ marginTop: 0 }} role="status">{ultimo ? `Último backup: ${dataCurta(ultimo)}${ultimo === hoje ? ' (hoje)' : ''}.` : 'Nenhum backup feito neste aparelho.'}</p>
-      <button className="botao largo" disabled={exportando} onClick={() => void exportar()}><Download aria-hidden />{exportando ? 'Montando o backup...' : 'Fazer backup agora'}</button>
+      {pronto ? (
+        <>
+          <p className="aviso ok" role="status">Backup pronto ({(pronto.texto.length / 1024 / 1024).toFixed(1).replace('.', ',')} MB). Toque para guardar em Arquivos ou no iCloud Drive. Ele tem suas fotos: não mande por aplicativo de mensagem.</p>
+          <button className="botao largo" onClick={() => void salvar()}><Save aria-hidden />Salvar o arquivo</button>
+        </>
+      ) : (
+        <button className="botao largo" disabled={exportando} onClick={() => void montar()}><Download aria-hidden />{exportando ? 'Montando o backup...' : 'Fazer backup agora'}</button>
+      )}
       {erroExportar && <p className="aviso" role="alert">{erroExportar}</p>}
 
       <input ref={entrada} id="arquivo-backup" type="file" accept="application/json,.json" className="so-leitor" onChange={(e) => void escolher(e.target.files?.[0])} />

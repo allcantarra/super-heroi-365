@@ -45,8 +45,11 @@ test('backup: exporta, recusa arquivo errado, pede confirmação e restaura subs
   await page.getByRole('button', { name: /Café reforçado/ }).tap()
   await abrirAjustes(page)
   await expect(page.getByText('Nenhum backup feito neste aparelho.')).toBeVisible()
-  const download = page.waitForEvent('download')
   await page.getByRole('button', { name: 'Fazer backup agora' }).tap()
+  await expect(page.getByText(/Backup pronto/)).toBeVisible()
+  await expect(page.getByText('Nenhum backup feito neste aparelho.')).toBeVisible() // ainda não saiu do app
+  const download = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Salvar o arquivo' }).tap()
   const arquivo = await download
   expect(arquivo.suggestedFilename()).toBe('super-heroi-365-backup-2026-11-09.json')
   const caminho = await arquivo.path()
@@ -84,8 +87,9 @@ test('a tela Hoje lembra do backup depois de duas semanas sem', async ({ page })
   await expect(page.getByText(/Você ainda não fez backup/)).toBeVisible()
   await page.getByRole('button', { name: 'Fazer backup' }).tap()
   await expect(page.getByRole('heading', { name: 'Ajustes', level: 1 })).toBeVisible()
-  const download = page.waitForEvent('download')
   await page.getByRole('button', { name: 'Fazer backup agora' }).tap()
+  const download = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Salvar o arquivo' }).tap()
   await download
   await page.getByRole('button', { name: 'Voltar para o dia' }).tap()
   await expect(page.getByText(/Você ainda não fez backup/)).toHaveCount(0)
@@ -93,7 +97,7 @@ test('a tela Hoje lembra do backup depois de duas semanas sem', async ({ page })
 
 test('editar rotina pelos ajustes continua funcionando', async ({ page }) => {
   await abrirAjustes(page)
-  await page.getByRole('button', { name: 'Editar rotina, perfil e herói' }).tap()
+  await page.getByRole('button', { name: 'Editar rotina e perfil' }).tap()
   await expect(page.getByLabel('Peso de hoje (kg)')).toHaveValue('60,5')
   await page.getByRole('button', { name: 'Cancelar' }).tap()
   await expect(page.getByText('DIA 1 DE 365')).toBeVisible()

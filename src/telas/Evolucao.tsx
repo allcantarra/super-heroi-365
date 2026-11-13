@@ -39,6 +39,7 @@ type Visao = 'peso' | 'medidas' | 'fotos' | 'heroi'
 const VISOES: { id: Visao; nome: string }[] = [{ id: 'peso', nome: 'Peso' }, { id: 'medidas', nome: 'Medidas' }, { id: 'fotos', nome: 'Fotos' }, { id: 'heroi', nome: 'Herói' }]
 const kg = (n: number) => n.toFixed(1).replace('.', ',')
 const sinal = (n: number, casas = 1) => `${n > 0 ? '+' : n < 0 ? '−' : ''}${Math.abs(n).toFixed(casas).replace('.', ',')}`
+const SINGULAR = { forca: 'série de força registrada', folego: 'minuto de corrida e cardio', energia: 'refeição cumprida', foco: 'dia vencido' } as const
 const UNIDADES = { forca: 'séries', folego: 'minutos', energia: 'refeições', foco: 'dias' } as const
 const texto = (n: number | undefined) => (n === undefined ? '' : String(n).replace('.', ','))
 
@@ -422,7 +423,7 @@ function Heroi({ dados, hoje }: { dados: Dados; hoje: string }) {
             <i style={{ width: `${(a.noNivel / a.doNivel) * 100}%` }} />
           </div>
           <p className="nota" style={{ margin: '6px 0 0' }}>
-            {a.pontos} {a.fonte} no total. {a.semana > 0 ? `+${a.semana} nos últimos 7 dias.` : 'Nada nos últimos 7 dias.'}
+            {a.pontos} {a.pontos === 1 ? SINGULAR[a.id] : a.fonte} no total. {a.semana > 0 ? `+${a.semana} nos últimos 7 dias.` : 'Nada nos últimos 7 dias.'}
           </p>
         </article>
       ))}
