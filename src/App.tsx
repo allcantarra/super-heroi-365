@@ -6,12 +6,12 @@ import { diasComTreino } from './dominio/treino'
 import { Cardapio } from './telas/Cardapio'
 import { Hoje } from './telas/Hoje'
 import { PrimeiraAbertura } from './telas/PrimeiraAbertura'
+import { Evolucao } from './telas/Evolucao'
 import { Treino } from './telas/Treino'
 import { AvisoInstalar } from './ui/AvisoInstalar'
 import { useAgora } from './ui/useAgora'
 
 type Aba = 'hoje' | 'cardapio' | 'treino' | 'evolucao'
-type AbaEmBreve = 'evolucao'
 
 const ABAS: { id: Aba; nome: string; icone: LucideIcon }[] = [
   { id: 'hoje', nome: 'Hoje', icone: CalendarCheck },
@@ -19,10 +19,6 @@ const ABAS: { id: Aba; nome: string; icone: LucideIcon }[] = [
   { id: 'treino', nome: 'Treino', icone: Dumbbell },
   { id: 'evolucao', nome: 'Evolução', icone: TrendingUp },
 ]
-
-const EM_BREVE: Record<AbaEmBreve, { titulo: string; texto: string }> = {
-  evolucao: { titulo: 'Sem registros ainda', texto: 'Peso, medidas e fotos em quadrinho chegam na etapa 5.' },
-}
 
 function abaDoEndereco(): Aba {
   const h = location.hash.slice(1)
@@ -32,7 +28,7 @@ function abaDoEndereco(): Aba {
 export function App() {
   const [aba, setAba] = useState<Aba>(abaDoEndereco)
   const [ajustando, setAjustando] = useState(false)
-  const { estado, erroAoSalvar, tentarDeNovo, salvarPerfil, mudarDia, mudarSessao } = useDados()
+  const { estado, erroAoSalvar, tentarDeNovo, salvarPerfil, mudarDia, mudarSessao, evolucao } = useDados()
   const agora = useAgora()
   const hoje = dataLocal(agora)
 
@@ -89,8 +85,6 @@ export function App() {
     )
   }
 
-  const atual = ABAS.find((a) => a.id === aba)!
-
   return (
     <>
       <main className="app">
@@ -101,11 +95,7 @@ export function App() {
         ) : aba === 'treino' ? (
           <Treino dados={dados} hoje={hoje} erroAoSalvar={erroAoSalvar} mudarSessao={(d, n, m) => void mudarSessao(d, n, m)} irParaHoje={() => ir('hoje')} />
         ) : (
-          <div className="vazio">
-            <atual.icone aria-hidden />
-            <h1>{EM_BREVE[aba].titulo}</h1>
-            <p>{EM_BREVE[aba].texto}</p>
-          </div>
+          <Evolucao dados={dados} hoje={hoje} erroAoSalvar={erroAoSalvar} acoes={evolucao} />
         )}
       </main>
       <AvisoInstalar />

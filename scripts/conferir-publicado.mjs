@@ -35,6 +35,26 @@ await pagina.getByRole('tab', { name: 'Compras' }).click()
 await pagina.locator('.compra').first().waitFor()
 const itensDeCompra = await pagina.locator('.compra').count()
 
+// Treino: começa, registra uma série (ou cronometra) e confere que a sessão sobrevive a recarregar.
+// Usa o relógio real: em domingo não há treino, e o resultado fica como 'folga'.
+await pagina.getByRole('button', { name: 'Treino', exact: true }).click()
+const comecar = pagina.getByRole('button', { name: /COMEÇAR TREINO|CONTINUAR TREINO/ })
+let treino = 'folga'
+if (await comecar.waitFor({ timeout: 5000 }).then(() => true, () => false)) {
+  await comecar.click()
+  const registrar = pagina.getByRole('button', { name: 'Registrar série' })
+  if (await registrar.waitFor({ timeout: 5000 }).then(() => true, () => false)) {
+    await registrar.click()
+    await pagina.getByRole('button', { name: 'Pular descanso' }).waitFor()
+  } else {
+    await pagina.getByRole('button', { name: /Cronometrar/ }).click()
+    await pagina.getByRole('button', { name: 'Parar e anotar' }).click()
+  }
+  await pagina.reload()
+  await pagina.getByRole('button', { name: 'Treino', exact: true }).click()
+  treino = await pagina.getByRole('button', { name: /CONTINUAR TREINO/ }).waitFor({ timeout: 10000 }).then(() => 'série gravada', () => 'série perdida')
+}
+
 await pagina.getByRole('button', { name: 'Hoje', exact: true }).click()
 await pagina.reload()
 const xpAposRecarregar = await pagina.getByText('40 XP', { exact: true }).waitFor({ timeout: 10000 }).then(() => true, () => false)
@@ -44,5 +64,5 @@ await contexto.setOffline(true)
 await pagina.reload()
 const offline = await pagina.getByText('DIA 1 DE 365').waitFor({ timeout: 10000 }).then(() => true, () => false)
 await contexto.setOffline(false)
-console.log(JSON.stringify({ url: URL, refeicoes, dia2, marmitas, itensDeCompra, xpAposRecarregar, offline, erros, falhas }))
+console.log(JSON.stringify({ url: URL, refeicoes, dia2, marmitas, itensDeCompra, treino, xpAposRecarregar, offline, erros, falhas }))
 await navegador.close()

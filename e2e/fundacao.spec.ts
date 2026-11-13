@@ -8,7 +8,7 @@ test('navega entre as quatro seções e volta pelo botão do navegador', async (
   await expect(page.getByRole('heading', { name: 'Treino', level: 1 })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Treino', exact: true })).toHaveAttribute('aria-current', 'page')
   await page.getByRole('button', { name: 'Evolução' }).tap()
-  await expect(page.getByRole('heading', { name: 'Sem registros ainda' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Evolução', level: 1 })).toBeVisible()
   await page.goBack()
   await expect(page.getByRole('heading', { name: 'Treino', level: 1 })).toBeVisible()
 })

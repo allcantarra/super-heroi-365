@@ -5,6 +5,7 @@ import type { IdRefeicao } from '../conteudo/cardapio'
 import type { Dados } from '../dados/useDados'
 import { cardapioDaData, macrosDoPrato, prato } from '../dominio/cardapio'
 import { META_COPOS, ML_POR_COPO, XP_COPO, alternarMissao, cafeinaLiberada, jornada, missaoDeAgora, mudarCopos, registroVazio, resumoDoDia, type RegistroDia } from '../dominio/dia'
+import { xpDaEvolucao } from '../dominio/evolucao'
 import { TITULOS, estagioDoNivel, progressoDe } from '../dominio/jogo'
 import { missoesDoDia, type Missao } from '../dominio/rotina'
 import { FASES, faseDoDia, horaLocal, numeroDoDia } from '../dominio/tempo'
@@ -36,7 +37,9 @@ export function Hoje({ dados, hoje, agora, erroAoSalvar, mudarDia, abrirAjustes,
   const registro = dias.get(hoje) ?? registroVazio(hoje)
   const resumo = resumoDoDia(registro, missoes)
   const trilha = jornada(diaUm, hoje, perfil.rotina, dias)
-  const progresso = progressoDe(trilha.xpTotal)
+  /** XP de pesagem semanal e foto mensal: vem dos registros da Evolução, não das missões do dia. */
+  const xpExtra = xpDaEvolucao(diaUm, hoje, dados.pesagens.keys(), dados.mesesComFoto)
+  const progresso = progressoDe(trilha.xpTotal + xpExtra)
   const estagio = estagioDoNivel(progresso.nivel)
   const numero = numeroDoDia(diaUm, hoje)
   const fase = faseDoDia(numero)
@@ -57,7 +60,7 @@ export function Hoje({ dados, hoje, agora, erroAoSalvar, mudarDia, abrirAjustes,
       const depois = new Map(dias).set(hoje, mudanca(registro))
       const novo = jornada(diaUm, hoje, perfil.rotina, depois)
       const ganho = novo.xpTotal - trilha.xpTotal
-      const nivelNovo = progressoDe(novo.xpTotal).nivel
+      const nivelNovo = progressoDe(novo.xpTotal + xpExtra).nivel
       const palavra = nivelNovo > progresso.nivel ? `NÍVEL ${nivelNovo}!` : PALAVRAS[novo.xpTotal % PALAVRAS.length]
       if (ganho > 0) setGolpe({ id: ++serie.current, palavra, linha: `+${ganho} XP` })
       if (perfil.som) tocarAcerto()

@@ -1,14 +1,22 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { RegistroDia } from '../dominio/dia'
+import type { Medida, Pesagem } from '../dominio/evolucao'
 import type { Sessao } from '../dominio/treino'
-import { lerDias, lerPerfil, lerSessoes, mudarDia, mudarSessao, salvarPerfil, type Perfil } from './banco'
+import {
+  apagarFoto, apagarMedida, apagarPesagem, lerDias, lerMedidas, lerMesesComFoto, lerPerfil, lerPesagens, lerSessoes, mudarDia, mudarSessao,
+  salvarFoto, salvarMedida, salvarPerfil, salvarPesagem, type Perfil,
+} from './banco'
 
 export interface Dados {
   perfil: Perfil
   dias: Map<string, RegistroDia>
   /** Treinos registrados, por data. */
   sessoes: Map<string, Sessao>
+  pesagens: Map<string, Pesagem>
+  medidas: Map<string, Medida>
+  /** Meses do projeto que têm foto. As imagens são lidas só na tela de Evolução. */
+  mesesComFoto: number[]
 }
 
 type Estado = { fase: 'carregando' } | { fase: 'erro' } | { fase: 'pronto'; dados: Dados }
@@ -19,8 +27,8 @@ export function useDados() {
   const lido = useLiveQuery<Estado, Estado>(
     async () => {
       try {
-        const [perfil, dias, sessoes] = await Promise.all([lerPerfil(), lerDias(), lerSessoes()])
-        return { fase: 'pronto', dados: { perfil, dias, sessoes } }
+        const [perfil, dias, sessoes, pesagens, medidas, mesesComFoto] = await Promise.all([lerPerfil(), lerDias(), lerSessoes(), lerPesagens(), lerMedidas(), lerMesesComFoto()])
+        return { fase: 'pronto', dados: { perfil, dias, sessoes, pesagens, medidas, mesesComFoto } }
       } catch {
         return { fase: 'erro' }
       }
@@ -90,7 +98,29 @@ export function useDados() {
     return { fase: 'pronto', dados: { ...lido.dados, perfil: perfilPendente ?? lido.dados.perfil, sessoes } }
   }, [lido, perfilPendente, sessaoPendente])
 
+  /** Gravações da evolução: formulário enviado de uma vez, sem retorno otimista. Devolve se deu certo. */
+  const gravarEvolucao = useCallback(async (acao: () => Promise<unknown>): Promise<boolean> => {
+    setErroAoSalvar(false)
+    try {
+      await acao()
+      return true
+    } catch {
+      setErroAoSalvar(true)
+      return false
+    }
+  }, [])
+
+  const evolucao = useMemo(() => ({
+    salvarPesagem: (p: Pesagem) => gravarEvolucao(() => salvarPesagem(p)),
+    apagarPesagem: (data: string) => gravarEvolucao(() => apagarPesagem(data)),
+    salvarMedida: (m: Medida) => gravarEvolucao(() => salvarMedida(m)),
+    apagarMedida: (data: string) => gravarEvolucao(() => apagarMedida(data)),
+    salvarFoto: (...a: Parameters<typeof salvarFoto>) => gravarEvolucao(() => salvarFoto(...a)),
+    apagarFoto: (mes: number) => gravarEvolucao(() => apagarFoto(mes)),
+  }), [gravarEvolucao])
+
   return {
+    evolucao,
     estado,
     erroAoSalvar,
     tentarDeNovo: useCallback(() => setTentativa((t) => t + 1), []),

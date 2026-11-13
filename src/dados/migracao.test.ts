@@ -21,11 +21,13 @@ function bancoDaEtapa3(): Promise<void> {
   })
 }
 
-it('quem já usava o app na etapa 3 abre a etapa 4 sem perder nada, e a marca manual de treino continua', async () => {
+it('quem já usava o app na etapa 3 abre a etapa 5 sem perder nada, e a marca manual de treino continua', async () => {
   await bancoDaEtapa3()
   const { lerDias, lerPerfil, lerSessoes } = await import('./banco')
   expect((await lerPerfil()).diaUm).toBe('2026-11-09')
   expect((await lerPerfil()).comprados).toEqual(['arroz'])
   expect((await lerDias()).get('2026-11-09')).toEqual({ data: '2026-11-09', feitas: ['pre', 'treino'], copos: 3 })
   expect((await lerSessoes()).size).toBe(0)
+  const { lerPesagens, lerMedidas, lerMesesComFoto } = await import('./banco')
+  expect((await lerPesagens()).size + (await lerMedidas()).size + (await lerMesesComFoto()).length).toBe(0)
 })

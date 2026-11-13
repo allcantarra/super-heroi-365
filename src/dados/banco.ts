@@ -4,6 +4,7 @@ import { normalizarTrocas, type Trocas } from '../dominio/cardapio'
 import { META_COPOS, registroVazio, type RegistroDia } from '../dominio/dia'
 import { normalizarRotina, type IdMissao, type Rotina } from '../dominio/rotina'
 import { dataValida } from '../dominio/tempo'
+import { normalizarFoto, normalizarMedida, normalizarPesagem, type Foto, type Medida, type Pesagem } from '../dominio/evolucao'
 import { normalizarSessao, type Sessao } from '../dominio/treino'
 import { normalizarAparencia, type Aparencia } from '../heroi/aparencia'
 
@@ -33,6 +34,9 @@ class Banco extends Dexie {
   perfil!: Table<Perfil, 'eu'>
   dias!: Table<RegistroDia, string>
   sessoes!: Table<Sessao, string>
+  pesagens!: Table<Pesagem, string>
+  medidas!: Table<Medida, string>
+  fotos!: Table<Foto, number>
 
   constructor() {
     super('super-heroi-365')
@@ -40,6 +44,7 @@ class Banco extends Dexie {
     this.version(1).stores({ perfil: 'id' })
     this.version(2).stores({ perfil: 'id', dias: 'data' })
     this.version(3).stores({ perfil: 'id', dias: 'data', sessoes: 'data' })
+    this.version(4).stores({ perfil: 'id', dias: 'data', sessoes: 'data', pesagens: 'data', medidas: 'data', fotos: 'mes' })
   }
 }
 
@@ -127,6 +132,54 @@ export async function mudarSessao(data: string, nova: Sessao, mudanca: (s: Sessa
 export { registroVazio }
 
 /** Pede ao navegador para não apagar os dados sob pressão de espaço. Devolve false se não for concedido. */
+// ---------------- evolução ----------------
+
+export async function lerPesagens(): Promise<Map<string, Pesagem>> {
+  const lidas = (await banco.pesagens.toArray()).map(normalizarPesagem).filter((p): p is Pesagem => p !== null)
+  return new Map(lidas.map((p) => [p.data, p]))
+}
+
+export async function lerMedidas(): Promise<Map<string, Medida>> {
+  const lidas = (await banco.medidas.toArray()).map(normalizarMedida).filter((m): m is Medida => m !== null)
+  return new Map(lidas.map((m) => [m.data, m]))
+}
+
+/** Só os meses que têm foto, sem ler as imagens: é o que o jogo precisa para o XP. */
+export async function lerMesesComFoto(): Promise<number[]> {
+  return (await banco.fotos.toCollection().primaryKeys()).filter((m): m is number => typeof m === 'number' && Number.isInteger(m) && m >= 1 && m <= 13)
+}
+
+export async function lerFotos(): Promise<Foto[]> {
+  return (await banco.fotos.toArray()).map(normalizarFoto).filter((f): f is Foto => f !== null).sort((a, b) => a.mes - b.mes)
+}
+
+export async function salvarPesagem(p: Pesagem): Promise<void> {
+  const valida = normalizarPesagem(p)
+  if (!valida) throw new Error('Pesagem inválida')
+  await banco.pesagens.put(valida)
+  void pedirArmazenamentoPersistente()
+}
+
+export const apagarPesagem = (data: string) => banco.pesagens.delete(data)
+
+export async function salvarMedida(m: Medida): Promise<void> {
+  const valida = normalizarMedida(m)
+  if (!valida) throw new Error('Medida inválida')
+  await banco.medidas.put(valida)
+  void pedirArmazenamentoPersistente()
+}
+
+export const apagarMedida = (data: string) => banco.medidas.delete(data)
+
+export async function salvarFoto(f: Foto): Promise<void> {
+  const valida = normalizarFoto(f)
+  if (!valida) throw new Error('Foto inválida')
+  await banco.fotos.put(valida)
+  void pedirArmazenamentoPersistente()
+}
+
+export const apagarFoto = (mes: number) => banco.fotos.delete(mes)
+
 export async function pedirArmazenamentoPersistente(): Promise<boolean> {
   try {
     if (!navigator.storage?.persist) return false

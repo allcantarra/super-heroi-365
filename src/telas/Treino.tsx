@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { AQUECIMENTO, EXERCICIOS, type IdExercicio } from '../conteudo/treinos'
 import type { Dados } from '../dados/useDados'
 import { jornada } from '../dominio/dia'
+import { xpDaEvolucao } from '../dominio/evolucao'
 import { progressoDe } from '../dominio/jogo'
 import { dataCurta, numeroDoDia, segundaDaSemana, somarDias } from '../dominio/tempo'
 import {
@@ -50,8 +51,9 @@ export function Treino({ dados, hoje, erroAoSalvar, mudarSessao, irParaHoje }: P
     const feita: Sessao = { data: hoje, treino: treino.id, inicio: 1, fim: 2, series: [{ exercicio: treino.itens[0].exercicio, valor: 1 }] }
     const depois = jornada(diaUm, hoje, perfil.rotina, diasComTreino(dias, new Map(sessoes).set(hoje, feita), hoje))
     const ganho = depois.xpTotal - antes.xpTotal
-    const nivel = progressoDe(depois.xpTotal).nivel
-    if (ganho > 0) setGolpe({ id: instante(), palavra: nivel > progressoDe(antes.xpTotal).nivel ? `NÍVEL ${nivel}!` : 'BOOM!', linha: `+${ganho} XP` })
+    const xpExtra = xpDaEvolucao(diaUm, hoje, dados.pesagens.keys(), dados.mesesComFoto)
+    const nivel = progressoDe(depois.xpTotal + xpExtra).nivel
+    if (ganho > 0) setGolpe({ id: instante(), palavra: nivel > progressoDe(antes.xpTotal + xpExtra).nivel ? `NÍVEL ${nivel}!` : 'BOOM!', linha: `+${ganho} XP` })
     gravar((s) => concluir(s, instante()))
     setExecutando(false)
     window.scrollTo(0, 0)
