@@ -48,6 +48,16 @@ export const RECEITAS = {
     ingredientes: ['150 g de peito de frango cru em cubos', '1 colher de sopa cheia de requeijão', '3 colheres de sopa de molho de tomate liso', 'Sal, alho em pó e páprica'],
     passos: ['Tempere e grelhe o frango por 8 minutos.', 'Baixe o fogo, junte o molho e o requeijão e mexa por 2 minutos.', 'Sirva sobre o macarrão.'],
   },
+  estrogonofe: {
+    nome: 'Estrogonofe de frango', tipo: 'Marmita da semana', tempo: '25 min', rende: '4 porções',
+    ingredientes: ['700 g de peito de frango cru em cubos', '1 caixinha de creme de leite (200 g)', '4 colheres de sopa de molho de tomate liso', '1 colher de sopa de azeite', 'Sal, alho em pó e páprica'],
+    passos: ['Tempere o frango e doure no azeite, em duas levas.', 'Junte o molho de tomate e deixe 3 minutos.', 'Desligue o fogo e misture o creme de leite.', 'Guarde separado do arroz. Dura 3 dias na geladeira.'],
+  },
+  lasanha: {
+    nome: 'Lasanha de carne moída', tipo: 'Marmita da semana', tempo: '50 min', rende: '4 porções',
+    ingredientes: ['300 g de massa de lasanha direto ao forno', '550 g de carne moída crua', '340 g de molho de tomate liso (1 sachê)', '8 fatias de mussarela', '8 fatias de presunto', '1 copo de água', 'Sal e alho em pó'],
+    passos: ['Doure a carne, junte o molho e a água e deixe 5 minutos: o molho precisa ficar ralo para cozinhar a massa.', 'Em uma travessa: molho, massa, presunto, queijo. Repita e termine com molho e queijo.', 'Forno a 200 graus, 30 minutos coberta com papel-alumínio e 10 sem ele.', 'Espere esfriar para cortar. Dura 4 dias na geladeira e congela bem.'],
+  },
   batataAssada: {
     nome: 'Batata assada crocante', tipo: 'Prato', tempo: '25 min', rende: '2 porções',
     ingredientes: ['350 g de batata em gomos', '1 colher de sopa de azeite', 'Sal e páprica'],

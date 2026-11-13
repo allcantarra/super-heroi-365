@@ -27,12 +27,14 @@ const BASE: Base[] = [
   { id: 'pre2', nome: 'Pão com mel', categoria: 'pre', itens: [['paoForma', 2], ['mel', 10], ['beterraba', 5], ['guarana', 2]], preparo: 'Beterraba e guaraná em pó misturados em meio copo de água.' },
   { id: 'pre3', nome: 'Suco de laranja com aveia', categoria: 'pre', itens: [['sucoLaranja', 250], ['aveia', 20], ['beterraba', 5], ['guarana', 2]], preparo: 'Bata tudo junto e beba.' },
   { id: 'pre4', nome: 'Vitamina rápida de Mucilon', categoria: 'pre', itens: [['leite', 150], ['mucilon', 20], ['beterraba', 5], ['guarana', 2]], preparo: 'Bata tudo junto e beba.' },
+  { id: 'pre5', nome: 'Banana amassada com aveia e mel', categoria: 'pre', itens: [['banana', 1], ['aveia', 15], ['mel', 10], ['beterraba', 5], ['guarana', 2]], preparo: 'Beterraba e guaraná em pó misturados em meio copo de água.' },
 
   { id: 'cafe1', nome: 'Ovos mexidos, pão e shake de whey', categoria: 'cafe', itens: [['ovo', 2], ['paoFrances', 1], ['leite', 200], ['whey', 30], ['creatina', 5]], preparo: 'Whey e creatina batidos no leite.' },
   { id: 'cafe2', nome: 'Vitamina de whey, banana e aveia', categoria: 'cafe', itens: [['leite', 300], ['banana', 1], ['aveia', 30], ['whey', 30], ['maca', 5], ['creatina', 5]], preparo: 'Bata tudo no liquidificador.', receita: 'shakePosTreino' },
   { id: 'cafe3', nome: 'Misto quente e shake de whey', categoria: 'cafe', itens: [['paoForma', 2], ['mussarela', 2], ['presunto', 2], ['leite', 200], ['whey', 30], ['creatina', 5]], preparo: 'Whey e creatina batidos no leite.' },
   { id: 'cafe4', nome: 'Panqueca de aveia e banana com whey', categoria: 'cafe', itens: [['ovo', 2], ['banana', 1], ['aveia', 30], ['leite', 150], ['whey', 30], ['creatina', 5]], preparo: 'Whey e creatina batidos no leite, para beber junto.', receita: 'panquecaAveia' },
   { id: 'cafe5', nome: 'Pão de queijo e shake de whey', categoria: 'cafe', itens: [['paoQueijo', 2], ['leite', 200], ['achocolatado', 10], ['whey', 30], ['creatina', 5]], preparo: 'Whey, creatina e achocolatado batidos no leite.' },
+  { id: 'cafe6', nome: 'Pão com ovo e queijo e shake de whey', categoria: 'cafe', itens: [['paoForma', 2], ['ovo', 1], ['mussarela', 1], ['leite', 200], ['whey', 30], ['creatina', 5]], preparo: 'Whey e creatina batidos no leite.' },
 
   { id: 'lanche1', nome: 'Sanduíche de presunto e queijo', categoria: 'lanche', itens: [['paoForma', 2], ['presunto', 2], ['mussarela', 1], ['requeijao', 10]], preparo: 'Monte em casa e leve embrulhado.' },
   { id: 'lanche2', nome: 'Sanduíche de pasta de amendoim', categoria: 'lanche', itens: [['paoForma', 2], ['pastaAmendoim', 15]], preparo: 'Monte em casa e leve embrulhado.' },
@@ -43,6 +45,8 @@ const BASE: Base[] = [
   { id: 'lanche7', nome: 'Biscoito com queijo minas', categoria: 'lanche', itens: [['creamCracker', 30], ['minas', 40]], preparo: 'Queijo em fatias num pote.' },
   { id: 'lanche8', nome: 'Sanduíche de frango desfiado', categoria: 'lanche', itens: [['paoFrances', 1], ['frango', 50], ['requeijao', 10]], preparo: 'Use o frango da marmita, desfiado com requeijão.' },
   { id: 'lanche9', nome: 'Vitamina de Mucilon na garrafa', categoria: 'lanche', itens: [['leite', 250], ['mucilon', 25]], preparo: 'Bata de manhã e leve em garrafa térmica.' },
+  { id: 'lanche10', nome: 'Leite com achocolatado e biscoito', categoria: 'lanche', itens: [['leite', 200], ['achocolatado', 15], ['creamCracker', 20]], preparo: 'Leite já batido com o achocolatado, na garrafa térmica.' },
+  { id: 'lanche11', nome: 'Sanduíche de ovo', categoria: 'lanche', itens: [['paoForma', 2], ['ovo', 1], ['requeijao', 10]], preparo: 'Ovo cozido amassado com o requeijão.' },
 
   { id: 'almoco1', nome: 'Arroz, bife e batata', categoria: 'almoco', itens: [['arroz', 150], ['patinho', 120], ['batata', 150], ['azeite', 5]], preparo: 'Batata assada na airfryer, com o azeite.', receita: 'batataAssada' },
   { id: 'almoco2', nome: 'Arroz com carne moída e ovo', categoria: 'almoco', itens: [['arroz', 160], ['moida', 120], ['ovo', 1]], preparo: 'Ovo cozido, para aguentar a marmita.', receita: 'carneMoida' },
@@ -51,6 +55,10 @@ const BASE: Base[] = [
   { id: 'almoco5', nome: 'Sobrecoxa assada, arroz e batata', categoria: 'almoco', itens: [['sobrecoxa', 120], ['arroz', 140], ['batata', 120]], preparo: 'Sobrecoxa e batata assadas juntas.' },
   { id: 'almoco6', nome: 'Escondidinho de carne moída', categoria: 'almoco', itens: [['pure', 250], ['moida', 120], ['mussarela', 2]], preparo: 'Camada de carne, purê por cima e queijo.', receita: 'pureBatata' },
   { id: 'almoco7', nome: 'Macarrão com frango e requeijão', categoria: 'almoco', itens: [['macarrao', 200], ['frango', 110], ['requeijao', 20], ['molhoTomate', 50]], preparo: 'Misture o requeijão no molho quente.', receita: 'frangoCremoso' },
+  { id: 'almoco8', nome: 'Estrogonofe de frango com arroz', categoria: 'almoco', itens: [['frango', 120], ['cremeLeite', 30], ['molhoTomate', 30], ['arroz', 170]], preparo: 'Creme de leite por último, com o fogo desligado.', receita: 'estrogonofe' },
+  { id: 'almoco9', nome: 'Sobrecoxa, arroz e purê', categoria: 'almoco', itens: [['sobrecoxa', 120], ['arroz', 130], ['pure', 130]], preparo: 'Sobrecoxa assada sem pele.', receita: 'pureBatata' },
+  { id: 'almoco10', nome: 'Arroz de forno com frango e queijo', categoria: 'almoco', itens: [['arroz', 180], ['frango', 110], ['mussarela', 2], ['requeijao', 15]], preparo: 'Arroz misturado ao frango desfiado e requeijão, queijo por cima.' },
+  { id: 'almoco11', nome: 'Lasanha de carne moída', categoria: 'almoco', itens: [['macarrao', 180], ['moida', 100], ['molhoTomate', 80], ['mussarela', 2], ['presunto', 2]], preparo: 'Camadas de massa, molho com carne, presunto e queijo. Assa no domingo e corta em porções.', receita: 'lasanha' },
 
   { id: 'jantar1', nome: 'Hambúrguer caseiro no pão', categoria: 'jantar', itens: [['moida', 110], ['paoFrances', 1], ['mussarela', 1]], preparo: 'Um disco de carne moída, 4 minutos de cada lado.', receita: 'hamburguer' },
   { id: 'jantar2', nome: 'Bife com batata frita e arroz', categoria: 'jantar', itens: [['patinho', 100], ['batataFrita', 90], ['arroz', 80]], preparo: 'Na Fase 4, troque a batata frita pela assada.' },
@@ -59,11 +67,15 @@ const BASE: Base[] = [
   { id: 'jantar5', nome: 'Arroz, frango e ovo', categoria: 'jantar', itens: [['arroz', 150], ['frango', 110], ['ovo', 1]], preparo: 'Ovo frito por cima.' },
   { id: 'jantar6', nome: 'Purê com carne moída', categoria: 'jantar', itens: [['pure', 200], ['moida', 110]], preparo: 'Sobra da marmita serve.', receita: 'pureBatata' },
   { id: 'jantar7', nome: 'Churrasco com arroz', categoria: 'jantar', itens: [['picanha', 110], ['arroz', 130]], preparo: 'Picanha na frigideira bem quente.' },
+  { id: 'jantar8', nome: 'Sanduíche quente de ovo e queijo', categoria: 'jantar', itens: [['paoFrances', 2], ['ovo', 2], ['mussarela', 1], ['leite', 100]], preparo: 'Pronto em 8 minutos, na frigideira. Leite para acompanhar.' },
+  { id: 'jantar9', nome: 'Macarrão na manteiga com carne moída', categoria: 'jantar', itens: [['macarrao', 180], ['moida', 100], ['manteiga', 5]], preparo: 'A carne moída da semana vai por cima.', receita: 'carneMoida' },
+  { id: 'jantar10', nome: 'Batata recheada com frango e requeijão', categoria: 'jantar', itens: [['batata', 250], ['frango', 100], ['requeijao', 25], ['mussarela', 1]], preparo: 'Batata no micro-ondas por 8 minutos, aberta e recheada.' },
 
   { id: 'ceia1', nome: 'Vitamina de Mucilon com banana', categoria: 'ceia', itens: [['leite', 250], ['mucilon', 20], ['banana', 1]], preparo: 'Bata e beba devagar.', receita: 'mucilonNoturno' },
   { id: 'ceia2', nome: 'Vitamina de Farinha Láctea', categoria: 'ceia', itens: [['leite', 250], ['farinhaLactea', 25]], preparo: 'Bata e beba devagar.', receita: 'vitaminaFarinhaLactea' },
   { id: 'ceia3', nome: 'Iogurte batido com aveia e mel', categoria: 'ceia', itens: [['iogurte', 200], ['leite', 100], ['aveia', 20], ['mel', 10]], preparo: 'Bata até ficar cremoso.' },
   { id: 'ceia4', nome: 'Leite com achocolatado e pasta de amendoim', categoria: 'ceia', itens: [['leite', 250], ['achocolatado', 15], ['pastaAmendoim', 10]], preparo: 'Bata para dissolver a pasta.' },
+  { id: 'ceia5', nome: 'Vitamina de banana com aveia', categoria: 'ceia', itens: [['leite', 250], ['banana', 1], ['aveia', 15]], preparo: 'Bata e beba devagar.' },
 ]
 
 const kcalDe = (id: IdAlimento, q: number) => {

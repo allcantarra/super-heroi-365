@@ -332,3 +332,161 @@ details[open] > summary > svg {
 .refeicao + .painel {
   margin-top: 34px;
 }
+
+/* ---------- calendário dos 365 dias ---------- */
+.abas.quatro {
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.abas.quatro button {
+  font-size: 16px;
+}
+
+.seletor-data {
+  display: grid;
+  grid-template-columns: 52px 1fr 52px;
+  gap: 8px;
+  align-items: end;
+  margin-bottom: 18px;
+}
+
+.seletor-data > button {
+  height: 52px;
+  display: grid;
+  place-items: center;
+  background: var(--fundo);
+  border: 3px solid var(--papel);
+}
+
+.seletor-data > button:disabled {
+  opacity: 0.35;
+}
+
+.seletor-data > button svg {
+  width: 26px;
+  height: 26px;
+}
+
+.seletor-data label {
+  min-width: 0;
+  font-weight: 700;
+}
+
+.seletor-data label span {
+  display: block;
+  margin-bottom: 4px;
+  font: 400 17px/1.1 var(--titulo);
+  color: var(--amarelo);
+}
+
+.seletor-data input {
+  width: 100%;
+  height: 52px;
+  padding: 0 8px;
+  background: var(--fundo);
+  color: var(--papel);
+  border: 3px solid var(--papel);
+  border-radius: 0;
+  font: 700 18px var(--texto);
+  color-scheme: dark;
+}
+
+.seletor-data .voltar-hoje {
+  grid-column: 1 / -1;
+  height: 44px;
+  background: var(--amarelo);
+  color: var(--tinta);
+  border: 0;
+  font: 400 16px/1 var(--titulo);
+}
+
+.resumo-fase summary small {
+  display: block;
+  font-size: 14px;
+  color: var(--apagado);
+}
+
+.marmita {
+  margin-bottom: 14px;
+  padding: 12px;
+  background: var(--fundo);
+  border: 3px solid var(--azul);
+}
+
+.marmita header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 4px;
+  color: var(--apagado);
+  font-weight: 700;
+}
+
+.marmita header b {
+  font: 400 17px var(--titulo);
+  color: var(--amarelo);
+}
+
+.marmita h3 {
+  font: 400 23px/1.1 var(--titulo);
+  margin-bottom: 8px;
+}
+
+.marmita .trocar {
+  margin-top: 8px;
+  font-size: 15px;
+  color: var(--apagado);
+}
+
+.marmita .botao {
+  width: 100%;
+  margin-top: 10px;
+  min-height: 48px;
+}
+
+.linha-dia {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  min-height: 58px;
+  padding: 8px 0;
+  text-align: left;
+  border-bottom: 2px dashed #ffffff30;
+}
+
+.linha-dia:disabled {
+  opacity: 0.4;
+}
+
+.linha-dia .quando {
+  flex: none;
+  width: 54px;
+  font: 400 19px/1 var(--titulo);
+  color: var(--amarelo);
+}
+
+.linha-dia .quando small {
+  display: block;
+  margin-top: 3px;
+  font: 600 13px var(--texto);
+  color: var(--apagado);
+}
+
+.linha-dia .pratos {
+  font-size: 16px;
+  line-height: 1.15;
+  color: var(--apagado);
+}
+
+.linha-dia .pratos b {
+  display: block;
+  font-size: 18px;
+  color: var(--papel);
+}
+
+.linha-dia.hoje .pratos b {
+  color: var(--amarelo);
+}

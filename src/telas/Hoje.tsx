@@ -3,11 +3,11 @@ import { useRef, useState, type CSSProperties } from 'react'
 import { alimento, textoQuantidade } from '../conteudo/alimentos'
 import type { IdRefeicao } from '../conteudo/cardapio'
 import type { Dados } from '../dados/useDados'
-import { cardapioDoDia, macrosDoPrato, prato } from '../dominio/cardapio'
+import { cardapioDaData, macrosDoPrato, prato } from '../dominio/cardapio'
 import { META_COPOS, ML_POR_COPO, XP_COPO, alternarMissao, cafeinaLiberada, jornada, missaoDeAgora, mudarCopos, registroVazio, resumoDoDia, type RegistroDia } from '../dominio/dia'
 import { TITULOS, estagioDoNivel, progressoDe } from '../dominio/jogo'
 import { missoesDoDia, type Missao } from '../dominio/rotina'
-import { FASES, diaDaSemana, faseDoDia, numeroDoDia } from '../dominio/tempo'
+import { FASES, faseDoDia, numeroDoDia } from '../dominio/tempo'
 import { Avatar } from '../heroi/Avatar'
 import { Pow, type Golpe } from '../ui/Pow'
 import { tocarAcerto } from '../ui/som'
@@ -40,7 +40,7 @@ export function Hoje({ dados, hoje, agora, erroAoSalvar, mudarDia, abrirAjustes 
   const fase = faseDoDia(numero)
   const proxima = missaoDeAgora(registro, missoes)
   const cafeina = cafeinaLiberada(agora)
-  const cardapio = cardapioDoDia(diaDaSemana(hoje), perfil.trocas)
+  const cardapio = cardapioDaData(diaUm, hoje, perfil.trocas)
   /** O que comer na missão: prato do cardápio do dia; o treino não tem prato. */
   const pratoDa = (m: Missao) => (m.tipo === 'refeicao' ? prato(cardapio[m.id as IdRefeicao]) : null)
   const pratoAgora = proxima ? pratoDa(proxima) : null

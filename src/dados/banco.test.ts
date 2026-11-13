@@ -5,7 +5,7 @@ import { APARENCIA_PADRAO } from '../heroi/aparencia'
 import { banco, lerDias, lerPerfil, mudarDia, normalizarDia, normalizarPerfil, salvarPerfil, type Perfil } from './banco'
 
 const PESSOA = { pesoInicial: 60, metaPeso: 70, altura: 175, idade: 30 }
-const PERFIL: Perfil = { id: 'eu', aparencia: { pele: 'Morena', cabelo: 'Preto', uniforme: 'Grafite', corte: 'Curto' }, pessoa: PESSOA, rotina: ROTINA_PADRAO, diaUm: '2026-11-12', som: false, trocas: { '2:jantar': 'jantar7' }, comprados: ['arroz'] }
+const PERFIL: Perfil = { id: 'eu', aparencia: { pele: 'Morena', cabelo: 'Preto', uniforme: 'Grafite', corte: 'Curto' }, pessoa: PESSOA, rotina: ROTINA_PADRAO, diaUm: '2026-11-12', som: false, trocas: { '2026-11-16:jantar': 'jantar7', 's1:A': 'almoco2' }, comprados: ['arroz'] }
 
 beforeEach(async () => {
   await banco.perfil.clear()
@@ -36,8 +36,8 @@ describe('perfil no aparelho', () => {
   })
 
   it('descarta troca inválida e item comprado desconhecido ou repetido', () => {
-    const p = normalizarPerfil({ ...PERFIL, trocas: { '2:jantar': 'almoco1', '1:ceia': 'ceia2' }, comprados: ['arroz', 'arroz', 'x', 3] })
-    expect(p.trocas).toEqual({ '1:ceia': 'ceia2' })
+    const p = normalizarPerfil({ ...PERFIL, trocas: { '2026-11-16:jantar': 'almoco1', '2026-11-16:ceia': 'ceia2', '1:ceia': 'ceia2' }, comprados: ['arroz', 'arroz', 'x', 3] })
+    expect(p.trocas).toEqual({ '2026-11-16:ceia': 'ceia2' })
     expect(p.comprados).toEqual(['arroz'])
   })
 

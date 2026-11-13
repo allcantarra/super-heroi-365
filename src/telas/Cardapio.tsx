@@ -1,13 +1,16 @@
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useState } from 'react'
 import { alimento, textoQuantidade } from '../conteudo/alimentos'
-import { DIAS_DA_SEMANA, FORMATO, METAS, MODELOS, REFEICAO_LIVRE, REFEICOES, type IdRefeicao } from '../conteudo/cardapio'
+import { DIAS_DA_SEMANA, FORMATO, METAS, REFEICAO_LIVRE, REFEICOES, type IdRefeicao } from '../conteudo/cardapio'
+import type { IdPrato } from '../conteudo/pratos'
 import { RECEITAS, type IdReceita, type Receita } from '../conteudo/receitas'
 import type { Perfil } from '../dados/banco'
-import { alternativas, chaveDaTroca, listaDeCompras, macrosDoDia, macrosDoPrato, prato, pratoDoDia } from '../dominio/cardapio'
+import {
+  alternativas, chaveDaTroca, datasDaSemana, fasePara, listaDeCompras, macrosDaData, macrosDoPrato, marmitasDaSemana, prato, pratoDaData,
+  pratoOriginal, segundaDe, semanaDe,
+} from '../dominio/cardapio'
 import { missoesDoDia } from '../dominio/rotina'
-import { FASES, diaDaSemana, faseDoDia, numeroDoDia, somarDias, type Fase } from '../dominio/tempo'
-import type { IdPrato } from '../conteudo/pratos'
+import { FASES, diaDaSemana, numeroDoDia, somarDias } from '../dominio/tempo'
 
 interface Props {
   perfil: Perfil
@@ -17,87 +20,100 @@ interface Props {
   salvarPerfil: (p: Perfil) => void
 }
 
-type Visao = 'dia' | 'receitas' | 'compras'
-const VISOES: { id: Visao; nome: string }[] = [{ id: 'dia', nome: 'Dia' }, { id: 'receitas', nome: 'Receitas' }, { id: 'compras', nome: 'Compras' }]
-const NUMEROS_DE_FASE: Fase[] = [1, 2, 3, 4]
+type Visao = 'dia' | 'semana' | 'receitas' | 'compras'
+const VISOES: { id: Visao; nome: string }[] = [{ id: 'dia', nome: 'Dia' }, { id: 'semana', nome: 'Semana' }, { id: 'receitas', nome: 'Receitas' }, { id: 'compras', nome: 'Compras' }]
 const inteiro = (n: number) => Math.round(n)
+const curta = (data: string) => `${data.slice(8)}/${data.slice(5, 7)}`
+const diaCurto = (data: string) => DIAS_DA_SEMANA[diaDaSemana(data)].slice(0, 3).toLowerCase()
 
 export function Cardapio({ perfil, feitasHoje, hoje, salvarPerfil }: Props) {
-  const faseAtual = faseDoDia(numeroDoDia(perfil.diaUm!, hoje))
+  const diaUm = perfil.diaUm!
   const [visao, setVisao] = useState<Visao>('dia')
-  const [fase, setFase] = useState<Fase>(faseAtual)
-  const [dia, setDia] = useState(diaDaSemana(hoje))
+  const [data, setData] = useState(hoje)
   const [receitaAberta, setReceitaAberta] = useState<IdReceita | null>(null)
-  const [semanas, setSemanas] = useState(1)
+  const [semanasAFrente, setSemanasAFrente] = useState(0)
 
   const abrirReceita = (id: IdReceita) => {
     setReceitaAberta(id)
     setVisao('receitas')
     window.scrollTo(0, 0)
   }
-
-  return (
-    <>
-      <div className="abas" role="tablist" aria-label="Partes do cardápio">
-        {VISOES.map((v) => (
-          <button key={v.id} role="tab" aria-selected={visao === v.id} onClick={() => setVisao(v.id)}>{v.nome}</button>
-        ))}
-      </div>
-      {visao === 'dia' && <Dia perfil={perfil} feitasHoje={feitasHoje} hoje={hoje} fase={fase} faseAtual={faseAtual} dia={dia} setFase={setFase} setDia={setDia} salvarPerfil={salvarPerfil} abrirReceita={abrirReceita} />}
-      {visao === 'receitas' && <Receitas aberta={receitaAberta} />}
-      {visao === 'compras' && <Compras perfil={perfil} fase={faseAtual} semanas={semanas} setSemanas={setSemanas} salvarPerfil={salvarPerfil} />}
-    </>
-  )
-}
-
-function Dia({ perfil, feitasHoje, hoje, fase, faseAtual, dia, setFase, setDia, salvarPerfil, abrirReceita }: {
-  perfil: Perfil
-  feitasHoje: readonly string[]
-  hoje: string
-  fase: Fase
-  faseAtual: Fase
-  dia: number
-  setFase: (f: Fase) => void
-  setDia: (d: number) => void
-  salvarPerfil: (p: Perfil) => void
-  abrirReceita: (id: IdReceita) => void
-}) {
-  const meta = METAS[fase]
-  const total = macrosDoDia(dia, fase, perfil.trocas)
-  // uma data com o mesmo dia da semana, só para montar os horários (domingo não tem treino)
-  const dataDoDia = somarDias(hoje, (dia - diaDaSemana(hoje) + 7) % 7)
-  const horas = Object.fromEntries(missoesDoDia(perfil.rotina, dataDoDia).map((m) => [m.id, m]))
-
-  // no dia de hoje, a próxima refeição pendente abre sozinha e ganha destaque
-  const refeicaoDeAgora = dia === diaDaSemana(hoje) ? REFEICOES.find((r) => !feitasHoje.includes(r)) : undefined
-
-  const trocar = (refeicao: IdRefeicao, id: IdPrato) => {
-    const trocas = { ...perfil.trocas }
-    if (id === MODELOS[dia][refeicao]) delete trocas[chaveDaTroca(dia, refeicao)]
-    else trocas[chaveDaTroca(dia, refeicao)] = id
+  const trocar = (dataDaTroca: string, refeicao: IdRefeicao, id: IdPrato) => {
+    const trocas = { ...perfil.trocas }, chave = chaveDaTroca(diaUm, dataDaTroca, refeicao)
+    if (id === pratoOriginal(diaUm, dataDaTroca, refeicao)) delete trocas[chave]
+    else trocas[chave] = id
     salvarPerfil({ ...perfil, trocas })
   }
 
   return (
     <>
-      <div className="campos" style={{ marginBottom: 22 }}>
-        <label className="campo largo">
-          Fase
-          <select aria-label="Fase" value={fase} onChange={(e) => setFase(Number(e.target.value) as Fase)}>
-            {NUMEROS_DE_FASE.map((f) => <option key={f} value={f}>{f}. {FASES[f].nome}{f === faseAtual ? ' (atual)' : ''}</option>)}
-          </select>
-        </label>
-        <label className="campo largo">
-          Dia
-          <select aria-label="Dia da semana" value={dia} onChange={(e) => setDia(Number(e.target.value))}>
-            {[1, 2, 3, 4, 5, 6, 0].map((d) => <option key={d} value={d}>{DIAS_DA_SEMANA[d]}{d === diaDaSemana(hoje) ? ' (hoje)' : ''}</option>)}
-          </select>
-        </label>
+      <div className="abas quatro" role="tablist" aria-label="Partes do cardápio">
+        {VISOES.map((v) => (
+          <button key={v.id} role="tab" aria-selected={visao === v.id} onClick={() => setVisao(v.id)}>{v.nome}</button>
+        ))}
       </div>
+      {visao === 'dia' && <Dia perfil={perfil} feitasHoje={feitasHoje} hoje={hoje} data={data} setData={setData} trocar={trocar} abrirReceita={abrirReceita} />}
+      {visao === 'semana' && <Semana perfil={perfil} hoje={hoje} data={data} setData={setData} trocar={trocar} abrirReceita={abrirReceita} verDia={(d) => { setData(d); setVisao('dia'); window.scrollTo(0, 0) }} />}
+      {visao === 'receitas' && <Receitas aberta={receitaAberta} />}
+      {visao === 'compras' && <Compras perfil={perfil} hoje={hoje} semanasAFrente={semanasAFrente} setSemanasAFrente={setSemanasAFrente} salvarPerfil={salvarPerfil} />}
+    </>
+  )
+}
+
+/** Navegação pelo calendário do projeto: dia anterior, data, próximo dia. Não deixa ir para antes do dia 1. */
+function SeletorDeData({ diaUm, hoje, data, setData, passo, rotulo }: { diaUm: string; hoje: string; data: string; setData: (d: string) => void; passo: number; rotulo: string }) {
+  const ir = (d: string) => setData(d < diaUm ? diaUm : d)
+  return (
+    <div className="seletor-data">
+      <button aria-label={passo === 1 ? 'Dia anterior' : 'Semana anterior'} disabled={data <= diaUm} onClick={() => ir(somarDias(data, -passo))}><ChevronLeft aria-hidden /></button>
+      <label>
+        <span>{rotulo}</span>
+        <input type="date" aria-label="Data" value={data} min={diaUm} onChange={(e) => e.target.value && ir(e.target.value)} />
+      </label>
+      <button aria-label={passo === 1 ? 'Próximo dia' : 'Próxima semana'} onClick={() => ir(somarDias(data, passo))}><ChevronRight aria-hidden /></button>
+      {data !== hoje && <button className="voltar-hoje" onClick={() => setData(hoje)}>Hoje</button>}
+    </div>
+  )
+}
+
+interface PropsDeVisao {
+  perfil: Perfil
+  hoje: string
+  data: string
+  setData: (d: string) => void
+  trocar: (data: string, refeicao: IdRefeicao, id: IdPrato) => void
+  abrirReceita: (id: IdReceita) => void
+}
+
+function ListaDeTroca({ rotulo, refeicao, atual, original, aoTrocar }: { rotulo: string; refeicao: IdRefeicao; atual: IdPrato; original: IdPrato; aoTrocar: (id: IdPrato) => void }) {
+  return (
+    <label className="campo trocar">
+      Trocar por
+      <select aria-label={rotulo} value={atual} onChange={(e) => aoTrocar(e.target.value as IdPrato)}>
+        <option value={atual}>{prato(atual).nome}</option>
+        {alternativas(refeicao, atual).map((id) => (
+          <option key={id} value={id}>{prato(id).nome}{id === original ? ' (original)' : ''}</option>
+        ))}
+      </select>
+    </label>
+  )
+}
+
+function Dia({ perfil, feitasHoje, hoje, data, setData, trocar, abrirReceita }: PropsDeVisao & { feitasHoje: readonly string[] }) {
+  const diaUm = perfil.diaUm!
+  const numero = numeroDoDia(diaUm, data), fase = fasePara(diaUm, data), meta = METAS[fase]
+  const total = macrosDaData(diaUm, data, perfil.trocas)
+  const horas = Object.fromEntries(missoesDoDia(perfil.rotina, data).map((m) => [m.id, m]))
+  // no dia de hoje, a próxima refeição pendente abre sozinha e ganha destaque
+  const refeicaoDeAgora = data === hoje ? REFEICOES.find((r) => !feitasHoje.includes(r)) : undefined
+
+  return (
+    <>
+      <SeletorDeData diaUm={diaUm} hoje={hoje} data={data} setData={setData} passo={1} rotulo={`Dia ${numero} de 365, ${DIAS_DA_SEMANA[diaDaSemana(data)].toLowerCase()}`} />
 
       <details className="resumo-fase">
         <summary aria-label="Metas da fase">
-          <span><b>{inteiro(total.kcal)} kcal</b> no dia, {inteiro(total.p)} g de proteína</span>
+          <span><b>{inteiro(total.kcal)} kcal</b> no dia, {inteiro(total.p)} g de proteína<small>Fase {fase}: {FASES[fase].nome}</small></span>
           <ChevronDown aria-hidden />
         </summary>
         <p>{meta.foco}</p>
@@ -111,11 +127,10 @@ function Dia({ perfil, feitasHoje, hoje, fase, faseAtual, dia, setFase, setDia, 
       </details>
 
       {REFEICOES.map((refeicao) => {
-        const id = pratoDoDia(dia, refeicao, perfil.trocas), p = prato(id), m = macrosDoPrato(id, fase), missao = horas[refeicao]
-        const original = MODELOS[dia][refeicao]
+        const id = pratoDaData(diaUm, data, refeicao, perfil.trocas), p = prato(id), m = macrosDoPrato(id, fase), missao = horas[refeicao]
         const agora = refeicao === refeicaoDeAgora
         return (
-          <details key={`${dia}-${refeicao}`} className={`refeicao ${agora ? 'agora' : ''}`} open={agora}>
+          <details key={`${data}-${refeicao}`} className={`refeicao ${agora ? 'agora' : ''}`} open={agora}>
             <summary>
               <span className="hora">{missao.hora}</span>
               <span className="titulo">
@@ -131,16 +146,9 @@ function Dia({ perfil, feitasHoje, hoje, fase, faseAtual, dia, setFase, setDia, 
               ))}
             </ul>
             <p className="resumo">{inteiro(m.kcal)} kcal, {inteiro(m.p)} g de proteína. {p.preparo}</p>
-            <label className="campo trocar">
-              Trocar por
-              <select aria-label={`Trocar ${missao.nome}`} value={id} onChange={(e) => trocar(refeicao, e.target.value as IdPrato)}>
-                <option value={id}>{p.nome}</option>
-                {alternativas(refeicao, id, fase).map((alt) => (
-                  <option key={alt.id} value={alt.id}>{prato(alt.id).nome}{alt.id === original ? ' (original)' : ''}</option>
-                ))}
-              </select>
-            </label>
-            {'receita' in p && p.receita && <button className="botao fantasma" onClick={() => abrirReceita(p.receita as IdReceita)}>Ver receita</button>}
+            {refeicao === 'almoco' && <p className="resumo">Marmita da semana: trocar aqui troca todos os dias em que ela aparece.</p>}
+            <ListaDeTroca rotulo={`Trocar ${missao.nome}`} refeicao={refeicao} atual={id} original={pratoOriginal(diaUm, data, refeicao)} aoTrocar={(novo) => trocar(data, refeicao, novo)} />
+            {p.receita && <button className="botao fantasma" onClick={() => abrirReceita(p.receita as IdReceita)}>Ver receita</button>}
           </details>
         )
       })}
@@ -150,6 +158,61 @@ function Dia({ perfil, feitasHoje, hoje, fase, faseAtual, dia, setFase, setDia, 
         <ul className="dicas">{REFEICAO_LIVRE.regras.map((r) => <li key={r}>{r}</li>)}</ul>
       </section>
       <p className="nota">Calorias e macros são estimativas pela tabela TACO, com margem de cerca de 10%. Nenhum prato leva verdura, legume em pedaço, peixe, fruto do mar ou feijão.</p>
+    </>
+  )
+}
+
+/** Preparo de domingo: as três marmitas da semana, com porções e total a cozinhar. */
+function Semana({ perfil, hoje, data, setData, trocar, abrirReceita, verDia }: PropsDeVisao & { verDia: (data: string) => void }) {
+  const diaUm = perfil.diaUm!
+  const segunda = segundaDe(data), dias = datasDaSemana(segunda)
+  const marmitas = marmitasDaSemana(diaUm, segunda, perfil.trocas)
+
+  return (
+    <>
+      <SeletorDeData diaUm={diaUm} hoje={hoje} data={data} setData={setData} passo={7} rotulo={`Semana ${semanaDe(diaUm, data) + 1}, de ${curta(segunda)} a ${curta(dias[6])}`} />
+
+      <h2 className="secao">MARMITAS DA SEMANA</h2>
+      <p className="nota" style={{ marginTop: 0 }}>Três pratos, cozidos de uma vez no domingo. Guarde na geladeira o que for comer até quarta e congele o resto.</p>
+      {marmitas.map((m) => {
+        const p = prato(m.prato)
+        return (
+          <article key={m.papel} className="marmita">
+            <header>
+              <b>{m.datas.length} porções</b>
+              <span>{m.datas.map(diaCurto).join(', ')}</span>
+            </header>
+            <h3>{p.nome}</h3>
+            <ul className="itens">
+              {p.itens.map((item) => {
+                const totalDaSemana = m.datas.reduce((s, d) => s + item.q[fasePara(diaUm, d) - 1], 0)
+                return <li key={item.a}><span>{textoQuantidade(item.a, totalDaSemana)}</span>{alimento(item.a).nome}, no total</li>
+              })}
+            </ul>
+            <ListaDeTroca rotulo={`Trocar marmita ${m.papel}`} refeicao="almoco" atual={m.prato} original={pratoOriginal(diaUm, m.datas[0], 'almoco')} aoTrocar={(novo) => trocar(m.datas[0], 'almoco', novo)} />
+            {p.receita && <button className="botao fantasma" onClick={() => abrirReceita(p.receita as IdReceita)}>Ver receita</button>}
+          </article>
+        )
+      })}
+
+      <h2 className="secao" style={{ marginTop: 30 }}>OS 7 DIAS</h2>
+      {dias.map((d) => {
+        const antes = d < diaUm
+        return (
+          <button key={d} className={`linha-dia ${d === hoje ? 'hoje' : ''}`} disabled={antes} onClick={() => verDia(d)} aria-label={`Ver ${DIAS_DA_SEMANA[diaDaSemana(d)]}, ${curta(d)}`}>
+            <span className="quando">{diaCurto(d)}<small>{curta(d)}</small></span>
+            <span className="pratos">
+              {antes ? 'Antes do dia 1' : (
+                <>
+                  <b>{prato(pratoDaData(diaUm, d, 'almoco', perfil.trocas)).nome}</b>
+                  {prato(pratoDaData(diaUm, d, 'jantar', perfil.trocas)).nome}
+                </>
+              )}
+            </span>
+          </button>
+        )
+      })}
+      <p className="nota">Toque em um dia para ver as 8 refeições dele.</p>
     </>
   )
 }
@@ -179,8 +242,13 @@ function Receitas({ aberta }: { aberta: IdReceita | null }) {
   )
 }
 
-function Compras({ perfil, fase, semanas, setSemanas, salvarPerfil }: { perfil: Perfil; fase: Fase; semanas: number; setSemanas: (n: number) => void; salvarPerfil: (p: Perfil) => void }) {
-  const setores = listaDeCompras(fase, perfil.trocas, semanas)
+function Compras({ perfil, hoje, semanasAFrente, setSemanasAFrente, salvarPerfil }: { perfil: Perfil; hoje: string; semanasAFrente: number; setSemanasAFrente: (n: number) => void; salvarPerfil: (p: Perfil) => void }) {
+  const diaUm = perfil.diaUm!
+  const estaSegunda = segundaDe(hoje)
+  // 0 = esta semana, 1 = a próxima, 4 = as próximas quatro
+  const segundas = semanasAFrente === 4 ? [1, 2, 3, 4].map((s) => somarDias(estaSegunda, s * 7)) : [somarDias(estaSegunda, semanasAFrente * 7)]
+  const datas = segundas.flatMap(datasDaSemana).filter((d) => d >= diaUm)
+  const setores = listaDeCompras(diaUm, datas, perfil.trocas)
   const comprados = new Set(perfil.comprados)
   const total = setores.reduce((s, x) => s + x.itens.length, 0)
   const marcados = setores.reduce((s, x) => s + x.itens.filter((i) => comprados.has(i.id)).length, 0)
@@ -191,14 +259,15 @@ function Compras({ perfil, fase, semanas, setSemanas, salvarPerfil }: { perfil: 
       <div className="campos" style={{ marginBottom: 18 }}>
         <label className="campo largo">
           Comprar para
-          <select aria-label="Comprar para" value={semanas} onChange={(e) => setSemanas(Number(e.target.value))}>
-            <option value={1}>1 semana</option>
-            <option value={4}>1 mês (4 semanas)</option>
+          <select aria-label="Comprar para" value={semanasAFrente} onChange={(e) => setSemanasAFrente(Number(e.target.value))}>
+            <option value={0}>Esta semana ({curta(estaSegunda)} a {curta(somarDias(estaSegunda, 6))})</option>
+            <option value={1}>Próxima semana ({curta(somarDias(estaSegunda, 7))} a {curta(somarDias(estaSegunda, 13))})</option>
+            <option value={4}>Próximas 4 semanas</option>
           </select>
         </label>
       </div>
       <p className="contador" role="status"><b>{marcados} de {total}</b> itens no carrinho</p>
-      <p className="nota" style={{ marginTop: 0 }}>Fase {fase}, com as suas trocas de prato. Carnes, arroz e macarrão já estão em peso cru.</p>
+      <p className="nota" style={{ marginTop: 0 }}>Lista do cardápio dessas datas, com as suas trocas. Carnes, arroz e macarrão já estão em peso cru.</p>
       {setores.map(({ setor, itens }) => (
         <section key={setor} className="setor">
           <h2 className="secao">{setor.toUpperCase()}</h2>

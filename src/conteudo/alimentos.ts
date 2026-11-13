@@ -1,7 +1,7 @@
 /**
  * Tabela de alimentos. Valores por 100 g (ou 100 ml) do alimento pronto para comer.
  * Fonte: TACO 4ª edição (NEPA/Unicamp), conferida item a item em 2026-11-12.
- * Fora da TACO, por rótulo ou estimativa: leite integral líquido, macarrão cozido (derivado do cru), purê, pizza,
+ * Fora da TACO, por rótulo ou estimativa: creme de leite (valor da TACO citado de memória, não conferido), leite integral líquido, macarrão cozido (derivado do cru), purê, pizza,
  * esfiha, Mucilon, pasta de amendoim, whey, maca e beterraba em pó. Pão de forma usa a linha do integral.
  * Trate os totais como guia: a margem real, somando porção e preparo, é de cerca de 10%.
  * Lista fechada de propósito: nada de verdura, legume em pedaço, salada, peixe, fruto do mar ou feijão.
@@ -48,6 +48,7 @@ export const ALIMENTOS = {
   minas: { nome: 'Queijo minas', kcal: 264, p: 17.4, c: 3.2, g: 20.2, medida: 'g', classe: 'proteina', setor: 'Frios e laticínios' },
   requeijao: { nome: 'Requeijão', kcal: 257, p: 9.6, c: 2.4, g: 23.4, medida: 'g', classe: 'gordura', setor: 'Frios e laticínios' },
   presunto: { nome: 'Presunto', kcal: 94, p: 14.3, c: 2.1, g: 2.7, medida: un('fatia', 'fatias', 15), classe: 'proteina', setor: 'Frios e laticínios' },
+  cremeLeite: { nome: 'Creme de leite', kcal: 221, p: 1.5, c: 4.5, g: 22.5, medida: 'g', classe: 'gordura', setor: 'Mercearia' },
   manteiga: { nome: 'Manteiga', kcal: 726, p: 0.4, c: 0.1, g: 82.4, medida: 'g', classe: 'gordura', setor: 'Frios e laticínios' },
   paoFrances: { nome: 'Pão francês', kcal: 300, p: 8.0, c: 58.6, g: 3.1, medida: un('pão', 'pães', 50), classe: 'carbo', setor: 'Padaria' },
   paoForma: { nome: 'Pão de forma', kcal: 253, p: 9.4, c: 49.9, g: 3.7, medida: un('fatia', 'fatias', 25), classe: 'carbo', setor: 'Padaria' },
