@@ -6,6 +6,14 @@
  */
 import { writeFileSync } from 'node:fs'
 import { ALIMENTOS, type IdAlimento } from '../src/conteudo/alimentos.ts'
+import { RECEITAS as DE_DOMINGO } from '../src/conteudo/receitas.ts'
+import * as almoco from './receitas/almoco.ts'
+import * as cafe from './receitas/cafe.ts'
+import * as ceia from './receitas/ceia.ts'
+import * as jantar from './receitas/jantar.ts'
+import * as lanche from './receitas/lanche.ts'
+import * as pre from './receitas/pre.ts'
+import type { PratoNovo, ReceitaDoPrato } from './receitas/tipos.ts'
 
 type Categoria = 'pre' | 'cafe' | 'lanche' | 'almoco' | 'jantar' | 'ceia'
 
@@ -241,6 +249,36 @@ ampliar('ceia', 6, [
   ['Iogurte batido com granola', [['iogurte', 250], ['granola', 25], ['mel', 5]], 'Bata bem, para a granola não ficar em pedaços.'],
 ])
 
+// ---- versão 2: receita completa de cada prato e pratos novos, um arquivo por categoria em scripts/receitas ----
+const POR_CATEGORIA: Record<Categoria, { RECEITAS: Record<string, ReceitaDoPrato>; NOVOS: PratoNovo[] }> = { pre, cafe, lanche, almoco, jantar, ceia }
+const RECEITA_DE = new Map<string, ReceitaDoPrato>()
+for (const [categoria, { RECEITAS, NOVOS }] of Object.entries(POR_CATEGORIA) as [Categoria, (typeof POR_CATEGORIA)[Categoria]][]) {
+  for (const [id, r] of Object.entries(RECEITAS)) RECEITA_DE.set(id, r)
+  for (const novo of NOVOS) {
+    BASE.push({ id: novo.id, nome: novo.nome, categoria, itens: novo.itens, preparo: novo.preparo })
+    RECEITA_DE.set(novo.id, novo)
+  }
+}
+const ids = new Set<string>()
+for (const b of BASE) {
+  if (ids.has(b.id)) throw new Error(`id repetido: ${b.id}`)
+  ids.add(b.id)
+  if (!RECEITA_DE.has(b.id)) throw new Error(`prato sem receita: ${b.id}`)
+}
+for (const id of RECEITA_DE.keys()) if (!ids.has(id)) throw new Error(`receita de prato que não existe: ${id}`)
+// a ligação com o preparo de domingo pode vir da base antiga ou da receita nova
+for (const b of BASE) {
+  b.receita ??= RECEITA_DE.get(b.id)!.domingo
+  if (b.receita && !Object.hasOwn(DE_DOMINGO, b.receita)) throw new Error(`${b.id} cita preparo de domingo que não existe: ${b.receita}`)
+}
+
+/** Campos da receita em texto de código, só os que existem. */
+function receitaEmTexto(id: string): string {
+  const { tempo, passos, etiquetas, temperos, levar, airfryer } = RECEITA_DE.get(id)!
+  const campos: Record<string, unknown> = { tempo, passos, etiquetas, temperos: temperos?.length ? temperos : undefined, levar, airfryer }
+  return Object.entries(campos).filter(([, v]) => v !== undefined).map(([k, v]) => `, ${k}: ${JSON.stringify(v)}`).join('')
+}
+
 const kcalDe = (id: IdAlimento, q: number) => {
   const a = ALIMENTOS[id]
   return ((typeof a.medida === 'object' ? q * a.medida.gramas : q) * a.kcal) / 100
@@ -290,10 +328,29 @@ function ajustar(base: Base, fase: number): number[] {
   return q
 }
 
+/**
+ * Item contado não encolhe sozinho (sanduíche precisa das duas fatias). Quando mesmo assim o prato passa de 8% do
+ * orçamento numa fase, tira uma unidade do item contado cuja unidade mais se aproxima do excesso e recalcula.
+ */
+function ajustarComRecuo(base: Base, fase: number): number[] {
+  let atual = base
+  for (let volta = 0; volta < 3; volta++) {
+    const q = ajustar(atual, fase)
+    const alvo = ORCAMENTO[base.categoria][fase]
+    const excesso = base.itens.reduce((s, [id], i) => s + kcalDe(id, q[i]), 0) - alvo
+    if (excesso <= alvo * 0.08) return q
+    const candidatos = atual.itens.map(([id, q0], i) => ({ i, id, q0 })).filter(({ id, q0 }) => contado(id) && !fixo(id) && q0 > 1)
+    if (!candidatos.length) return q
+    const melhor = candidatos.reduce((a, b) => (Math.abs(kcalDe(a.id, 1) - excesso) <= Math.abs(kcalDe(b.id, 1) - excesso) ? a : b))
+    atual = { ...atual, itens: atual.itens.map((item, i) => (i === melhor.i ? [item[0], item[1] - 1] : item)) }
+  }
+  return ajustar(atual, fase)
+}
+
 const linhas: string[] = []
 let pior = 0
 for (const b of BASE) {
-  const porFase = [0, 1, 2, 3].map((f) => ajustar(b, f))
+  const porFase = [0, 1, 2, 3].map((f) => ajustarComRecuo(b, f))
   const itens = b.itens.map(([id], i) => `{ a: '${id}', q: [${porFase.map((q) => q[i]).join(', ')}] }`).join(', ')
   ;[0, 1, 2, 3].forEach((f) => {
     const kcal = b.itens.reduce((s, [id], i) => s + kcalDe(id, porFase[f][i]), 0)
@@ -301,7 +358,7 @@ for (const b of BASE) {
     pior = Math.max(pior, desvio)
     if (desvio > 0.1) console.log(`ATENÇÃO ${b.id} fase ${f + 1}: ${Math.round(kcal)} kcal para ${ORCAMENTO[b.categoria][f]} (${(desvio * 100).toFixed(1)}%)`)
   })
-  linhas.push(`  ${b.id}: { nome: ${JSON.stringify(b.nome)}, categoria: '${b.categoria}', itens: [${itens}], preparo: ${JSON.stringify(b.preparo)}${b.receita ? `, receita: '${b.receita}'` : ''} },`)
+  linhas.push(`  ${b.id}: { nome: ${JSON.stringify(b.nome)}, categoria: '${b.categoria}', itens: [${itens}], preparo: ${JSON.stringify(b.preparo)}${b.receita ? `, receita: '${b.receita}'` : ''}${receitaEmTexto(b.id)} },`)
 }
 
 writeFileSync('src/conteudo/pratos.ts', `/**
@@ -317,12 +374,26 @@ export interface ItemDoPrato {
   q: readonly [number, number, number, number]
 }
 
+export type Etiqueta = 'doce' | 'salgado' | 'besteira' | 'marmita' | 'vegetariano'
+
 export interface Prato {
   nome: string
   categoria: Categoria
   itens: readonly ItemDoPrato[]
+  /** Resumo de uma frase, mostrado no cardápio do dia. */
   preparo: string
+  /** Preparo de domingo em RECEITAS, quando o prato sai de uma receita feita para a semana. */
   receita?: string
+  /** Minutos até estar pronto para comer. */
+  tempo: number
+  passos: readonly string[]
+  etiquetas: readonly Etiqueta[]
+  /** Ingredientes sem peso na conta: sal, alho em pó, orégano. */
+  temperos?: readonly string[]
+  /** Como levar para o trabalho. */
+  levar?: string
+  /** Versão na airfryer de quem leva fritura. */
+  airfryer?: string
 }
 
 /** Calorias de cada categoria por fase. Três lanches por dia. */

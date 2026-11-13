@@ -24,12 +24,47 @@ export function macrosDoPrato(id: IdPrato, fase: Fase): Macros {
   return prato(id).itens.reduce((s, item) => somar(s, macrosDoItem(item.a, item.q[fase - 1])), ZERO)
 }
 
-/** Pratos de cada categoria, na ordem em que entram no rodízio do ano. */
-export const DA_CATEGORIA = (() => {
-  const mapa = {} as Record<Categoria, IdPrato[]>
-  for (const id of Object.keys(PRATOS) as IdPrato[]) (mapa[PRATOS[id].categoria] ??= []).push(id)
+const ehBesteira = (id: IdPrato): boolean => (PRATOS[id].etiquetas as readonly string[]).includes('besteira')
+
+function agrupar(filtro: (id: IdPrato) => boolean): Record<Categoria, IdPrato[]> {
+  const mapa = { pre: [], cafe: [], lanche: [], almoco: [], jantar: [], ceia: [] } as Record<Categoria, IdPrato[]>
+  for (const id of Object.keys(PRATOS) as IdPrato[]) if (filtro(id)) mapa[PRATOS[id].categoria].push(id)
   return mapa
-})()
+}
+
+/** Todos os pratos de cada categoria: é a lista de troca. */
+export const TODOS_DA_CATEGORIA = agrupar(() => true)
+/** Pratos do dia a dia de cada categoria, na ordem em que entram no rodízio do ano. Besteira fica de fora. */
+export const DA_CATEGORIA = agrupar((id) => !ehBesteira(id))
+/** Besteiras planejadas de cada categoria: só entram nas vagas abaixo. */
+export const BESTEIRAS = agrupar(ehBesteira)
+
+export interface VagaDeBesteira {
+  /** Dia da semana: 0 é domingo. */
+  dia: number
+  refeicao: IdRefeicao
+}
+
+/**
+ * Onde o rodízio serve besteira: até 3 por semana e nunca duas no mesmo dia nas fases 1 a 3; 1 por semana na fase 4.
+ * A refeição livre de sábado continua à parte. A troca do usuário pode pôr besteira em qualquer refeição: é escolha dele.
+ */
+export const VAGAS_DE_BESTEIRA: { normal: readonly VagaDeBesteira[]; definicao: readonly VagaDeBesteira[] } = {
+  normal: [{ dia: 2, refeicao: 'lancheTarde' }, { dia: 4, refeicao: 'jantar' }, { dia: 0, refeicao: 'jantar' }],
+  definicao: [{ dia: 4, refeicao: 'jantar' }],
+}
+
+/** Besteira que a vaga dá naquela data, ou null quando não é vaga. Cada vaga anda pela lista de besteiras da categoria. */
+function besteiraDaVaga(diaUm: string, data: string, refeicao: IdRefeicao): IdPrato | null {
+  const vagas = fasePara(diaUm, data) === 4 ? VAGAS_DE_BESTEIRA.definicao : VAGAS_DE_BESTEIRA.normal
+  const categoria = CATEGORIA_DA_REFEICAO[refeicao]
+  const lista = BESTEIRAS[categoria]
+  if (!lista.length) return null
+  const daCategoria = vagas.filter((v) => CATEGORIA_DA_REFEICAO[v.refeicao] === categoria)
+  const ordem = daCategoria.findIndex((v) => v.dia === diaDaSemana(data) && v.refeicao === refeicao)
+  if (ordem < 0) return null
+  return ciclo(lista, semanaDe(diaUm, data) * daCategoria.length + ordem)
+}
 
 /** Segunda-feira da semana de uma data. */
 export function segundaDe(data: string): string {
@@ -88,6 +123,8 @@ const RODIZIO: Record<Exclude<IdRefeicao, 'almoco' | 'lancheTarde' | 'trajeto'>,
 
 /** Prato que o rodízio do ano dá para uma refeição em uma data, antes de qualquer troca. */
 export function pratoOriginal(diaUm: string, data: string, refeicao: IdRefeicao): IdPrato {
+  const besteira = besteiraDaVaga(diaUm, data, refeicao)
+  if (besteira) return besteira
   const lista = DA_CATEGORIA[CATEGORIA_DA_REFEICAO[refeicao]], n = lista.length, terco = Math.floor(n / 3)
   if (refeicao === 'almoco') {
     // três marmitas por semana, cada uma andando pela lista inteira ao longo do ano, sem repetir na semana seguinte
@@ -118,7 +155,7 @@ export function macrosDaData(diaUm: string, data: string, trocas: Trocas): Macro
 
 /** Outros pratos que servem para a mesma refeição. Todos fecham no mesmo orçamento de calorias, então a troca não desmonta o dia. */
 export function alternativas(refeicao: IdRefeicao, atual: IdPrato): IdPrato[] {
-  return DA_CATEGORIA[CATEGORIA_DA_REFEICAO[refeicao]].filter((id) => id !== atual)
+  return TODOS_DA_CATEGORIA[CATEGORIA_DA_REFEICAO[refeicao]].filter((id) => id !== atual)
 }
 
 export function normalizarTrocas(dado: unknown): Trocas {

@@ -4,7 +4,8 @@
  * Fora da TACO, por rótulo ou estimativa: leite integral líquido, macarrão cozido (derivado do cru), purê, pizza,
  * esfiha, Mucilon, pasta de amendoim, whey, maca e beterraba em pó. Pão de forma usa a linha do integral.
  * Trate os totais como guia: a margem real, somando porção e preparo, é de cerca de 10%.
- * Lista fechada de propósito: nada de verdura, legume em pedaço, salada, peixe, fruto do mar ou feijão.
+ * Lista fechada de propósito. Desde a versão 2 entram alface e tomate no lanche, cenoura ralada ou batida e a salada caesar;
+ * peixe, fruto do mar, feijão, verdura cozida e legume em pedaço continuam fora.
  */
 
 export type Setor = 'Açougue' | 'Frios e laticínios' | 'Padaria' | 'Mercearia' | 'Hortifruti' | 'Suplementos'
@@ -54,6 +55,8 @@ export const ALIMENTOS = {
   paoForma: { nome: 'Pão de forma', kcal: 253, p: 9.4, c: 49.9, g: 3.7, medida: un('fatia', 'fatias', 25), classe: 'carbo', setor: 'Padaria' },
   paoQueijo: { nome: 'Pão de queijo', kcal: 363, p: 5.1, c: 34.2, g: 24.6, medida: un('unidade', 'unidades', 30), classe: 'carbo', setor: 'Padaria' },
   pizza: { nome: 'Pizza de mussarela', kcal: 260, p: 11.0, c: 30.0, g: 10.5, medida: un('fatia', 'fatias', 110), classe: 'carbo', setor: 'Padaria' },
+  // esfiha de frango: valor médio de rótulo de padaria (2026-11-13), fora da TACO
+  esfihaFrango: { nome: 'Esfiha de frango', kcal: 245, p: 11.0, c: 31.0, g: 8.5, medida: { singular: 'unidade', plural: 'unidades', gramas: 80 }, classe: 'carbo', setor: 'Padaria' },
   esfiha: { nome: 'Esfiha de carne', kcal: 250, p: 10.0, c: 30.0, g: 10.0, medida: un('unidade', 'unidades', 80), classe: 'carbo', setor: 'Padaria' },
   creamCracker: { nome: 'Biscoito cream cracker', kcal: 432, p: 10.1, c: 68.7, g: 14.4, medida: 'g', classe: 'carbo', setor: 'Mercearia' },
   aveia: { nome: 'Aveia em flocos', kcal: 394, p: 13.9, c: 66.6, g: 8.5, medida: 'g', classe: 'carbo', setor: 'Mercearia' },
@@ -112,6 +115,33 @@ export const ALIMENTOS = {
   guarana: { nome: 'Guaraná em pó', kcal: 0, p: 0, c: 0, g: 0, medida: 'g', classe: 'suplemento', setor: 'Suplementos', cafeina: true },
   maca: { nome: 'Maca peruana em pó', kcal: 325, p: 14.0, c: 60.0, g: 2.0, medida: 'g', classe: 'suplemento', setor: 'Suplementos' },
   beterraba: { nome: 'Beterraba em pó', kcal: 300, p: 10.0, c: 65.0, g: 0.5, medida: 'g', classe: 'suplemento', setor: 'Suplementos' },
+  // ---- versão 2 (receitas e besteiras planejadas): conferida em 2026-11-13. Da TACO: alface crespa crua, tomate com semente cru,
+  // cenoura crua, carne seca cozida (fator de compra estimado), parmesão, açaí (polpa congelada), farinha de trigo, farinha de rosca,
+  // maionese tradicional, chocolate ao leite, coxinha frita e empada de frango assada. Fora da TACO, por rótulo ou estimativa:
+  // catupiry, croutons, massa de pizza, ketchup, batata palha, queijo coalho, joelho, pão de cachorro-quente, pão sírio e bacon
+  // (bacon frito usa a média de tabelas internacionais; a TACO só tem toucinho). Pesos das unidades são estimativas de padaria. ----
+  alface: { nome: 'Alface', kcal: 11, p: 1.3, c: 1.7, g: 0.2, medida: un('folha', 'folhas', 10), classe: 'outro', setor: 'Hortifruti' },
+  tomate: { nome: 'Tomate', kcal: 15, p: 1.1, c: 3.1, g: 0.2, medida: un('rodela', 'rodelas', 20), classe: 'outro', setor: 'Hortifruti' },
+  cenoura: { nome: 'Cenoura ralada', kcal: 34, p: 1.3, c: 7.7, g: 0.2, medida: 'g', classe: 'outro', setor: 'Hortifruti', compra: 'Cenoura' },
+  catupiry: { nome: 'Requeijão cremoso tipo catupiry', kcal: 260, p: 9.0, c: 3.0, g: 24.0, medida: 'g', classe: 'gordura', setor: 'Frios e laticínios' },
+  carneSeca: { nome: 'Carne seca desfiada', kcal: 313, p: 26.9, c: 0, g: 21.9, medida: 'g', classe: 'proteina', setor: 'Açougue', compra: 'Carne seca (crua)', fatorCompra: 1.25 },
+  parmesao: { nome: 'Queijo parmesão ralado', kcal: 453, p: 35.6, c: 1.7, g: 33.5, medida: 'g', classe: 'proteina', setor: 'Frios e laticínios' },
+  crouton: { nome: 'Croutons', kcal: 410, p: 11.0, c: 70.0, g: 9.0, medida: 'g', classe: 'carbo', setor: 'Padaria' },
+  acai: { nome: 'Polpa de açaí', kcal: 58, p: 0.8, c: 6.2, g: 3.9, medida: 'g', classe: 'gordura', setor: 'Hortifruti' },
+  massaPizza: { nome: 'Massa de pizza', kcal: 270, p: 8.0, c: 52.0, g: 3.0, medida: un('disco', 'discos', 110), classe: 'carbo', setor: 'Padaria' },
+  farinhaTrigo: { nome: 'Farinha de trigo', kcal: 360, p: 9.8, c: 75.1, g: 1.4, medida: 'g', classe: 'carbo', setor: 'Mercearia' },
+  farinhaRosca: { nome: 'Farinha de rosca', kcal: 371, p: 11.4, c: 75.8, g: 1.5, medida: 'g', classe: 'carbo', setor: 'Mercearia' },
+  maionese: { nome: 'Maionese', kcal: 302, p: 0.6, c: 7.9, g: 30.5, medida: 'g', classe: 'gordura', setor: 'Mercearia' },
+  ketchup: { nome: 'Ketchup', kcal: 110, p: 1.0, c: 26.0, g: 0.1, medida: 'g', classe: 'outro', setor: 'Mercearia' },
+  batataPalha: { nome: 'Batata palha', kcal: 540, p: 6.0, c: 52.0, g: 34.0, medida: 'g', classe: 'gordura', setor: 'Mercearia' },
+  queijoCoalho: { nome: 'Queijo coalho', kcal: 330, p: 23.3, c: 3.0, g: 24.5, medida: un('espeto', 'espetos', 50), classe: 'proteina', setor: 'Frios e laticínios' },
+  chocolate: { nome: 'Chocolate ao leite', kcal: 540, p: 7.2, c: 59.6, g: 30.3, medida: 'g', classe: 'gordura', setor: 'Mercearia' },
+  coxinha: { nome: 'Coxinha de frango', kcal: 283, p: 9.6, c: 34.5, g: 11.8, medida: un('coxinha pequena', 'coxinhas pequenas', 40), classe: 'carbo', setor: 'Padaria' },
+  joelho: { nome: 'Joelho de presunto e queijo', kcal: 300, p: 11.0, c: 38.0, g: 11.0, medida: un('joelho pequeno', 'joelhos pequenos', 50), classe: 'carbo', setor: 'Padaria' },
+  empada: { nome: 'Empada de frango', kcal: 358, p: 6.9, c: 47.5, g: 15.6, medida: un('empadinha', 'empadinhas', 35), classe: 'carbo', setor: 'Padaria' },
+  paoHotDog: { nome: 'Pão de cachorro-quente', kcal: 280, p: 9.0, c: 50.0, g: 4.0, medida: un('pão', 'pães', 50), classe: 'carbo', setor: 'Padaria' },
+  paoSirio: { nome: 'Pão sírio', kcal: 275, p: 9.1, c: 55.7, g: 1.2, medida: un('pão', 'pães', 60), classe: 'carbo', setor: 'Padaria' },
+  bacon: { nome: 'Bacon frito', kcal: 541, p: 37.0, c: 1.4, g: 42.0, medida: 'g', classe: 'gordura', setor: 'Frios e laticínios' },
 } as const satisfies Record<string, Alimento>
 
 export type IdAlimento = keyof typeof ALIMENTOS
@@ -130,5 +160,8 @@ export function textoQuantidade(id: IdAlimento, quantidade: number): string {
   return `${quantidade} ${a.medida}`
 }
 
-/** Termos que nunca podem aparecer em nome de alimento, prato ou receita. */
-export const PROIBIDOS = /feij|verdura|salada|alface|couve|br[oó]colis|cenoura|abobrinha|legume|peixe|atum|sardinha|salm[aã]o|til[aá]pia|camar[aã]o|fruto do mar|lula|polvo|mexilh/i
+/**
+ * Termos que nunca podem aparecer em nome de alimento, prato ou receita.
+ * Desde a versão 2 entram alface e tomate no lanche, cenoura ralada ou batida e a salada caesar; prato de salada solta continua fora.
+ */
+export const PROIBIDOS = /feij|verdura|salada(?! caesar)|couve|br[oó]colis|abobrinha|chuchu|vagem|ervilha|legume|peixe|atum|sardinha|salm[aã]o|til[aá]pia|camar[aã]o|fruto do mar|lula|polvo|mexilh/i

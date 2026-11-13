@@ -490,3 +490,131 @@ details[open] > summary > svg {
 .linha-dia.hoje .pratos b {
   color: var(--amarelo);
 }
+
+/* ---------- livro de receitas (v2.3) ---------- */
+.livro-filtros {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.livro-busca {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 50px;
+  padding: 0 12px;
+  background: var(--papel);
+  color: var(--tinta);
+  border: 3px solid var(--papel);
+  box-shadow: 5px 5px 0 #000;
+}
+
+.livro-busca svg {
+  flex: none;
+  width: 22px;
+  height: 22px;
+}
+
+.livro-busca input {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  color: var(--tinta);
+  font: 700 18px var(--texto);
+  outline: none;
+}
+
+.livro-selects {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.livro-conta {
+  margin: 12px 0 14px;
+}
+
+.receita-corpo h4 {
+  margin: 12px 0 4px;
+  font: 400 17px var(--titulo);
+  color: var(--papel);
+}
+
+.receita-corpo ul,
+.receita-corpo ol {
+  margin: 0;
+  padding-left: 20px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.receita-corpo li + li {
+  margin-top: 4px;
+}
+
+.etiquetas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 4px 0 2px;
+}
+
+.etiquetas span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border: 2px solid var(--apagado);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--apagado);
+}
+
+.etiquetas span svg {
+  width: 14px;
+  height: 14px;
+}
+
+.etiquetas span.besteira {
+  border-color: var(--vermelho);
+  background: var(--vermelho);
+  color: var(--papel);
+}
+
+.receita-nota {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.receita-nota svg {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  color: var(--amarelo);
+}
+
+.receita-domingo {
+  margin-top: 12px;
+  padding: 0 10px 10px;
+  border: 2px dashed #ffffff50;
+}
+
+.receita-domingo summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  font-weight: 700;
+  color: var(--amarelo);
+  cursor: pointer;
+}
+
+.receita-domingo ol {
+  margin-top: 8px;
+}

@@ -85,8 +85,10 @@ test.describe('cardápio: dia', () => {
     await page.getByRole('button', { name: 'Cardápio' }).tap()
     await expect(refeicao(page, 6).locator('summary')).toContainText('Churrasco com arroz')
     await refeicao(page, 6).locator('summary').tap()
-    await page.getByLabel('Trocar Jantar').selectOption({ label: 'Hambúrguer caseiro no pão (original)' })
-    await expect(refeicao(page, 6).locator('summary')).toContainText('Hambúrguer caseiro no pão')
+    // volta ao prato que o rodízio dava, marcado como original na lista
+    const original = (await page.getByLabel('Trocar Jantar').locator('option', { hasText: '(original)' }).innerText()).replace(' (original)', '')
+    await page.getByLabel('Trocar Jantar').selectOption({ label: `${original} (original)` })
+    await expect(refeicao(page, 6).locator('summary')).toContainText(original)
     await expect.poll(async () => (await perfilGravado(page)).trocas).toEqual({})
   })
 
@@ -98,12 +100,15 @@ test.describe('cardápio: dia', () => {
     expect(opcoes.join('|')).not.toMatch(/Arroz|Macarrão|Omelete|Purê|Lasanha/)
   })
 
-  test('ver receita abre a receita do prato', async ({ page }) => {
+  test('a refeição mostra o modo de preparo e abre o prato no livro de receitas', async ({ page }) => {
     await refeicao(page, 3).locator('summary').tap()
-    await refeicao(page, 3).getByRole('button', { name: 'Ver receita' }).tap()
+    await expect(refeicao(page, 3)).toContainText('Modo de preparo')
+    await expect(refeicao(page, 3)).toContainText('Para levar:')
+    const nome = (await refeicao(page, 3).locator('.titulo').innerText()).split(String.fromCharCode(10)).pop()!.trim()
+    await refeicao(page, 3).getByRole('button', { name: 'Ver no livro de receitas' }).tap()
     await expect(aba(page, 'Receitas')).toHaveAttribute('aria-selected', 'true')
-    await expect(page.locator('details[open] summary')).toContainText('Batata assada crocante')
-    await expect(page.locator('details[open]')).toContainText('Modo de preparo')
+    await expect(page.locator('details.receita[open] summary').first()).toContainText(nome)
+    await expect(page.locator('details.receita[open]').first()).toContainText('Ingredientes')
     await semEstouro(page)
   })
 })
@@ -171,7 +176,8 @@ test.describe('cardápio: semana e compras', () => {
   })
 
   test('nada proibido aparece em 30 dias de cardápio, nas receitas nem nas compras', async ({ page }) => {
-    const proibido = /feij|verdura|salada |alface|cenoura|peixe|atum|camar/i
+    // desde a versão 2: alface, tomate e cenoura ralada entram no preparo, e a salada caesar é a única salada
+    const proibido = /feij|verdura|salada (?!caesar)|couve|legume|peixe|atum|camar/i
     for (let i = 0; i < 30; i++) {
       expect(await page.locator('details.refeicao').allTextContents().then((t) => t.join(' '))).not.toMatch(proibido)
       await page.getByRole('button', { name: 'Próximo dia' }).tap()

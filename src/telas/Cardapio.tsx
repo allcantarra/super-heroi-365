@@ -1,16 +1,17 @@
-import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
-import { useState } from 'react'
+import { ChevronDown, ChevronLeft, ChevronRight, Search } from 'lucide-react'
+import { useMemo, useState } from 'react'
 import { alimento, textoQuantidade } from '../conteudo/alimentos'
 import { DIAS_DA_SEMANA, FORMATO, METAS, REFEICAO_LIVRE, REFEICOES, type IdRefeicao } from '../conteudo/cardapio'
-import type { IdPrato } from '../conteudo/pratos'
+import type { Categoria, Etiqueta, IdPrato } from '../conteudo/pratos'
 import { RECEITAS, type IdReceita, type Receita } from '../conteudo/receitas'
+import { ReceitaDoPrato, buscarReceitas, ETIQUETAS, NOME_DA_CATEGORIA } from '../ui/ReceitaDoPrato'
 import type { Perfil } from '../dados/banco'
 import {
   alternativas, chaveDaTroca, datasDaSemana, fasePara, listaDeCompras, macrosDaData, macrosDoPrato, marmitasDaSemana, prato, pratoDaData,
   pratoOriginal, segundaDe, semanaDe,
 } from '../dominio/cardapio'
 import { missoesDoDia, type IdMissao } from '../dominio/rotina'
-import { FASES, diaDaSemana, numeroDoDia, somarDias } from '../dominio/tempo'
+import { FASES, diaDaSemana, numeroDoDia, somarDias, type Fase } from '../dominio/tempo'
 
 interface Props {
   perfil: Perfil
@@ -32,10 +33,10 @@ export function Cardapio({ perfil, feitasHoje, inicioHoje, hoje, salvarPerfil }:
   const diaUm = perfil.diaUm!
   const [visao, setVisao] = useState<Visao>('dia')
   const [data, setData] = useState(hoje)
-  const [receitaAberta, setReceitaAberta] = useState<IdReceita | null>(null)
+  const [receitaAberta, setReceitaAberta] = useState<IdPrato | null>(null)
   const [semanasAFrente, setSemanasAFrente] = useState(0)
 
-  const abrirReceita = (id: IdReceita) => {
+  const abrirReceita = (id: IdPrato) => {
     setReceitaAberta(id)
     setVisao('receitas')
     window.scrollTo(0, 0)
@@ -56,7 +57,7 @@ export function Cardapio({ perfil, feitasHoje, inicioHoje, hoje, salvarPerfil }:
       </div>
       {visao === 'dia' && <Dia perfil={perfil} feitasHoje={feitasHoje} inicioHoje={inicioHoje} hoje={hoje} data={data} setData={setData} trocar={trocar} abrirReceita={abrirReceita} />}
       {visao === 'semana' && <Semana perfil={perfil} hoje={hoje} data={data} setData={setData} trocar={trocar} abrirReceita={abrirReceita} verDia={(d) => { setData(d); setVisao('dia'); window.scrollTo(0, 0) }} />}
-      {visao === 'receitas' && <Receitas aberta={receitaAberta} />}
+      {visao === 'receitas' && <Livro fase={fasePara(diaUm, hoje)} aberta={receitaAberta} />}
       {visao === 'compras' && <Compras perfil={perfil} hoje={hoje} semanasAFrente={semanasAFrente} setSemanasAFrente={setSemanasAFrente} salvarPerfil={salvarPerfil} />}
     </>
   )
@@ -84,7 +85,7 @@ interface PropsDeVisao {
   data: string
   setData: (d: string) => void
   trocar: (data: string, refeicao: IdRefeicao, id: IdPrato) => void
-  abrirReceita: (id: IdReceita) => void
+  abrirReceita: (id: IdPrato) => void
 }
 
 function ListaDeTroca({ rotulo, refeicao, atual, original, aoTrocar }: { rotulo: string; refeicao: IdRefeicao; atual: IdPrato; original: IdPrato; aoTrocar: (id: IdPrato) => void }) {
@@ -152,10 +153,11 @@ function Dia({ perfil, feitasHoje, inicioHoje, hoje, data, setData, trocar, abri
                 <li key={item.a}><span>{textoQuantidade(item.a, item.q[fase - 1])}</span>{alimento(item.a).nome}{alimento(item.a).cafeina ? ' (só até 15h)' : ''}</li>
               ))}
             </ul>
-            <p className="resumo">{inteiro(m.kcal)} kcal, {inteiro(m.p)} g de proteína. {p.preparo}</p>
+            <p className="resumo">{inteiro(m.kcal)} kcal, {inteiro(m.p)} g de proteína, {p.tempo} min. {p.preparo}</p>
+            <ReceitaDoPrato id={id} fase={fase} semIngredientes />
             {refeicao === 'almoco' && <p className="resumo">Marmita da semana: trocar aqui troca todos os dias em que ela aparece.</p>}
             <ListaDeTroca rotulo={`Trocar ${missao.nome}`} refeicao={refeicao} atual={id} original={pratoOriginal(diaUm, data, refeicao)} aoTrocar={(novo) => trocar(data, refeicao, novo)} />
-            {p.receita && <button className="botao fantasma" onClick={() => abrirReceita(p.receita as IdReceita)}>Ver receita</button>}
+            <button className="botao fantasma" onClick={() => abrirReceita(id)}>Ver no livro de receitas</button>
           </details>
         )
       })}
@@ -197,7 +199,7 @@ function Semana({ perfil, hoje, data, setData, trocar, abrirReceita, verDia }: P
               })}
             </ul>
             <ListaDeTroca rotulo={`Trocar marmita ${m.papel}`} refeicao="almoco" atual={m.prato} original={pratoOriginal(diaUm, m.datas[0], 'almoco')} aoTrocar={(novo) => trocar(m.datas[0], 'almoco', novo)} />
-            {p.receita && <button className="botao fantasma" onClick={() => abrirReceita(p.receita as IdReceita)}>Ver receita</button>}
+            <button className="botao fantasma" onClick={() => abrirReceita(m.prato)}>Ver receita</button>
           </article>
         )
       })}
@@ -224,17 +226,55 @@ function Semana({ perfil, hoje, data, setData, trocar, abrirReceita, verDia }: P
   )
 }
 
-function Receitas({ aberta }: { aberta: IdReceita | null }) {
+const REFEICOES_DO_LIVRO = Object.entries(NOME_DA_CATEGORIA) as [Categoria, string][]
+
+/** Livro de receitas: todos os pratos do ano, com busca, filtro por refeição e por etiqueta, e o preparo de domingo. */
+function Livro({ fase, aberta }: { fase: Fase; aberta: IdPrato | null }) {
+  const [busca, setBusca] = useState('')
+  const [categoria, setCategoria] = useState<Categoria | ''>(aberta ? prato(aberta).categoria : '')
+  const [etiqueta, setEtiqueta] = useState<Etiqueta | ''>('')
+  const achados = useMemo(() => buscarReceitas(busca, categoria || undefined, etiqueta || undefined), [busca, categoria, etiqueta])
+  const filtrando = busca.trim() !== '' || categoria !== '' || etiqueta !== ''
   const tipos: Receita['tipo'][] = ['Marmita da semana', 'Prato', 'Shake']
-  const titulos: Record<Receita['tipo'], string> = { 'Marmita da semana': 'MARMITAS DA SEMANA', Prato: 'PRATOS RÁPIDOS', Shake: 'SHAKES E VITAMINAS' }
   const lista = Object.entries(RECEITAS) as [IdReceita, Receita][]
   return (
     <>
-      {tipos.map((tipo) => (
+      <div className="livro-filtros">
+        <label className="livro-busca">
+          <Search aria-hidden />
+          <input type="search" aria-label="Buscar receita" placeholder="Buscar: tapioca, frango, pizza..." value={busca} onChange={(e) => setBusca(e.target.value)} />
+        </label>
+        <div className="livro-selects">
+          <label className="campo">
+            Refeição
+            <select value={categoria} onChange={(e) => setCategoria(e.target.value as Categoria | '')}>
+              <option value="">Todas</option>
+              {REFEICOES_DO_LIVRO.map(([id, nome]) => <option key={id} value={id}>{nome}</option>)}
+            </select>
+          </label>
+          <label className="campo">
+            Tipo
+            <select value={etiqueta} onChange={(e) => setEtiqueta(e.target.value as Etiqueta | '')}>
+              <option value="">Todos</option>
+              {(Object.entries(ETIQUETAS) as [Etiqueta, string][]).map(([id, nome]) => <option key={id} value={id}>{nome}</option>)}
+            </select>
+          </label>
+        </div>
+      </div>
+      <p className="nota livro-conta" role="status">{achados.length === 1 ? '1 receita' : `${achados.length} receitas`}{filtrando ? (achados.length === 1 ? ' encontrada' : ' encontradas') : ' no livro'}. Quantidades da fase {fase}.</p>
+      {achados.length === 0 && <p className="treino-vazio">Nenhuma receita com esse filtro. Tente outra palavra.</p>}
+      {achados.map((id) => (
+        <details key={id} className="receita" open={id === aberta} ref={id === aberta ? (el) => el?.scrollIntoView({ block: 'start' }) : undefined}>
+          <summary><span>{prato(id).nome}</span><small>{prato(id).tempo} min</small><ChevronDown aria-hidden /></summary>
+          <ReceitaDoPrato id={id} fase={fase} />
+        </details>
+      ))}
+
+      {!filtrando && tipos.map((tipo) => (
         <section key={tipo}>
-          <h2 className="secao">{titulos[tipo]}</h2>
+          <h2 className="secao">{tipo === 'Marmita da semana' ? 'PREPARO DE DOMINGO' : tipo === 'Prato' ? 'BASES RÁPIDAS' : 'SHAKES DE BASE'}</h2>
           {lista.filter(([, r]) => r.tipo === tipo).map(([id, r]) => (
-            <details key={id} className="receita" open={id === aberta}>
+            <details key={id} className="receita">
               <summary><span>{r.nome}</span><small>{r.tempo}</small><ChevronDown aria-hidden /></summary>
               <p className="resumo">Rende {r.rende}.</p>
               <h4>Ingredientes</h4>

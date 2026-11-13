@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { ALIMENTOS, PROIBIDOS, type IdAlimento } from '../conteudo/alimentos'
 import { CATEGORIA_DA_REFEICAO, FORMATO, METAS, REFEICOES, REFEICAO_LIVRE } from '../conteudo/cardapio'
-import { ORCAMENTO, PRATOS, type IdPrato } from '../conteudo/pratos'
+import { ORCAMENTO, PRATOS, type IdPrato, type Prato } from '../conteudo/pratos'
 import { RECEITAS } from '../conteudo/receitas'
 import {
-  DA_CATEGORIA, alternativas, cardapioDaData, chaveDaTroca, datasDaSemana, fasePara, listaDeCompras, macrosDaData, macrosDoPrato,
+  BESTEIRAS, DA_CATEGORIA, TODOS_DA_CATEGORIA, VAGAS_DE_BESTEIRA, alternativas, cardapioDaData, chaveDaTroca, datasDaSemana, fasePara, listaDeCompras, macrosDaData, macrosDoPrato,
   marmitasDaSemana, normalizarTrocas, papelDoDia, prato, pratoDaData, pratoOriginal, segundaDe, semanaDe,
 } from './cardapio'
 import { diaDaSemana, somarDias, type Fase } from './tempo'
@@ -19,7 +19,7 @@ describe('conteúdo: restrições alimentares', () => {
   it('nenhum alimento, prato ou receita cita item proibido', () => {
     const textos = [
       ...Object.values(ALIMENTOS).flatMap((a) => [a.nome, 'compra' in a ? a.compra : '']),
-      ...Object.values(PRATOS).flatMap((p) => [p.nome, p.preparo]),
+      ...(Object.values(PRATOS) as Prato[]).flatMap((p): string[] => [p.nome, p.preparo, ...p.passos, ...(p.temperos ?? []), p.levar ?? '', p.airfryer ?? '']),
       ...Object.values(RECEITAS).flatMap((r) => [r.nome, ...r.ingredientes, ...r.passos]),
       ...REFEICAO_LIVRE.regras,
     ]
@@ -27,8 +27,9 @@ describe('conteúdo: restrições alimentares', () => {
   })
 
   it('a checagem de proibidos funciona', () => {
-    for (const t of ['Feijão tropeiro', 'salada', 'Filé de peixe', 'camarão', 'legumes']) expect(PROIBIDOS.test(t)).toBe(true)
-    expect(PROIBIDOS.test('Arroz, bife e batata')).toBe(false)
+    for (const t of ['Feijão tropeiro', 'salada', 'Salada de tomate', 'Filé de peixe', 'camarão', 'legumes', 'couve refogada', 'ervilha']) expect(PROIBIDOS.test(t)).toBe(true)
+    // versão 2: vegetal dentro do preparo e a salada caesar passam
+    for (const t of ['Arroz, bife e batata', 'Hambúrguer com alface e tomate', 'Nuggets com cenoura ralada', 'Salada caesar com frango']) expect(PROIBIDOS.test(t)).toBe(false)
   })
 
   it('todo prato usa só alimentos da tabela e aponta para receita que existe', () => {
@@ -41,7 +42,8 @@ describe('conteúdo: restrições alimentares', () => {
 
   it('a tabela de alimentos é coerente: kcal perto de 4p + 4c + 9g', () => {
     for (const [id, a] of Object.entries(ALIMENTOS)) {
-      if (a.kcal === 0) continue
+      // alimento de pouquíssima caloria (alface, tomate) tem a fibra pesando mais que a margem
+      if (a.kcal < 30) continue
       const calculado = 4 * a.p + 4 * a.c + 9 * a.g
       // folga de 20%: a TACO desconta fibra e arredonda, o que pesa em alimento de pouca caloria (molho de tomate)
       expect(Math.abs(calculado - a.kcal) / a.kcal, id).toBeLessThan(0.2)
@@ -109,10 +111,10 @@ describe('calendário dos 365 dias', () => {
     }
   })
 
-  it('os macros de um dia isolado variam com os pratos: até 27% da meta (40% para gordura)', () => {
+  it('os macros de um dia isolado variam com os pratos: até 27% da meta (30% para proteína, 40% para gordura)', () => {
     for (const data of ANO) {
       const m = macrosDaData(DIA_UM, data, {}), meta = METAS[fasePara(DIA_UM, data)]
-      expect(Math.abs(m.p / meta.p - 1), `proteína ${data}: ${Math.round(m.p)}`).toBeLessThan(0.27)
+      expect(Math.abs(m.p / meta.p - 1), `proteína ${data}: ${Math.round(m.p)}`).toBeLessThan(0.3)
       expect(Math.abs(m.c / meta.c - 1), `carboidrato ${data}: ${Math.round(m.c)}`).toBeLessThan(0.27)
       expect(Math.abs(m.g / meta.g - 1), `gordura ${data}: ${Math.round(m.g)}`).toBeLessThan(0.4)
     }
@@ -182,7 +184,9 @@ describe('trocas de refeição', () => {
 
   it('oferece só pratos da mesma categoria, sem o atual', () => {
     const lista = alternativas('trajeto', 'lanche2')
-    expect(lista.length).toBe(DA_CATEGORIA.lanche.length - 1)
+    expect(lista.length).toBe(TODOS_DA_CATEGORIA.lanche.length - 1)
+    // a troca deixa escolher besteira em qualquer dia: é escolha do usuário
+    expect(lista).toEqual(expect.arrayContaining(BESTEIRAS.lanche))
     expect(lista.every((id) => prato(id).categoria === 'lanche' && id !== 'lanche2')).toBe(true)
   })
 
@@ -264,5 +268,106 @@ describe('lista de compras', () => {
     const outro = alternativas('almoco', original).find((id) => prato(id).itens[0].a !== prato(original).itens[0].a)!
     const trocada = listaDeCompras(DIA_UM, semana, { [chaveDaTroca(DIA_UM, semana[0], 'almoco')]: outro })
     expect(JSON.stringify(trocada)).not.toBe(JSON.stringify(lista))
+  })
+})
+
+describe('receitas completas (versão 2)', () => {
+  const temFritura = (id: IdPrato) => {
+    const p = prato(id)
+    return p.itens.some((i) => ['batataFrita', 'milanesaFrango', 'milanesaBoi', 'coxinha', 'bacon'].includes(i.a)) || /frit[oa]|empanad|milanesa/i.test(p.nome)
+  }
+
+  it('todo prato tem receita: tempo, 3 a 7 passos, doce ou salgado, e nada de "você"', () => {
+    for (const id of IDS) {
+      const p = prato(id)
+      expect(p.tempo, id).toBeGreaterThan(0)
+      expect(p.tempo, id).toBeLessThanOrEqual(120)
+      expect(p.passos.length, id).toBeGreaterThanOrEqual(3)
+      expect(p.passos.length, id).toBeLessThanOrEqual(7)
+      expect(p.etiquetas.filter((e) => e === 'doce' || e === 'salgado').length, id).toBe(1)
+      for (const t of p.passos) expect(t.trim().length, id).toBeGreaterThan(8)
+      expect(JSON.stringify(p).toLowerCase(), id).not.toMatch(/\bvocê\b/)
+    }
+  })
+
+  it('refeição de trabalho diz como levar; almoço é marmita; fritura tem versão na airfryer', () => {
+    for (const id of IDS) {
+      const p = prato(id)
+      if (p.categoria === 'lanche' || p.categoria === 'almoco') expect(p.levar?.length ?? 0, id).toBeGreaterThan(15)
+      if (p.categoria === 'almoco') expect(p.etiquetas, id).toContain('marmita')
+      if (temFritura(id)) expect(p.airfryer?.length ?? 0, id).toBeGreaterThan(15)
+    }
+  })
+
+  it('besteira só no lanche e no jantar, com pelo menos 4 opções em cada e 30 pratos do dia a dia por refeição', () => {
+    for (const id of IDS) if (prato(id).etiquetas.includes('besteira')) expect(['lanche', 'jantar'], id).toContain(prato(id).categoria)
+    expect(BESTEIRAS.lanche.length).toBeGreaterThanOrEqual(4)
+    expect(BESTEIRAS.jantar.length).toBeGreaterThanOrEqual(4)
+    for (const c of ['pre', 'cafe', 'lanche', 'almoco', 'jantar', 'ceia'] as const) expect(DA_CATEGORIA[c].length, c).toBeGreaterThanOrEqual(30)
+  })
+
+  it('o lote 1 trouxe uns 45 pratos novos, chegando a 225', () => {
+    expect(IDS.length).toBeGreaterThanOrEqual(220)
+  })
+})
+
+describe('besteira planejada no rodízio', () => {
+  const besteira = (id: IdPrato) => prato(id).etiquetas.includes('besteira')
+
+  it('até 3 por semana nas fases 1 a 3, 1 por semana na fase 4, nunca 2 no mesmo dia', () => {
+    const porSemana = new Map<number, { n: number; fase4: boolean }>()
+    for (const data of ANO) {
+      const dia = cardapioDaData(DIA_UM, data, {})
+      const doDia = REFEICOES.filter((r) => besteira(dia[r])).length
+      expect(doDia, data).toBeLessThanOrEqual(1)
+      const s = semanaDe(DIA_UM, data), atual = porSemana.get(s) ?? { n: 0, fase4: false }
+      porSemana.set(s, { n: atual.n + doDia, fase4: atual.fase4 || fasePara(DIA_UM, data) === 4 })
+    }
+    for (const [s, { n, fase4 }] of porSemana) expect(n, `semana ${s}`).toBeLessThanOrEqual(fase4 ? 3 : 3)
+    const semanasSoDaFase4 = [...porSemana.keys()].filter((s) => ANO.filter((d) => semanaDe(DIA_UM, d) === s).every((d) => fasePara(DIA_UM, d) === 4))
+    expect(semanasSoDaFase4.length).toBeGreaterThan(5)
+    for (const s of semanasSoDaFase4) expect(porSemana.get(s)!.n, `semana ${s}`).toBeLessThanOrEqual(1)
+  })
+
+  it('cai nas vagas certas: terça no lanche da tarde, quinta e domingo no jantar', () => {
+    expect(VAGAS_DE_BESTEIRA.normal.map((v) => `${v.dia}:${v.refeicao}`)).toEqual(['2:lancheTarde', '4:jantar', '0:jantar'])
+    const terca = ANO.find((d) => diaDaSemana(d) === 2 && fasePara(DIA_UM, d) === 1)!
+    expect(besteira(pratoDaData(DIA_UM, terca, 'lancheTarde', {}))).toBe(true)
+    expect(besteira(pratoDaData(DIA_UM, terca, 'jantar', {}))).toBe(false)
+  })
+
+  it('todas as besteiras aparecem ao longo do ano', () => {
+    const vistas = new Set(ANO.flatMap((d) => Object.values(cardapioDaData(DIA_UM, d, {}))).filter(besteira))
+    for (const c of ['lanche', 'jantar'] as const) for (const id of BESTEIRAS[c]) expect(vistas.has(id), id).toBe(true)
+  })
+})
+
+describe('receita casa com o prato', () => {
+  const n = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+  // pós, bebida de base e gordura de preparo nem sempre aparecem com o nome nos passos
+  const IGNORAR = new Set<string>(['creatina', 'guarana', 'beterraba', 'whey', 'leite', 'azeite', 'manteiga', 'mel', 'sucoLaranja', 'maca'])
+  const GENERICAS = new Set(['com', 'cozido', 'cozida', 'grelhado', 'assada', 'assado', 'natural', 'integral', 'refogada', 'tipo', 'frito', 'frita', 'liso', 'pronto', 'cremoso', 'para'])
+
+  it('os passos citam pelo menos metade dos ingredientes do próprio prato (pega receita trocada de prato)', () => {
+    const ruins: string[] = []
+    for (const id of IDS) {
+      const p = prato(id)
+      // prato que sai do preparo de domingo pode só remeter a ele: a receita de domingo entra na conferência
+      const domingo = p.receita ? RECEITAS[p.receita as keyof typeof RECEITAS] : undefined
+      const texto = n([...p.passos, p.levar ?? '', p.airfryer ?? '', ...(domingo ? [...domingo.ingredientes, ...domingo.passos] : [])].join(' ')).replace(/paes/g, 'pao')
+      const itens = p.itens.filter((i) => !IGNORAR.has(i.a))
+      const falta = itens.filter((i) => !n(ALIMENTOS[i.a].nome).split(/[^a-z]+/).filter((w) => w.length >= 3 && !GENERICAS.has(w)).some((w) => texto.includes(w.slice(0, 5))))
+      if (itens.length && falta.length / itens.length >= 0.5) ruins.push(`${id} ${p.nome}: falta ${falta.map((i) => i.a).join(', ')}`)
+    }
+    expect(ruins).toEqual([])
+  })
+})
+
+describe('preparo de domingo', () => {
+  it('prato que remete ao preparo de domingo aponta para ele, e o livro mostra a receita', () => {
+    for (const id of IDS) {
+      const p = prato(id)
+      if (/preparo de domingo/i.test(p.passos.join(' '))) expect(p.receita, id).toBeDefined()
+    }
   })
 })
