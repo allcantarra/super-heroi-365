@@ -1,4 +1,4 @@
-import { EXERCICIOS, FICHAS, type Ficha, type IdExercicio, type IdFicha, type Unidade } from '../conteudo/treinos'
+import { EXERCICIOS, FICHAS, type Ficha, type IdExercicio, type IdFicha, type PassoDoRoteiro, type Unidade } from '../conteudo/treinos'
 import type { RegistroDia } from './dia'
 import { dataValida, diaDaSemana, horaLocal, numeroDoDia } from './tempo'
 
@@ -10,6 +10,8 @@ export interface ItemTreino {
   alvo: [minimo: number, maximo: number]
   /** Descanso depois de cada série, em segundos. */
   descanso: number
+  /** Exercício que a ficha pedia, quando ele foi trocado na hora por `exercicio`. */
+  original?: IdExercicio
 }
 
 export interface TreinoDoDia {
@@ -110,9 +112,13 @@ export interface Sessao {
   inicio: number
   fim: number | null
   series: SerieFeita[]
+  /** Trocas feitas na hora: exercício da ficha para o exercício feito no lugar dele. */
+  trocas?: Partial<Record<IdExercicio, IdExercicio>>
 }
 
 export const VALOR_MAXIMO = 999
+
+const exercicioValido = (v: unknown): v is IdExercicio => typeof v === 'string' && Object.hasOwn(EXERCICIOS, v)
 
 export function sessaoNova(data: string, treino: string, agora: number): Sessao {
   return { data, treino, inicio: agora, fim: null, series: [] }
@@ -126,12 +132,94 @@ export function normalizarSessao(dado: unknown): Sessao | null {
   if (!dataValida(d.data) || typeof d.treino !== 'string' || !d.treino || !instante(d.inicio)) return null
   const series = (Array.isArray(d.series) ? d.series : []).flatMap((s: unknown): SerieFeita[] => {
     const { exercicio, valor } = (s ?? {}) as { exercicio?: unknown; valor?: unknown }
-    if (typeof exercicio !== 'string' || !Object.hasOwn(EXERCICIOS, exercicio)) return []
+    if (!exercicioValido(exercicio)) return []
     if (typeof valor !== 'number' || !Number.isInteger(valor) || valor < 1 || valor > VALOR_MAXIMO) return []
-    return [{ exercicio: exercicio as IdExercicio, valor }]
+    return [{ exercicio, valor }]
   })
   const fim = instante(d.fim) && d.fim >= d.inicio && series.length > 0 ? d.fim : null
-  return { data: d.data, treino: d.treino, inicio: d.inicio, fim, series }
+  const trocas: Partial<Record<IdExercicio, IdExercicio>> = {}
+  if (d.trocas && typeof d.trocas === 'object' && !Array.isArray(d.trocas)) {
+    for (const [de, para] of Object.entries(d.trocas)) if (exercicioValido(de) && exercicioValido(para) && de !== para) trocas[de] = para
+  }
+  return { data: d.data, treino: d.treino, inicio: d.inicio, fim, series, ...(Object.keys(trocas).length ? { trocas } : {}) }
+}
+
+// ---------- troca na hora ----------
+
+/** Exercícios que podem entrar no lugar do item: mesmo grupo, mesma unidade, mesmo jeito de contar (por lado ou não) e dificuldade a no máximo 1 de distância. */
+export function opcoesDeTroca(itens: ItemTreino[], indice: number): IdExercicio[] {
+  const item = itens[indice]
+  if (!item) return []
+  const original = item.original ?? item.exercicio
+  const base = EXERCICIOS[original]
+  const ocupados = new Set(itens.map((i) => i.exercicio))
+  return (Object.keys(EXERCICIOS) as IdExercicio[])
+    .filter((id) => {
+      const ex = EXERCICIOS[id]
+      return id !== original && !ocupados.has(id) && ex.grupo === base.grupo && ex.unidade === base.unidade
+        && !!ex.porLado === !!base.porLado && Math.abs(ex.dificuldade - base.dificuldade) <= 1
+    })
+    .sort((a, b) => EXERCICIOS[a].nome.localeCompare(EXERCICIOS[b].nome, 'pt-BR'))
+}
+
+/** Ficha do dia com as trocas da sessão já aplicadas. Séries, recordes e "última vez" seguem o exercício feito. */
+export function aplicarTrocas(treino: TreinoDoDia, sessao: Sessao | undefined): TreinoDoDia {
+  const trocas = sessao?.trocas
+  if (!trocas) return treino
+  return { ...treino, itens: treino.itens.map((item) => {
+    const novo = trocas[item.exercicio]
+    return novo ? { ...item, exercicio: novo, original: item.exercicio } : item
+  }) }
+}
+
+/**
+ * Troca o exercício da ficha `original` por `novo`; trocar de volta para o original desfaz a troca.
+ * Só vale antes da primeira série: depois disso o exercício já foi feito e a troca fica como está.
+ */
+export function trocarExercicio(sessao: Sessao, ficha: TreinoDoDia, original: IdExercicio, novo: IdExercicio): Sessao {
+  const atual = sessao.trocas?.[original] ?? original
+  if (atual === novo || seriesDe(sessao, atual).length > 0) return sessao
+  const trocas = { ...sessao.trocas }
+  if (novo === original) delete trocas[original]
+  else trocas[original] = novo
+  const { trocas: _, ...resto } = sessao
+  const depois: Sessao = Object.keys(trocas).length ? { ...resto, trocas } : resto
+  // nenhuma troca (nem a volta ao original) pode deixar o mesmo exercício em dois itens do treino
+  const ids = aplicarTrocas(ficha, depois).itens.map((i) => i.exercicio)
+  return new Set(ids).size === ids.length ? depois : sessao
+}
+
+/** O exercício da ficha está livre para voltar ao item? Não está, se outro item foi trocado para ele. */
+export function podeVoltarAoOriginal(itens: ItemTreino[], indice: number): boolean {
+  const original = itens[indice]?.original
+  return !!original && !itens.some((i, n) => n !== indice && i.exercicio === original)
+}
+
+// ---------- aquecimento e alongamento ----------
+
+export interface EtapaDoRoteiro {
+  exercicio: IdExercicio
+  segundos: number
+  /** Em exercício feito de um lado e depois do outro: 1 é o primeiro lado, 2 o outro. */
+  lado?: 1 | 2
+}
+
+/** Abre os exercícios por lado em duas etapas, uma para cada lado. */
+export function etapasDoRoteiro(roteiro: readonly PassoDoRoteiro[]): EtapaDoRoteiro[] {
+  return roteiro.flatMap(({ exercicio, segundos }) =>
+    EXERCICIOS[exercicio].porLado ? [{ exercicio, segundos, lado: 1 as const }, { exercicio, segundos, lado: 2 as const }] : [{ exercicio, segundos }])
+}
+
+export const duracaoDoRoteiro = (roteiro: readonly PassoDoRoteiro[]): number => etapasDoRoteiro(roteiro).reduce((s, e) => s + e.segundos, 0)
+
+/** Em que etapa o roteiro está depois de `decorridos` segundos e quanto falta nela. Null quando acabou. */
+export function momentoDoRoteiro(etapas: EtapaDoRoteiro[], decorridos: number): { indice: number; restante: number } | null {
+  let fim = 0
+  for (let indice = 0; indice < etapas.length; indice++) {
+    fim += etapas[indice].segundos
+    if (decorridos < fim) return { indice, restante: Math.ceil(fim - decorridos) }
+  }
+  return null
 }
 
 export function registrarSerie(sessao: Sessao, exercicio: IdExercicio, valor: number): Sessao {

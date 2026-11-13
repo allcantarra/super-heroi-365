@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { EXERCICIOS, FICHAS, type Grupo, type IdExercicio } from '../conteudo/treinos'
+import { ALONGAMENTO, AQUECIMENTO, EXERCICIOS, FICHAS, type Grupo, type IdExercicio } from '../conteudo/treinos'
 import { jornada, missaoDeAgora, registroVazio, type RegistroDia } from './dia'
 import { ROTINA_PADRAO, missoesDoDia } from './rotina'
 import { somarDias } from './tempo'
 import {
-  ajustarFim, concluir, desfazerSerie, diasComTreino, duracaoEstimada, fichaDoDia, normalizarSessao, proximoItem, reabrir, recordes, recordesBatidos,
+  ajustarFim, aplicarTrocas, concluir, desfazerSerie, diasComTreino, duracaoDoRoteiro, duracaoEstimada, etapasDoRoteiro, fichaDoDia, momentoDoRoteiro, normalizarSessao,
+  opcoesDeTroca, podeVoltarAoOriginal, proximoItem, reabrir, recordes, recordesBatidos, trocarExercicio,
   registrarSerie, relogio, resumoDaSessao, segundosDecorridos, segundosRestantes, seriesDe, sessaoNova, sugestao, textoAlvo, textoValor, treinoDaData, treinoFeito, ultimaVez,
   type Sessao,
 } from './treino'
@@ -36,11 +37,50 @@ describe('conteúdo das fichas', () => {
     }
   })
 
-  it('todo exercício do catálogo é usado e tem descrição de execução', () => {
+  it('todo exercício do catálogo aparece numa ficha, no aquecimento, no alongamento ou como troca de um exercício de ficha', () => {
+    const alcancaveis = new Set<string>([...usados, ...AQUECIMENTO.map((p) => p.exercicio), ...ALONGAMENTO.map((p) => p.exercicio)])
+    for (let n = 0; n < 365; n++) {
+      const t = treinoDaData(DIA_UM, somarDias(DIA_UM, n))
+      if (t) t.itens.forEach((_, i) => opcoesDeTroca(t.itens, i).forEach((id) => alcancaveis.add(id)))
+    }
+    for (const id of Object.keys(EXERCICIOS)) expect(alcancaveis.has(id), id).toBe(true)
+  })
+
+  it('todo exercício tem passo a passo completo: posição, 3 a 5 passos, respiração, 2 a 3 erros, mais fácil e mais difícil', () => {
+    const preenchido = (t: string) => t.trim().length >= 10
     for (const [id, ex] of Object.entries(EXERCICIOS)) {
-      expect(usados.has(id as IdExercicio), id).toBe(true)
       expect(ex.execucao.length, id).toBeGreaterThan(40)
       expect(ex.execucao.length, id).toBeLessThan(220)
+      expect([1, 2, 3, 4, 5], id).toContain(ex.dificuldade)
+      expect(ex.passos.length, id).toBeGreaterThanOrEqual(3)
+      expect(ex.passos.length, id).toBeLessThanOrEqual(5)
+      expect(ex.erros.length, id).toBeGreaterThanOrEqual(2)
+      expect(ex.erros.length, id).toBeLessThanOrEqual(3)
+      for (const t of [ex.inicio, ex.respiracao, ex.maisFacil, ex.maisDificil, ...ex.passos, ...ex.erros]) expect(preenchido(t), `${id}: "${t}"`).toBe(true)
+      expect(new Set(ex.passos).size, id).toBe(ex.passos.length)
+    }
+  })
+
+  it('o catálogo tem uns 90 exercícios, com nomes únicos', () => {
+    const nomes = Object.values(EXERCICIOS).map((e) => e.nome)
+    expect(nomes.length).toBeGreaterThanOrEqual(85)
+    expect(new Set(nomes).size).toBe(nomes.length)
+  })
+
+  it('todo exercício de ficha tem pelo menos uma troca possível no próprio treino', () => {
+    for (const ficha of FICHAS) for (const modelo of ficha.treinos) {
+      const itens = modelo.itens.map((i) => ({ exercicio: i.exercicio, series: 1, alvo: [1, 1] as [number, number], descanso: 30 }))
+      itens.forEach((item, i) => expect(opcoesDeTroca(itens, i).length, `${ficha.id}-${modelo.letra} ${item.exercicio}`).toBeGreaterThanOrEqual(1))
+    }
+  })
+
+  it('aquecimento e alongamento têm 3 minutos cada, com movimentos leves contados em segundos', () => {
+    expect(duracaoDoRoteiro(AQUECIMENTO)).toBe(180)
+    expect(duracaoDoRoteiro(ALONGAMENTO)).toBe(180)
+    for (const { exercicio } of [...AQUECIMENTO, ...ALONGAMENTO]) {
+      expect(EXERCICIOS[exercicio].unidade, exercicio).toBe('seg')
+      expect(['mobilidade', 'folego'], exercicio).toContain(EXERCICIOS[exercicio].grupo)
+      expect(EXERCICIOS[exercicio].dificuldade, exercicio).toBeLessThanOrEqual(2)
     }
   })
 
@@ -317,5 +357,91 @@ describe('cronômetro', () => {
     expect([0, 5, 65, 600, -3].map(relogio)).toEqual(['0:00', '0:05', '1:05', '10:00', '0:00'])
     expect(segundosDecorridos(T0, T0 + 61_900)).toBe(61)
     expect(segundosDecorridos(T0, T0 - 5)).toBe(0)
+  })
+})
+
+describe('troca na hora', () => {
+  // choque-A semana 1: flexaoInclinada, pike, mergulho, toqueOmbro, prancha
+  const ficha = treinoDaData(DIA_UM, DIA_UM)!
+
+  it('oferece só exercícios do mesmo grupo, unidade, jeito de contar e dificuldade vizinha, fora os que já estão no treino', () => {
+    const base = EXERCICIOS.flexaoInclinada
+    const opcoes = opcoesDeTroca(ficha.itens, 0)
+    expect(opcoes.length).toBeGreaterThan(0)
+    for (const id of opcoes) {
+      const ex = EXERCICIOS[id]
+      expect(ex.grupo, id).toBe(base.grupo)
+      expect(ex.unidade, id).toBe(base.unidade)
+      expect(!!ex.porLado, id).toBe(!!base.porLado)
+      expect(Math.abs(ex.dificuldade - base.dificuldade), id).toBeLessThanOrEqual(1)
+      expect(ficha.itens.map((i) => i.exercicio), id).not.toContain(id)
+    }
+    expect(opcoesDeTroca(ficha.itens, 99)).toEqual([])
+  })
+
+  it('a sessão guarda a troca, a ficha passa a mostrar o feito e as séries contam para o exercício feito', () => {
+    const novo = opcoesDeTroca(ficha.itens, 0)[0]
+    let s = trocarExercicio(sessaoNova(DIA_UM, 'choque-A', T0), ficha, 'flexaoInclinada', novo)
+    expect(s.trocas).toEqual({ flexaoInclinada: novo })
+    const comTroca = aplicarTrocas(ficha, s)
+    expect(comTroca.itens[0]).toMatchObject({ exercicio: novo, original: 'flexaoInclinada', series: 2, alvo: [6, 8] })
+    expect(comTroca.itens[1]).toEqual(ficha.itens[1])
+    s = registrarSerie(s, novo, 7)
+    expect(seriesDe(s, novo)).toEqual([7])
+    expect(recordes(mapa(s)).get(novo)).toEqual({ valor: 7, data: DIA_UM })
+    expect(recordes(mapa(s)).has('flexaoInclinada')).toBe(false)
+  })
+
+  it('depois da primeira série a troca trava; antes dela, voltar ao original desfaz a troca', () => {
+    const [a, b] = opcoesDeTroca(ficha.itens, 0)
+    const trocada = trocarExercicio(sessaoNova(DIA_UM, 'choque-A', T0), ficha, 'flexaoInclinada', a)
+    expect(trocarExercicio(trocada, ficha, 'flexaoInclinada', b).trocas).toEqual({ flexaoInclinada: b })
+    expect(trocarExercicio(trocada, ficha, 'flexaoInclinada', 'flexaoInclinada').trocas).toBeUndefined()
+    const comSerie = registrarSerie(trocada, a, 5)
+    expect(trocarExercicio(comSerie, ficha, 'flexaoInclinada', b)).toBe(comSerie)
+    expect(aplicarTrocas(ficha, undefined)).toBe(ficha)
+  })
+
+  it('nenhuma troca nem volta ao original deixa o mesmo exercício em dois itens', () => {
+    // flexaoJoelhos sai do item 0 se ele for trocado; então o item 1 (pike) não pode virar flexaoJoelhos se o 0 voltar
+    const itens = [
+      { exercicio: 'flexaoJoelhos' as IdExercicio, series: 2, alvo: [6, 8] as [number, number], descanso: 60 },
+      { exercicio: 'mergulho' as IdExercicio, series: 2, alvo: [6, 8] as [number, number], descanso: 60 },
+    ]
+    const dois = { ...ficha, itens }
+    let s = trocarExercicio(sessaoNova(DIA_UM, 'choque-A', T0), dois, 'flexaoJoelhos', 'flexaoInclinada')
+    s = trocarExercicio(s, dois, 'mergulho', 'flexaoJoelhos')
+    expect(s.trocas).toEqual({ flexaoJoelhos: 'flexaoInclinada', mergulho: 'flexaoJoelhos' })
+    const comTroca = aplicarTrocas(dois, s)
+    expect(podeVoltarAoOriginal(comTroca.itens, 0)).toBe(false)
+    expect(trocarExercicio(s, dois, 'flexaoJoelhos', 'flexaoJoelhos')).toBe(s)
+    expect(podeVoltarAoOriginal(comTroca.itens, 1)).toBe(true)
+  })
+
+  it('a leitura do banco aproveita só trocas entre exercícios que existem', () => {
+    const s = normalizarSessao({ data: DIA_UM, treino: 'choque-A', inicio: T0, trocas: { flexaoInclinada: 'flexaoJoelhos', pike: 'naoExiste', inventado: 'flexao', prancha: 'prancha' } })!
+    expect(s.trocas).toEqual({ flexaoInclinada: 'flexaoJoelhos' })
+    expect(normalizarSessao({ data: DIA_UM, treino: 'choque-A', inicio: T0, trocas: ['x'] })!.trocas).toBeUndefined()
+    expect(normalizarSessao({ data: DIA_UM, treino: 'choque-A', inicio: T0, trocas: null })).not.toHaveProperty('trocas')
+  })
+})
+
+describe('aquecimento e alongamento', () => {
+  it('exercício por lado vira duas etapas, uma de cada lado', () => {
+    const etapas = etapasDoRoteiro([{ exercicio: 'giroBracos', segundos: 30 }, { exercicio: 'balancoPernas', segundos: 15 }])
+    expect(etapas).toEqual([
+      { exercicio: 'giroBracos', segundos: 30 },
+      { exercicio: 'balancoPernas', segundos: 15, lado: 1 },
+      { exercicio: 'balancoPernas', segundos: 15, lado: 2 },
+    ])
+  })
+
+  it('sabe em que movimento está e quanto falta, pelo tempo decorrido', () => {
+    const etapas = etapasDoRoteiro([{ exercicio: 'giroBracos', segundos: 30 }, { exercicio: 'balancoPernas', segundos: 15 }])
+    expect(momentoDoRoteiro(etapas, 0)).toEqual({ indice: 0, restante: 30 })
+    expect(momentoDoRoteiro(etapas, 29.2)).toEqual({ indice: 0, restante: 1 })
+    expect(momentoDoRoteiro(etapas, 30)).toEqual({ indice: 1, restante: 15 })
+    expect(momentoDoRoteiro(etapas, 52)).toEqual({ indice: 2, restante: 8 })
+    expect(momentoDoRoteiro(etapas, 60)).toBeNull()
   })
 })

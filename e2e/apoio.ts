@@ -82,10 +82,25 @@ export const aba = (page: Page, nome: 'Hoje' | 'Cardápio' | 'Treino' | 'Evoluç
 /** Treino mínimo que conta como feito: uma série registrada e conclusão antes do fim. Termina na tela Treino. */
 export async function treinoRapido(page: Page) {
   await aba(page, 'Treino').tap()
-  await page.getByRole('button', { name: /COMEÇAR TREINO|CONTINUAR TREINO/ }).tap()
+  await entrarNoTreino(page)
   await page.getByRole('button', { name: 'Registrar série' }).tap()
   await page.getByRole('button', { name: 'Pular descanso' }).tap()
   await page.getByRole('button', { name: 'Concluir treino antes do fim' }).tap()
   await page.getByRole('button', { name: 'Concluir agora' }).tap()
   await page.getByRole('heading', { name: 'TREINO CONCLUÍDO' }).waitFor()
+  await pularAlongamento(page)
+}
+
+/** Começa ou continua o treino. Treino sem série abre no aquecimento, que é pulado aqui. */
+export async function entrarNoTreino(page: Page) {
+  const botao = page.getByRole('button', { name: /COMEÇAR TREINO|CONTINUAR TREINO/ })
+  await botao.waitFor()
+  const semSerie = (await botao.textContent())?.includes('COMEÇAR')
+  await botao.tap()
+  if (semSerie) await page.getByRole('button', { name: 'Pular aquecimento' }).tap()
+}
+
+/** Depois de concluir, o alongamento abre sozinho por cima da tela Treino. */
+export async function pularAlongamento(page: Page) {
+  await page.getByRole('button', { name: 'Pular alongamento' }).tap()
 }

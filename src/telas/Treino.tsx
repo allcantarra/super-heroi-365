@@ -1,16 +1,17 @@
-import { BedDouble, Check, Play, RotateCcw, Trophy } from 'lucide-react'
+import { BedDouble, Check, Play, RotateCcw, StretchHorizontal, Trophy } from 'lucide-react'
 import { useState } from 'react'
-import { AQUECIMENTO, EXERCICIOS, type IdExercicio } from '../conteudo/treinos'
+import { ALONGAMENTO, AQUECIMENTO, EXERCICIOS, type IdExercicio } from '../conteudo/treinos'
 import type { Dados } from '../dados/useDados'
 import { jornada } from '../dominio/dia'
 import { xpDaEvolucao } from '../dominio/evolucao'
 import { progressoDe } from '../dominio/jogo'
 import { dataCurta, numeroDoDia, segundaDaSemana, somarDias } from '../dominio/tempo'
 import {
-  concluir, desfazerSerie, diasComTreino, duracaoEstimada, reabrir, recordes, recordesBatidos, registrarSerie, resumoDaSessao, seriesDe, sessaoNova, siglaDe, textoCurto, textoValor, treinoDaData, treinoFeito, ultimaVez,
+  aplicarTrocas, concluir, desfazerSerie, duracaoDoRoteiro, trocarExercicio, diasComTreino, duracaoEstimada, reabrir, recordes, recordesBatidos, registrarSerie, resumoDaSessao, seriesDe, sessaoNova, siglaDe, textoCurto, textoValor, treinoDaData, treinoFeito, ultimaVez,
   type Sessao, type TreinoDoDia,
 } from '../dominio/treino'
 import { Pow, type Golpe } from '../ui/Pow'
+import { Roteiro } from '../ui/Roteiro'
 import { instante } from '../ui/useTique'
 import { Execucao } from './Execucao'
 
@@ -27,14 +28,16 @@ const DIAS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 export function Treino({ dados, hoje, erroAoSalvar, mudarSessao, irParaHoje }: Props) {
   const { perfil, dias, sessoes } = dados
   const diaUm = perfil.diaUm!
-  const treino = treinoDaData(diaUm, hoje)
   const sessao = sessoes.get(hoje)
+  const daFicha = treinoDaData(diaUm, hoje)
+  const treino = daFicha && aplicarTrocas(daFicha, sessao)
   const [executando, setExecutando] = useState(false)
+  const [alongando, setAlongando] = useState(false)
   const [golpe, setGolpe] = useState<Golpe | null>(null)
 
   const gravar = (mudanca: (s: Sessao) => Sessao) => {
     // a sessão sempre carrega a ficha de hoje, mesmo que a data do dia 1 tenha sido ajustada depois de começar
-    if (treino) mudarSessao(hoje, sessaoNova(hoje, treino.id, instante()), (s) => ({ ...mudanca(s), treino: treino.id }))
+    if (daFicha) mudarSessao(hoje, sessaoNova(hoje, daFicha.id, instante()), (s) => ({ ...mudanca(s), treino: daFicha.id }))
   }
 
   const comecar = () => {
@@ -56,6 +59,7 @@ export function Treino({ dados, hoje, erroAoSalvar, mudarSessao, irParaHoje }: P
     if (ganho > 0) setGolpe({ id: instante(), palavra: nivel > progressoDe(antes.xpTotal + xpExtra).nivel ? `NÍVEL ${nivel}!` : 'BOOM!', linha: `+${ganho} XP` })
     gravar((s) => concluir(s, instante()))
     setExecutando(false)
+    setAlongando(true)
     window.scrollTo(0, 0)
   }
 
@@ -69,6 +73,7 @@ export function Treino({ dados, hoje, erroAoSalvar, mudarSessao, irParaHoje }: P
         erroAoSalvar={erroAoSalvar}
         registrar={(exercicio, valor) => gravar((s) => registrarSerie(s, exercicio, valor))}
         desfazer={(exercicio) => gravar((s) => desfazerSerie(s, exercicio))}
+        trocar={(original, novo) => daFicha && gravar((s) => trocarExercicio(s, daFicha, original, novo))}
         concluir={aoConcluir}
         sair={() => setExecutando(false)}
       />
@@ -98,7 +103,7 @@ export function Treino({ dados, hoje, erroAoSalvar, mudarSessao, irParaHoje }: P
           {referencia && numero >= 1 && <p className="treino-meta">Amanhã: {referencia.nome}, {referencia.foco.toLowerCase()}.</p>}
         </section>
       ) : treinoFeito(sessao) ? (
-        <Concluido treino={treino} sessao={sessao!} sessoes={sessoes} irParaHoje={irParaHoje} reabrir={comecar} />
+        <Concluido treino={treino} sessao={sessao!} sessoes={sessoes} irParaHoje={irParaHoje} reabrir={comecar} alongar={() => setAlongando(true)} />
       ) : (
         <section className="painel" aria-label="Treino de hoje">
           <span className="aba">TREINO DE HOJE</span>
@@ -110,14 +115,14 @@ export function Treino({ dados, hoje, erroAoSalvar, mudarSessao, irParaHoje }: P
               const feitas = seriesDe(sessao, item.exercicio).length
               return (
                 <li key={item.exercicio} className={feitas >= item.series ? 'feito' : undefined}>
-                  <span>{EXERCICIOS[item.exercicio].nome}</span>
+                  <span>{EXERCICIOS[item.exercicio].nome}{item.original && <small>no lugar de {EXERCICIOS[item.original].nome}</small>}</span>
                   <b>{textoCurto(item)}</b>
                 </li>
               )
             })}
           </ul>
           <p className="treino-nota">{treino.nota}</p>
-          <p className="treino-nota">{AQUECIMENTO}</p>
+          <p className="treino-nota">Começa com {Math.round(duracaoDoRoteiro(AQUECIMENTO) / 60)} minutos de aquecimento guiado e termina com {Math.round(duracaoDoRoteiro(ALONGAMENTO) / 60)} de alongamento, fora da conta acima. Dá para trocar um exercício por outro do mesmo nível antes da primeira série dele.</p>
           {sessao && sessao.series.length > 0 && <p className="recompensa">{sessao.series.length} {sessao.series.length === 1 ? 'série registrada' : 'séries registradas'} até agora.</p>}
           <button className="botao largo" onClick={comecar}><Play aria-hidden />{sessao && sessao.series.length > 0 ? 'CONTINUAR TREINO' : 'COMEÇAR TREINO'}</button>
         </section>
@@ -153,12 +158,22 @@ export function Treino({ dados, hoje, erroAoSalvar, mudarSessao, irParaHoje }: P
         </ul>
       )}
 
+      {alongando && (
+        <Roteiro
+          titulo="Alongamento"
+          chamada="3 minutos para soltar o que trabalhou. Segure cada posição sem balançar e sem dor."
+          roteiro={ALONGAMENTO}
+          som={perfil.som}
+          pular="Pular alongamento"
+          aoTerminar={() => setAlongando(false)}
+        />
+      )}
       <Pow golpe={golpe} aoTerminar={() => setGolpe(null)} />
     </>
   )
 }
 
-function Concluido({ treino, sessao, sessoes, irParaHoje, reabrir }: { treino: TreinoDoDia; sessao: Sessao; sessoes: Map<string, Sessao>; irParaHoje: () => void; reabrir: () => void }) {
+function Concluido({ treino, sessao, sessoes, irParaHoje, reabrir, alongar }: { treino: TreinoDoDia; sessao: Sessao; sessoes: Map<string, Sessao>; irParaHoje: () => void; reabrir: () => void; alongar: () => void }) {
   const resumo = resumoDaSessao(sessao, treino.itens)
   const batidos = new Set(recordesBatidos(sessoes, sessao))
   const feitos = [...new Set(sessao.series.map((s) => s.exercicio))] as IdExercicio[]
@@ -186,6 +201,7 @@ function Concluido({ treino, sessao, sessoes, irParaHoje, reabrir }: { treino: T
         })}
       </ul>
       <button className="botao largo" onClick={irParaHoje}>VER MEU DIA</button>
+      <button className="botao fantasma" style={{ marginTop: 12 }} onClick={alongar}><StretchHorizontal aria-hidden />Alongar 3 minutos</button>
       <button className="botao fantasma" style={{ marginTop: 12 }} onClick={reabrir}><RotateCcw aria-hidden />Reabrir treino</button>
     </section>
   )

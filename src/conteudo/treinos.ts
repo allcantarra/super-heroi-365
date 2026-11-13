@@ -4,79 +4,18 @@
  * Objetivo: corpo atlético e definido (ombros, costas em V, abdômen, fôlego), partindo do zero.
  */
 
-export type Unidade = 'reps' | 'seg' | 'min'
-export type Grupo = 'empurrar' | 'puxar' | 'pernas' | 'core' | 'folego'
+import { CORE } from './exercicios/core'
+import { EMPURRAR } from './exercicios/empurrar'
+import { FOLEGO } from './exercicios/folego'
+import { MOBILIDADE } from './exercicios/mobilidade'
+import { PERNAS } from './exercicios/pernas'
+import { PUXAR } from './exercicios/puxar'
+import type { Exercicio } from './exercicios/tipos'
 
-export interface Exercicio {
-  nome: string
-  unidade: Unidade
-  grupo: Grupo
-  /** Série feita de um lado e depois do outro; o número registrado é o de cada lado. */
-  porLado?: true
-  /** Como executar, em uma ou duas frases. */
-  execucao: string
-}
+export type { Dificuldade, Exercicio, Grupo, Unidade } from './exercicios/tipos'
 
-const E = {
-  // ---------- empurrar: peito, ombros e tríceps ----------
-  flexaoInclinada: { nome: 'Flexão com as mãos no sofá', unidade: 'reps', grupo: 'empurrar', execucao: 'Mãos no assento do sofá, corpo reto da cabeça ao calcanhar. Desça o peito em 3 segundos até quase tocar e empurre de volta.' },
-  flexaoJoelhos: { nome: 'Flexão de joelhos', unidade: 'reps', grupo: 'empurrar', execucao: 'Joelhos no chão, mãos um pouco mais abertas que os ombros. Desça em 3 segundos com os cotovelos a 45 graus do tronco e suba sem arquear a lombar.' },
-  flexao: { nome: 'Flexão tradicional', unidade: 'reps', grupo: 'empurrar', execucao: 'Corpo reto, abdômen firme. Desça em 3 segundos até o peito quase tocar o chão e suba em 1. Se travar, termine a série de joelhos.' },
-  flexaoPausa: { nome: 'Flexão com pausa embaixo', unidade: 'reps', grupo: 'empurrar', execucao: 'Flexão tradicional, parando 2 segundos com o peito a um palmo do chão. A pausa tira o impulso e obriga o peito a trabalhar.' },
-  flexaoDeclinada: { nome: 'Flexão com os pés no sofá', unidade: 'reps', grupo: 'empurrar', execucao: 'Pés no sofá, mãos no chão. Desça controlando e suba sem deixar o quadril cair. Pega a parte de cima do peito e os ombros.' },
-  flexaoDiamante: { nome: 'Flexão diamante', unidade: 'reps', grupo: 'empurrar', execucao: 'Mãos juntas embaixo do peito, formando um triângulo. Cotovelos rentes ao corpo na descida. De joelhos, se precisar.' },
-  flexaoArqueiro: { nome: 'Flexão arqueiro', unidade: 'reps', grupo: 'empurrar', porLado: true, execucao: 'Mãos bem abertas. Desça levando o peito para uma das mãos enquanto o outro braço estica. Suba e repita para o mesmo lado até fechar a série.' },
-  flexaoExplosiva: { nome: 'Flexão explosiva', unidade: 'reps', grupo: 'empurrar', execucao: 'Desça controlando e empurre o chão com força, até as palmas descolarem. Aterrisse com os cotovelos soltos e emende a próxima.' },
-  pike: { nome: 'Flexão pike', unidade: 'reps', grupo: 'empurrar', execucao: 'Quadril alto, corpo em V invertido. Dobre os cotovelos levando o topo da cabeça em direção ao chão, à frente das mãos, e empurre de volta. É o exercício dos ombros.' },
-  pikeElevado: { nome: 'Flexão pike com os pés na cadeira', unidade: 'reps', grupo: 'empurrar', execucao: 'Pés na cadeira, quadril alto, tronco quase na vertical. Desça a cabeça entre as mãos e empurre. Cadeira encostada na parede para não escorregar.' },
-  mergulho: { nome: 'Mergulho na cadeira', unidade: 'reps', grupo: 'empurrar', execucao: 'Mãos na borda de uma cadeira firme encostada na parede, pernas dobradas. Desça em 3 segundos até o cotovelo fazer 90 graus e suba.' },
-  mergulhoElevado: { nome: 'Mergulho com os pés elevados', unidade: 'reps', grupo: 'empurrar', execucao: 'Mãos em uma cadeira e calcanhares em outra, pernas esticadas. Desça até 90 graus sem deixar os ombros subirem para as orelhas.' },
-  elevacaoLateral: { nome: 'Elevação lateral com garrafas', unidade: 'reps', grupo: 'empurrar', execucao: 'Uma garrafa de água cheia em cada mão. Suba os braços pelos lados até a altura dos ombros, cotovelos levemente dobrados, e desça em 3 segundos. Alarga os ombros.' },
-  toqueOmbro: { nome: 'Prancha com toque no ombro', unidade: 'reps', grupo: 'empurrar', execucao: 'Posição alta de flexão, pés afastados. Toque uma mão no ombro oposto e troque, sem deixar o quadril balançar. Cada toque conta um.' },
-
-  // ---------- puxar: costas, bíceps e postura ----------
-  remadaToalha: { nome: 'Remada com toalha na porta', unidade: 'reps', grupo: 'puxar', execucao: 'Toalha presa nas duas maçanetas de uma porta aberta e firme. Pés perto da porta, incline o corpo para trás com os braços esticados e puxe o peito até as mãos, juntando as escápulas.' },
-  remadaMesa: { nome: 'Remada invertida na mesa', unidade: 'reps', grupo: 'puxar', execucao: 'Deite embaixo de uma mesa pesada e firme, segure a borda e puxe o peito até ela com o corpo reto. Teste a mesa antes. Joelhos dobrados deixam mais leve.' },
-  remadaMesaElevada: { nome: 'Remada invertida com os pés na cadeira', unidade: 'reps', grupo: 'puxar', execucao: 'Como a remada na mesa, com os calcanhares em uma cadeira e o corpo na horizontal. Puxe o peito até a borda e desça em 3 segundos.' },
-  remadaSupinada: { nome: 'Remada invertida com as palmas para você', unidade: 'reps', grupo: 'puxar', execucao: 'Remada na mesa segurando a borda por baixo, palmas viradas para o rosto. Cotovelos rentes ao corpo. O bíceps entra junto com as costas.' },
-  remadaMochila: { nome: 'Remada com mochila', unidade: 'reps', grupo: 'puxar', porLado: true, execucao: 'Mochila com livros em uma mão, a outra apoiada no sofá, tronco inclinado e costas retas. Puxe a mochila até a cintura, cotovelo rente ao corpo.' },
-  remadaIsometrica: { nome: 'Remada segurando no topo', unidade: 'seg', grupo: 'puxar', execucao: 'Suba na remada invertida na mesa e segure com o peito encostado na borda, escápulas juntas. Conte o tempo parado lá em cima.' },
-  superman: { nome: 'Super-homem com pausa', unidade: 'reps', grupo: 'puxar', execucao: 'De bruços, braços à frente. Tire peito, braços e pernas do chão, segure 2 segundos e desça. Olhe para o chão para não forçar o pescoço.' },
-  anjoInvertido: { nome: 'Anjo invertido no chão', unidade: 'reps', grupo: 'puxar', execucao: 'De bruços, peito pouco acima do chão. Leve os braços esticados da frente da cabeça até o quadril, em arco, sem encostar no chão, e volte. Abre a postura.' },
-  ytw: { nome: 'Y, T e W no chão', unidade: 'reps', grupo: 'puxar', execucao: 'De bruços, levante os braços formando um Y, depois um T, depois um W, apertando as escápulas em cada letra. As três letras contam uma repetição.' },
-  roscaMochila: { nome: 'Rosca com mochila', unidade: 'reps', grupo: 'puxar', execucao: 'Segure a alça da mochila com as duas mãos, palmas para cima. Cotovelos colados ao corpo, suba até o peito e desça em 3 segundos.' },
-
-  // ---------- pernas e glúteos ----------
-  agachamento: { nome: 'Agachamento livre', unidade: 'reps', grupo: 'pernas', execucao: 'Pés na largura dos ombros. Sente para trás em 3 segundos até a coxa ficar paralela ao chão, joelhos na direção dos pés, e suba empurrando o chão.' },
-  afundo: { nome: 'Afundo', unidade: 'reps', grupo: 'pernas', porLado: true, execucao: 'Passo longo à frente, tronco reto. Desça até o joelho de trás quase tocar o chão e volte. Faça todas de uma perna, depois a outra.' },
-  bulgaro: { nome: 'Agachamento búlgaro', unidade: 'reps', grupo: 'pernas', porLado: true, execucao: 'Peito do pé de trás apoiado no sofá. Desça na perna da frente até a coxa ficar paralela ao chão e suba sem empurrar com a de trás.' },
-  pistolSofa: { nome: 'Agachamento em uma perna até o sofá', unidade: 'reps', grupo: 'pernas', porLado: true, execucao: 'De costas para o sofá, uma perna esticada à frente. Sente devagar na outra perna até encostar no assento e levante sem tomar impulso.' },
-  agachamentoSalto: { nome: 'Agachamento com salto', unidade: 'reps', grupo: 'pernas', execucao: 'Agache até a coxa ficar paralela ao chão e salte. Aterrisse macio, na ponta dos pés, já descendo para a próxima.' },
-  ponteGluteo: { nome: 'Ponte de glúteo', unidade: 'reps', grupo: 'pernas', execucao: 'Deitado, joelhos dobrados, pés no chão. Suba o quadril até alinhar joelho, quadril e ombro, aperte o glúteo 1 segundo e desça.' },
-  ponteUnilateral: { nome: 'Ponte de glúteo em uma perna', unidade: 'reps', grupo: 'pernas', porLado: true, execucao: 'Como a ponte, com uma perna esticada no ar. Suba o quadril sem deixar um lado cair e segure 1 segundo no topo.' },
-  stiffUnilateral: { nome: 'Stiff em uma perna com mochila', unidade: 'reps', grupo: 'pernas', porLado: true, execucao: 'Mochila nas mãos, apoiado em uma perna com o joelho pouco dobrado. Incline o tronco reto à frente enquanto a outra perna sobe atrás, e volte. Trabalha a parte de trás da coxa.' },
-  panturrilha: { nome: 'Elevação de panturrilha', unidade: 'reps', grupo: 'pernas', execucao: 'Em pé, de preferência na beira de um degrau. Suba na ponta dos pés, segure 1 segundo e desça devagar.' },
-  panturrilhaUnilateral: { nome: 'Panturrilha em uma perna', unidade: 'reps', grupo: 'pernas', porLado: true, execucao: 'Na beira de um degrau, apoiado em um pé só e segurando na parede. Suba tudo, segure 1 segundo e desça abaixo da linha do degrau.' },
-  cadeiraParede: { nome: 'Cadeira na parede', unidade: 'seg', grupo: 'pernas', execucao: 'Costas na parede, coxas paralelas ao chão, joelhos a 90 graus. Segure parado, sem apoiar as mãos nas pernas.' },
-
-  // ---------- core ----------
-  prancha: { nome: 'Prancha', unidade: 'seg', grupo: 'core', execucao: 'Antebraços no chão, cotovelos embaixo dos ombros, corpo reto. Aperte glúteo e abdômen. Pare quando o quadril começar a cair.' },
-  pranchaLateral: { nome: 'Prancha lateral', unidade: 'seg', grupo: 'core', porLado: true, execucao: 'De lado, apoiado em um antebraço, pés empilhados. Suba o quadril até o corpo ficar reto e segure. Joelho de baixo no chão, se precisar.' },
-  pranchaAlcance: { nome: 'Prancha com alcance', unidade: 'seg', grupo: 'core', execucao: 'Na prancha, estique um braço à frente, segure 2 segundos e troque, sem girar o quadril.' },
-  deadBug: { nome: 'Inseto morto', unidade: 'reps', grupo: 'core', porLado: true, execucao: 'Deitado de costas, braços para o teto, joelhos a 90 graus. Desça um braço e a perna oposta até quase tocar o chão, com a lombar colada no piso, e volte.' },
-  elevacaoPernas: { nome: 'Elevação de pernas deitado', unidade: 'reps', grupo: 'core', execucao: 'Deitado, mãos embaixo do quadril. Suba as pernas esticadas até 90 graus e desça em 3 segundos sem encostar no chão. A lombar não descola.' },
-  elevacaoQuadril: { nome: 'Elevação de pernas tirando o quadril', unidade: 'reps', grupo: 'core', execucao: 'Suba as pernas até 90 graus e continue, empurrando os pés para o teto até o quadril sair do chão. Desça em 4 segundos.' },
-  hollow: { nome: 'Canoa', unidade: 'seg', grupo: 'core', execucao: 'Deitado de costas, tire ombros e pernas do chão com os braços esticados atrás da cabeça. A lombar fica colada no piso. Segure parado.' },
-  giroRusso: { nome: 'Giro russo com mochila', unidade: 'reps', grupo: 'core', execucao: 'Sentado, tronco inclinado para trás, pés fora do chão. Leve a mochila de um lado ao outro do quadril. Cada toque no chão conta um.' },
-  escalador: { nome: 'Escalador', unidade: 'seg', grupo: 'core', execucao: 'Posição alta de flexão. Traga um joelho ao peito e troque, rápido, como se corresse no lugar, com o quadril baixo.' },
-  burpee: { nome: 'Burpee', unidade: 'reps', grupo: 'core', execucao: 'Agache, apoie as mãos, jogue os pés para trás, encoste o peito no chão, volte e salte batendo as mãos acima da cabeça. Ritmo constante.' },
-  vacuum: { nome: 'Vácuo abdominal', unidade: 'seg', grupo: 'core', execucao: 'Em pé ou de quatro apoios, solte todo o ar e puxe o umbigo para dentro, na direção da coluna. Segure sem prender a garganta. Afina a cintura.' },
-
-  // ---------- fôlego ----------
-  caminhadaTrote: { nome: 'Caminhada e trote', unidade: 'min', grupo: 'folego', execucao: 'Comece com 3 minutos de caminhada rápida. Depois alterne 1 minuto de trote leve com 2 de caminhada. Ritmo em que dá para conversar.' },
-  corridaLeve: { nome: 'Corrida leve contínua', unidade: 'min', grupo: 'folego', execucao: 'Corra em ritmo de conversa, sem parar. Se faltar ar, caminhe 1 minuto e volte a correr. Os 3 primeiros minutos são de aquecimento.' },
-  corridaTiros: { nome: 'Corrida com tiros', unidade: 'min', grupo: 'folego', execucao: 'Aqueça 5 minutos trotando. Depois alterne 1 minuto forte com 2 minutos de trote até fechar o tempo. O tiro é forte, não desesperado.' },
-} satisfies Record<string, Exercicio>
+/** Catálogo inteiro. Cada grupo mora no próprio arquivo, com o passo a passo de cada exercício. */
+const E = { ...EMPURRAR, ...PUXAR, ...PERNAS, ...CORE, ...FOLEGO, ...MOBILIDADE } satisfies Record<string, Exercicio>
 
 export type IdExercicio = keyof typeof E
 export const EXERCICIOS: Record<IdExercicio, Exercicio> = E
@@ -115,7 +54,32 @@ export interface Ficha {
 
 const i = (exercicio: IdExercicio, descanso: number, ...niveis: Nivel[]): ItemFicha => ({ exercicio, descanso, niveis })
 
-export const AQUECIMENTO = 'Antes de começar: 2 minutos girando ombros, quadril e tornozelos, e 20 polichinelos.'
+/** Um movimento do aquecimento ou do alongamento. Em exercício por lado, os segundos valem para cada lado. */
+export interface PassoDoRoteiro {
+  exercicio: IdExercicio
+  segundos: number
+}
+
+/** 3 minutos antes da primeira série, fora da contagem de duração do treino. */
+export const AQUECIMENTO: readonly PassoDoRoteiro[] = [
+  { exercicio: 'corridaNoLugar', segundos: 30 },
+  { exercicio: 'giroBracos', segundos: 30 },
+  { exercicio: 'circulosQuadril', segundos: 30 },
+  { exercicio: 'balancoPernas', segundos: 15 },
+  { exercicio: 'giroTronco', segundos: 20 },
+  { exercicio: 'polichinelo', segundos: 20 },
+  { exercicio: 'skipping', segundos: 20 },
+]
+
+/** 3 minutos depois de concluir, também fora da contagem. */
+export const ALONGAMENTO: readonly PassoDoRoteiro[] = [
+  { exercicio: 'peitoralParede', segundos: 15 },
+  { exercicio: 'posteriorCoxa', segundos: 15 },
+  { exercicio: 'quadricepsParede', segundos: 15 },
+  { exercicio: 'flexorQuadril', segundos: 15 },
+  { exercicio: 'gatoVaca', segundos: 30 },
+  { exercicio: 'posturaCrianca', segundos: 30 },
+]
 
 export const FICHAS: Ficha[] = [
   {

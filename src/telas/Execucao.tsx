@@ -1,16 +1,19 @@
-import { Check, ChevronLeft, ChevronRight, Minus, Plus, SkipForward, Square, Sun, Timer, Trophy, Undo2, X } from 'lucide-react'
+import { ArrowLeftRight, Check, ChevronLeft, ChevronRight, Minus, Plus, SkipForward, Square, Sun, Timer, Trophy, Undo2, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { EXERCICIOS, type IdExercicio, type Unidade } from '../conteudo/treinos'
+import { AQUECIMENTO, EXERCICIOS, type IdExercicio, type Unidade } from '../conteudo/treinos'
 import { dataCurta } from '../dominio/tempo'
 import {
-  AJUSTE_DESCANSO, VALOR_MAXIMO, ajustarFim, proximoItem, recordes, registrarSerie, relogio, segundosDecorridos, segundosRestantes, seriesDe, sugestao, textoAlvo, textoValor, ultimaVez,
+  AJUSTE_DESCANSO, VALOR_MAXIMO, ajustarFim, opcoesDeTroca, podeVoltarAoOriginal, proximoItem, recordes, registrarSerie, relogio, segundosDecorridos, segundosRestantes, seriesDe, sugestao, textoAlvo, textoValor, ultimaVez,
   type Sessao, type TreinoDoDia,
 } from '../dominio/treino'
+import { PassoAPasso } from '../ui/PassoAPasso'
+import { Roteiro } from '../ui/Roteiro'
 import { agendarAviso, tocarAcerto } from '../ui/som'
 import { useTelaAcesa } from '../ui/useTelaAcesa'
 import { instante, useTique } from '../ui/useTique'
 
 interface Props {
+  /** Ficha do dia com as trocas da sessão já aplicadas. */
   treino: TreinoDoDia
   sessao: Sessao
   /** Todas as sessões, para mostrar a última vez e os recordes. */
@@ -19,6 +22,8 @@ interface Props {
   erroAoSalvar: boolean
   registrar: (exercicio: IdExercicio, valor: number) => void
   desfazer: (exercicio: IdExercicio) => void
+  /** Troca o exercício da ficha `original` por `novo` (ou de volta para o original). */
+  trocar: (original: IdExercicio, novo: IdExercicio) => void
   concluir: () => void
   sair: () => void
 }
@@ -61,10 +66,12 @@ function guardarCrono(c: Crono | null): void {
 }
 
 /** Treino em andamento: um exercício por vez, registro de cada série e descanso que começa sozinho. */
-export function Execucao({ treino, sessao, sessoes, som, erroAoSalvar, registrar, desfazer, concluir, sair }: Props) {
+export function Execucao({ treino, sessao, sessoes, som, erroAoSalvar, registrar, desfazer, trocar, concluir, sair }: Props) {
   const agora = useTique()
   const acesa = useTelaAcesa(true)
   const [crono, setCrono] = useState<Crono | null>(() => lerCrono(treino, sessao))
+  // treino que ainda não teve série começa pelo aquecimento; quem volta no meio do treino vai direto ao exercício
+  const [aquecendo, setAquecendo] = useState(() => sessao.series.length === 0 && !crono)
   const [indice, setIndice] = useState(() => {
     const doCrono = crono ? treino.itens.findIndex((x) => x.exercicio === crono.exercicio) : -1
     return doCrono >= 0 ? doCrono : (proximoItem(treino.itens, sessao) ?? 0)
@@ -103,11 +110,12 @@ export function Execucao({ treino, sessao, sessoes, som, erroAoSalvar, registrar
     if (som) cancelarSom.current = agendarAviso(segundos)
   }
 
-  // ao sair da tela, nenhum bipe fica agendado; ao entrar, o leitor de tela começa pelo nome do exercício
+  // ao sair da tela, nenhum bipe fica agendado
+  useEffect(() => () => cancelarSom.current(), [])
+  // ao entrar (ou ao fim do aquecimento), o leitor de tela começa pelo nome do exercício
   useEffect(() => {
-    titulo.current?.focus()
-    return () => cancelarSom.current()
-  }, [])
+    if (!aquecendo) titulo.current?.focus()
+  }, [aquecendo])
 
   // Em segundo plano o iPhone congela o áudio: ao voltar, o bipe é agendado de novo para o tempo que realmente falta.
   const fimDoDescanso = descanso?.fim
@@ -213,6 +221,21 @@ export function Execucao({ treino, sessao, sessoes, som, erroAoSalvar, registrar
   const mudarValor = (delta: number) => setAjuste({ chave, valor: Math.max(1, Math.min(VALOR_MAXIMO, valor + delta)) })
 
   const pendente = proximoItem(treino.itens, sessao)
+  const original = item.original ?? item.exercicio
+  const opcoes = feitas.length === 0 && !cronoAqui ? opcoesDeTroca(treino.itens, indice) : []
+
+  if (aquecendo) {
+    return (
+      <Roteiro
+        titulo="Aquecimento"
+        chamada="3 minutos para soltar as articulações e subir o coração antes da primeira série."
+        roteiro={AQUECIMENTO}
+        som={som}
+        pular="Pular aquecimento"
+        aoTerminar={() => setAquecendo(false)}
+      />
+    )
+  }
 
   return (
     <div className="execucao" role="dialog" aria-modal="true" aria-label="Treino em andamento">
@@ -233,7 +256,19 @@ export function Execucao({ treino, sessao, sessoes, som, erroAoSalvar, registrar
       <div className="exec-corpo">
         <h1 ref={titulo} tabIndex={-1}>{exercicio.nome}</h1>
         <p className="exec-alvo">{item.series} {item.series === 1 ? 'série' : 'séries'} de {textoAlvo(item)}</p>
+        {item.original && <p className="exec-troca-nota">No lugar de {EXERCICIOS[item.original].nome}</p>}
+        {opcoes.length > 0 && (
+          <label className="exec-trocar">
+            <span><ArrowLeftRight aria-hidden />Trocar exercício</span>
+            <select value={item.exercicio} onChange={(e) => trocar(original, e.target.value as IdExercicio)}>
+              {item.original && podeVoltarAoOriginal(treino.itens, indice) && <option value={item.original}>{EXERCICIOS[item.original].nome} (da ficha)</option>}
+              <option value={item.exercicio}>{exercicio.nome}{item.original ? '' : ' (da ficha)'}</option>
+              {opcoes.filter((id) => id !== item.exercicio).map((id) => <option key={id} value={id}>{EXERCICIOS[id].nome}</option>)}
+            </select>
+          </label>
+        )}
         <p className="exec-como">{exercicio.execucao}</p>
+        <PassoAPasso exercicio={item.exercicio} aberto={!anterior && !recorde} />
 
         <ol className="exec-series" aria-label="Séries deste exercício">
           {Array.from({ length: item.series }, (_, n) => {

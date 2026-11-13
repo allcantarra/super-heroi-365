@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { aba, abrirEm, concluirAbertura, marcarTreinoComoNaEtapa3, sessaoGravada, treinoRapido } from './apoio'
+import { aba, abrirEm, concluirAbertura, entrarNoTreino, marcarTreinoComoNaEtapa3, pularAlongamento, sessaoGravada, treinoRapido } from './apoio'
 
 const HOJE = '2026-11-09'
 
@@ -10,7 +10,6 @@ const registrar = (page: Page) => page.getByRole('button', { name: 'Registrar s�
 const pular = (page: Page) => page.getByRole('button', { name: 'Pular descanso' })
 const relogio = (page: Page) => page.locator('.exec-relogio')
 const valor = (page: Page) => page.locator('.exec-passo output b')
-const comecar = (page: Page) => page.getByRole('button', { name: /COMEÇAR TREINO|CONTINUAR TREINO/ })
 const titulo = (page: Page, nome: string) => page.getByRole('heading', { name: nome, level: 1, exact: true })
 const missaoTreino = (page: Page) => page.getByRole('button', { name: /Treino.*06:15/ })
 
@@ -44,12 +43,12 @@ test.describe('treino', () => {
     await expect(page.getByText(/5 exercícios, cerca de \d+ minutos/)).toBeVisible()
     await expect(page.getByText(/Nenhum recorde ainda\./)).toBeVisible()
     await semEstouro(page)
-    await comecar(page).tap()
+    await entrarNoTreino(page)
 
     // primeiro exercício: descrição, alvo e sugestão no piso do alvo
     await expect(titulo(page, 'Flexão com as mãos no sofá')).toBeVisible()
     await expect(page.getByText('2 séries de 6 a 8 repetições')).toBeVisible()
-    await expect(page.getByText(/Desça o peito em 3 segundos/)).toBeVisible()
+    await expect(page.locator('.exec-como')).toContainText('Desça o peito em 3 segundos')
     await expect(page.getByText(/Primeira vez neste exercício\./)).toBeVisible()
     await expect(page.getByText('Exercício 1 de 5')).toBeVisible()
     await expect(page.getByText('Tela acesa')).toBeAttached()
@@ -112,6 +111,7 @@ test.describe('treino', () => {
     await expect(page.locator('.treino-numeros')).toContainText('10 de 10')
     await expect(page.locator('.treino-recordes li')).toHaveCount(5)
     await semEstouro(page)
+    await pularAlongamento(page)
 
     // a missão de treino da tela Hoje está cumprida
     await page.getByRole('button', { name: 'VER MEU DIA' }).tap()
@@ -132,7 +132,7 @@ test.describe('treino', () => {
   })
 
   test('o descanso continua certo depois de o app passar um tempo em segundo plano', async ({ page }) => {
-    await comecar(page).tap()
+    await entrarNoTreino(page)
     await registrar(page).tap()
     await expect(relogio(page)).toBeVisible()
     // congela o relógio da página, como o iPhone faz com o app em segundo plano
@@ -151,7 +151,7 @@ test.describe('treino', () => {
   })
 
   test('sair no meio guarda as séries; recarregar e continuar retoma do ponto certo; desfazer apaga', async ({ page }) => {
-    await comecar(page).tap()
+    await entrarNoTreino(page)
     await registrar(page).tap()
     await pular(page).tap()
     await page.getByRole('button', { name: 'Sair do treino sem concluir' }).tap()
@@ -163,7 +163,7 @@ test.describe('treino', () => {
     await aba(page, 'Hoje').tap()
     await expect(missaoTreino(page)).toHaveAttribute('aria-pressed', 'false')
     await missaoTreino(page).tap()
-    await comecar(page).tap()
+    await entrarNoTreino(page)
     await expect(titulo(page, 'Flexão com as mãos no sofá')).toBeVisible()
     await expect(page.getByText('Série 2 de 2', { exact: true })).toBeVisible()
 
@@ -179,7 +179,7 @@ test.describe('treino', () => {
   })
 
   test('concluir antes do fim pede confirmação; reabrir desfaz a missão e o XP', async ({ page }) => {
-    await comecar(page).tap()
+    await entrarNoTreino(page)
     await expect(page.getByRole('button', { name: 'Concluir treino antes do fim' })).toHaveCount(0)
     await registrar(page).tap()
     await pular(page).tap()
@@ -189,6 +189,7 @@ test.describe('treino', () => {
     await page.getByRole('button', { name: 'Concluir treino antes do fim' }).tap()
     await page.getByRole('button', { name: 'Concluir agora' }).tap()
     await expect(page.getByRole('heading', { name: 'TREINO CONCLUÍDO' })).toBeVisible()
+    await pularAlongamento(page)
     await expect(page.locator('.treino-numeros')).toContainText('1 de 10')
 
     await page.getByRole('button', { name: 'Reabrir treino' }).tap()
@@ -200,18 +201,19 @@ test.describe('treino', () => {
   })
 
   test('na semana seguinte mostra o último treino igual, sugere o mesmo número e avisa o recorde', async ({ page }) => {
-    await comecar(page).tap()
+    await entrarNoTreino(page)
     await page.getByRole('button', { name: 'Mais 1' }).tap()
     await registrar(page).tap()
     await pular(page).tap()
     await page.getByRole('button', { name: 'Concluir treino antes do fim' }).tap()
     await page.getByRole('button', { name: 'Concluir agora' }).tap()
     await expect(page.getByRole('heading', { name: 'TREINO CONCLUÍDO' })).toBeVisible()
+    await pularAlongamento(page)
 
     // segunda-feira seguinte: mesma ficha, semana 2
     await page.clock.fastForward(7 * 24 * 3_600_000)
     await expect(page.getByText('Protocolo de Choque, semana 2 de 4')).toBeVisible()
-    await comecar(page).tap()
+    await entrarNoTreino(page)
     await expect(page.getByText('3 séries de 6 a 8 repetições')).toBeVisible()
     await expect(page.getByText('da última vez 7 rep')).toBeVisible()
     await expect(page.getByText('Recorde: 7 rep em 09/11')).toBeVisible()
@@ -247,7 +249,7 @@ test.describe('treino', () => {
   })
 
   test('treino com série registrada e não concluído conta quando o dia vira', async ({ page }) => {
-    await comecar(page).tap()
+    await entrarNoTreino(page)
     await registrar(page).tap()
     await pular(page).tap()
     await page.getByRole('button', { name: 'Sair do treino sem concluir' }).tap()
@@ -262,7 +264,7 @@ test.describe('treino', () => {
   })
 
   test('cronômetro esquecido ligado não sobra para depois de concluir e reabrir', async ({ page }) => {
-    await comecar(page).tap()
+    await entrarNoTreino(page)
     await registrar(page).tap()
     await pular(page).tap()
     for (let n = 0; n < 4; n++) await page.getByRole('button', { name: 'Pular', exact: true }).tap()
@@ -273,13 +275,14 @@ test.describe('treino', () => {
     await page.getByRole('button', { name: 'Concluir agora' }).tap()
     await expect(page.getByRole('heading', { name: 'TREINO CONCLUÍDO' })).toBeVisible()
     expect(await page.evaluate(() => localStorage.getItem('cronometro-treino'))).toBeNull()
+    await pularAlongamento(page)
     await page.getByRole('button', { name: 'Reabrir treino' }).tap()
     await expect(titulo(page, 'Flexão com as mãos no sofá')).toBeVisible()
     await expect(registrar(page)).toBeVisible()
   })
 
   test('desfazer a série durante o descanso encerra o descanso', async ({ page }) => {
-    await comecar(page).tap()
+    await entrarNoTreino(page)
     await registrar(page).tap()
     await expect(relogio(page)).toBeVisible()
     await page.getByRole('button', { name: 'Desfazer a última série' }).tap()

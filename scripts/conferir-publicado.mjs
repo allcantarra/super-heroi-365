@@ -42,6 +42,9 @@ const comecar = pagina.getByRole('button', { name: /COMEÇAR TREINO|CONTINUAR TR
 let treino = 'folga'
 if (await comecar.waitFor({ timeout: 5000 }).then(() => true, () => false)) {
   await comecar.click()
+  // treino sem série abre no aquecimento (desde a v2.2)
+  const pularAquecimento = pagina.getByRole('button', { name: 'Pular aquecimento' })
+  if (await pularAquecimento.waitFor({ timeout: 3000 }).then(() => true, () => false)) await pularAquecimento.click()
   const registrar = pagina.getByRole('button', { name: 'Registrar série' })
   if (await registrar.waitFor({ timeout: 5000 }).then(() => true, () => false)) {
     await registrar.click()
