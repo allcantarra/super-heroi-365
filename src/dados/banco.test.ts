@@ -5,7 +5,7 @@ import { APARENCIA_PADRAO } from '../heroi/aparencia'
 import { banco, lerDias, lerPerfil, mudarDia, normalizarDia, normalizarPerfil, salvarPerfil, type Perfil } from './banco'
 
 const PESSOA = { pesoInicial: 60, metaPeso: 70, altura: 175, idade: 30 }
-const PERFIL: Perfil = { id: 'eu', aparencia: { pele: 'Morena', cabelo: 'Preto', uniforme: 'Grafite', corte: 'Curto' }, pessoa: PESSOA, rotina: ROTINA_PADRAO, diaUm: '2026-11-12', som: false }
+const PERFIL: Perfil = { id: 'eu', aparencia: { pele: 'Morena', cabelo: 'Preto', uniforme: 'Grafite', corte: 'Curto' }, pessoa: PESSOA, rotina: ROTINA_PADRAO, diaUm: '2026-11-12', som: false, trocas: { '2:jantar': 'jantar7' }, comprados: ['arroz'] }
 
 beforeEach(async () => {
   await banco.perfil.clear()
@@ -14,7 +14,7 @@ beforeEach(async () => {
 
 describe('perfil no aparelho', () => {
   it('sem nada salvo, devolve perfil padrão e primeira abertura pendente', async () => {
-    expect(await lerPerfil()).toEqual({ id: 'eu', aparencia: APARENCIA_PADRAO, pessoa: null, rotina: ROTINA_PADRAO, diaUm: null, som: true })
+    expect(await lerPerfil()).toEqual({ id: 'eu', aparencia: APARENCIA_PADRAO, pessoa: null, rotina: ROTINA_PADRAO, diaUm: null, som: true, trocas: {}, comprados: [] })
   })
 
   it('lê de volta o que foi salvo', async () => {
@@ -33,6 +33,12 @@ describe('perfil no aparelho', () => {
     expect(normalizarPerfil({ ...PERFIL, pessoa: { ...PESSOA, pesoInicial: 900 } }).pessoa).toBeNull()
     expect(normalizarPerfil({ ...PERFIL, pessoa: { ...PESSOA, idade: '30' } }).pessoa).toBeNull()
     expect(normalizarPerfil({ ...PERFIL, diaUm: '2026-13-40' }).diaUm).toBeNull()
+  })
+
+  it('descarta troca inválida e item comprado desconhecido ou repetido', () => {
+    const p = normalizarPerfil({ ...PERFIL, trocas: { '2:jantar': 'almoco1', '1:ceia': 'ceia2' }, comprados: ['arroz', 'arroz', 'x', 3] })
+    expect(p.trocas).toEqual({ '1:ceia': 'ceia2' })
+    expect(p.comprados).toEqual(['arroz'])
   })
 
   it('sem dados da pessoa, a primeira abertura continua pendente mesmo com data', () => {

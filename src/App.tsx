@@ -2,12 +2,14 @@ import { CalendarCheck, Dumbbell, TrendingUp, Utensils, type LucideIcon } from '
 import { useEffect, useState } from 'react'
 import { useDados } from './dados/useDados'
 import { dataLocal } from './dominio/tempo'
+import { Cardapio } from './telas/Cardapio'
 import { Hoje } from './telas/Hoje'
 import { PrimeiraAbertura } from './telas/PrimeiraAbertura'
 import { AvisoInstalar } from './ui/AvisoInstalar'
 import { useAgora } from './ui/useAgora'
 
 type Aba = 'hoje' | 'cardapio' | 'treino' | 'evolucao'
+type AbaEmBreve = 'treino' | 'evolucao'
 
 const ABAS: { id: Aba; nome: string; icone: LucideIcon }[] = [
   { id: 'hoje', nome: 'Hoje', icone: CalendarCheck },
@@ -16,8 +18,7 @@ const ABAS: { id: Aba; nome: string; icone: LucideIcon }[] = [
   { id: 'evolucao', nome: 'Evolução', icone: TrendingUp },
 ]
 
-const EM_BREVE: Record<Exclude<Aba, 'hoje'>, { titulo: string; texto: string }> = {
-  cardapio: { titulo: 'Cardápio em preparo', texto: 'Os 7 modelos de dia, as receitas e a lista de compras chegam na etapa 3.' },
+const EM_BREVE: Record<AbaEmBreve, { titulo: string; texto: string }> = {
   treino: { titulo: 'Ficha em montagem', texto: 'O treino guiado, com cronômetro e registro de séries, chega na etapa 4.' },
   evolucao: { titulo: 'Sem registros ainda', texto: 'Peso, medidas e fotos em quadrinho chegam na etapa 5.' },
 }
@@ -91,6 +92,8 @@ export function App() {
       <main className="app">
         {aba === 'hoje' ? (
           <Hoje dados={dados} hoje={hoje} agora={agora} erroAoSalvar={erroAoSalvar} mudarDia={(d, m) => void mudarDia(d, m)} abrirAjustes={() => { setAjustando(true); window.scrollTo(0, 0) }} />
+        ) : aba === 'cardapio' ? (
+          <Cardapio perfil={dados.perfil} hoje={hoje} salvarPerfil={(p) => void salvarPerfil(p)} />
         ) : (
           <div className="vazio">
             <atual.icone aria-hidden />

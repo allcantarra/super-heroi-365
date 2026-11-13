@@ -1,0 +1,255 @@
+/* Etapa 3: cardápio, receitas e lista de compras. */
+.abas {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 22px;
+}
+
+.abas button {
+  min-height: 48px;
+  background: var(--fundo);
+  border: 3px solid var(--papel);
+  font: 400 18px/1 var(--titulo);
+}
+
+.abas button[aria-selected="true"] {
+  background: var(--amarelo);
+  color: var(--tinta);
+  border-color: var(--amarelo);
+  box-shadow: 4px 4px 0 #000;
+}
+
+.macros {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.macros > div {
+  background: var(--fundo);
+  border: 3px solid var(--papel);
+  padding: 8px 10px;
+}
+
+.macros dt {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--apagado);
+}
+
+.macros dd {
+  margin: 0;
+  font: 400 28px/1.05 var(--titulo);
+  color: var(--amarelo);
+}
+
+.macros small {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.dicas {
+  margin: 0;
+  padding-left: 18px;
+  font-weight: 600;
+}
+
+.dicas li + li {
+  margin-top: 6px;
+}
+
+.refeicao {
+  margin-bottom: 26px;
+  padding-bottom: 22px;
+  border-bottom: 3px dashed #ffffff30;
+}
+
+.refeicao header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.refeicao .hora {
+  font: 400 19px/1 var(--titulo);
+  color: var(--amarelo);
+}
+
+.refeicao .qual {
+  font-weight: 700;
+  color: var(--apagado);
+}
+
+.refeicao .formato {
+  margin-left: auto;
+  padding: 2px 8px;
+  border: 2px solid var(--apagado);
+  color: var(--apagado);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.refeicao .formato.fora {
+  border-color: var(--azul);
+  color: #9cc4ff;
+}
+
+.refeicao h3 {
+  font: 400 25px/1.1 var(--titulo);
+  margin-bottom: 8px;
+}
+
+.itens {
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+  font-weight: 600;
+}
+
+.itens li {
+  display: flex;
+  gap: 10px;
+  padding: 3px 0;
+}
+
+.itens li span {
+  flex: none;
+  width: 92px;
+  color: var(--amarelo);
+  font-weight: 700;
+}
+
+.resumo {
+  color: var(--apagado);
+  font-size: 16px;
+}
+
+.acoes-refeicao {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  margin-top: 12px;
+}
+
+.acoes-refeicao .campo {
+  flex: 1;
+  min-width: 0;
+  font-size: 15px;
+  color: var(--apagado);
+}
+
+.acoes-refeicao .botao {
+  flex: none;
+  min-height: 48px;
+  padding: 0 12px;
+}
+
+.nota {
+  margin: 18px 0 20px;
+  color: var(--apagado);
+  font-size: 15px;
+}
+
+.receita {
+  border: 3px solid var(--papel);
+  background: var(--fundo);
+  margin-bottom: 12px;
+  padding: 0 14px;
+}
+
+.receita summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  cursor: pointer;
+  list-style: none;
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 1.1;
+}
+
+.receita summary::-webkit-details-marker {
+  display: none;
+}
+
+.receita summary small {
+  flex: none;
+  font: 400 15px var(--titulo);
+  color: var(--amarelo);
+}
+
+.receita[open] {
+  padding-bottom: 14px;
+}
+
+.receita[open] summary {
+  color: var(--amarelo);
+}
+
+.receita h4 {
+  margin: 12px 0 4px;
+  font: 400 17px var(--titulo);
+}
+
+.receita ul,
+.receita ol {
+  margin: 0;
+  padding-left: 20px;
+  font-weight: 600;
+}
+
+.receita li + li {
+  margin-top: 4px;
+}
+
+.setor {
+  margin-bottom: 26px;
+}
+
+.compra {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 54px;
+  border-bottom: 2px dashed #ffffff30;
+  font-weight: 700;
+  font-size: 19px;
+  line-height: 1.1;
+}
+
+.compra input {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  accent-color: var(--amarelo);
+}
+
+.compra b {
+  margin-left: auto;
+  flex: none;
+  font: 400 17px var(--titulo);
+  color: var(--amarelo);
+}
+
+.compra.feita span {
+  text-decoration: line-through;
+  opacity: 0.5;
+}
+
+.botao:disabled {
+  opacity: 0.4;
+}
+
+.painel .itens li span {
+  color: var(--amarelo);
+}
+
+.painel .itens li.cortado {
+  text-decoration: line-through;
+  opacity: 0.7;
+}

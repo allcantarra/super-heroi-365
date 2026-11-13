@@ -1,10 +1,13 @@
 import { Check, Coffee, Flame, Minus, Plus, Settings, Shield } from 'lucide-react'
 import { useRef, useState, type CSSProperties } from 'react'
+import { alimento, textoQuantidade } from '../conteudo/alimentos'
+import type { IdRefeicao } from '../conteudo/cardapio'
 import type { Dados } from '../dados/useDados'
+import { cardapioDoDia, macrosDoPrato, prato } from '../dominio/cardapio'
 import { META_COPOS, ML_POR_COPO, XP_COPO, alternarMissao, cafeinaLiberada, jornada, missaoDeAgora, mudarCopos, registroVazio, resumoDoDia, type RegistroDia } from '../dominio/dia'
 import { TITULOS, estagioDoNivel, progressoDe } from '../dominio/jogo'
 import { missoesDoDia, type Missao } from '../dominio/rotina'
-import { FASES, faseDoDia, numeroDoDia } from '../dominio/tempo'
+import { FASES, diaDaSemana, faseDoDia, numeroDoDia } from '../dominio/tempo'
 import { Avatar } from '../heroi/Avatar'
 import { Pow, type Golpe } from '../ui/Pow'
 import { tocarAcerto } from '../ui/som'
@@ -37,6 +40,10 @@ export function Hoje({ dados, hoje, agora, erroAoSalvar, mudarDia, abrirAjustes 
   const fase = faseDoDia(numero)
   const proxima = missaoDeAgora(registro, missoes)
   const cafeina = cafeinaLiberada(agora)
+  const cardapio = cardapioDoDia(diaDaSemana(hoje), perfil.trocas)
+  /** O que comer na missão: prato do cardápio do dia; o treino não tem prato. */
+  const pratoDa = (m: Missao) => (m.tipo === 'refeicao' ? prato(cardapio[m.id as IdRefeicao]) : null)
+  const pratoAgora = proxima ? pratoDa(proxima) : null
 
   /** Calcula o que a mudança rende antes de gravar, para mostrar o retorno na hora do toque. */
   const aplicar = (mudanca: (r: RegistroDia) => RegistroDia, comemorar: boolean) => {
@@ -80,8 +87,20 @@ export function Hoje({ dados, hoje, agora, erroAoSalvar, mudarDia, abrirAjustes 
         <section className="painel" aria-label="Missão de agora">
           <span className="aba">MISSÃO DE AGORA, {proxima.hora}</span>
           <h2 className="grande">{proxima.nome.toUpperCase()}</h2>
-          <p>{proxima.detalhe}</p>
-          <div className="recompensa">Recompensa: +{proxima.xp} XP</div>
+          {pratoAgora ? (
+            <>
+              <p>{pratoAgora.nome}</p>
+              <ul className="itens" style={{ marginTop: 8 }}>
+                {pratoAgora.itens.map((item) => {
+                  const cortado = !cafeina && alimento(item.a).cafeina
+                  return <li key={item.a} className={cortado ? 'cortado' : undefined}><span>{textoQuantidade(item.a, item.q[fase - 1])}</span>{alimento(item.a).nome}{cortado ? ' (cortado: passou das 15h)' : ''}</li>
+                })}
+              </ul>
+            </>
+          ) : (
+            <p>{proxima.detalhe}</p>
+          )}
+          <div className="recompensa">Recompensa: +{proxima.xp} XP{pratoAgora ? `, ${Math.round(macrosDoPrato(cardapio[proxima.id as IdRefeicao], fase).kcal)} kcal` : ''}</div>
           <button className="botao largo" onClick={() => alternar(proxima)}><Check aria-hidden />FEITO</button>
         </section>
       ) : (
@@ -129,7 +148,7 @@ export function Hoje({ dados, hoje, agora, erroAoSalvar, mudarDia, abrirAjustes 
             <span className="caixa"><Check aria-hidden /></span>
             <span>
               <span className="nome">{m.nome}</span>
-              <span className="detalhe">{m.detalhe}</span>
+              <span className="detalhe">{pratoDa(m)?.nome ?? m.detalhe}</span>
             </span>
             <span className="quando">{m.hora}<small>+{m.xp} XP</small></span>
           </button>

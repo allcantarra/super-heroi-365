@@ -1,4 +1,6 @@
 import Dexie, { type Table } from 'dexie'
+import { ALIMENTOS } from '../conteudo/alimentos'
+import { normalizarTrocas, type Trocas } from '../dominio/cardapio'
 import { META_COPOS, registroVazio, type RegistroDia } from '../dominio/dia'
 import { normalizarRotina, type IdMissao, type Rotina } from '../dominio/rotina'
 import { dataValida } from '../dominio/tempo'
@@ -20,6 +22,10 @@ export interface Perfil {
   /** Data do dia 1; null enquanto a primeira abertura não foi concluída. */
   diaUm: string | null
   som: boolean
+  /** Pratos que o usuário trocou no cardápio, por dia da semana e refeição. */
+  trocas: Trocas
+  /** Itens já marcados na lista de compras. */
+  comprados: string[]
 }
 
 class Banco extends Dexie {
@@ -65,6 +71,8 @@ export function normalizarPerfil(dado: unknown): Perfil {
     rotina: normalizarRotina(d.rotina),
     diaUm: pessoa ? diaUm : null,
     som: d.som !== false,
+    trocas: normalizarTrocas(d.trocas),
+    comprados: Array.isArray(d.comprados) ? [...new Set(d.comprados.filter((x): x is string => typeof x === 'string' && x in ALIMENTOS))] : [],
   }
 }
 
