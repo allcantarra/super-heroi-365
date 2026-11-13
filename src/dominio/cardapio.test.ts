@@ -306,8 +306,8 @@ describe('receitas completas (versão 2)', () => {
     for (const c of ['pre', 'cafe', 'lanche', 'almoco', 'jantar', 'ceia'] as const) expect(DA_CATEGORIA[c].length, c).toBeGreaterThanOrEqual(30)
   })
 
-  it('o lote 1 trouxe uns 45 pratos novos, chegando a 225', () => {
-    expect(IDS.length).toBeGreaterThanOrEqual(220)
+  it('os lotes 1 e 2 trouxeram uns 170 pratos novos, chegando a 350', () => {
+    expect(IDS.length).toBeGreaterThanOrEqual(345)
   })
 })
 

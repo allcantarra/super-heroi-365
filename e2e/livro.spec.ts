@@ -13,7 +13,7 @@ test.beforeEach(async ({ page }) => {
 })
 
 test('livro de receitas: todos os pratos, busca sem acento, filtro por refeição e por besteira', async ({ page }) => {
-  await expect(conta(page)).toContainText(/22\d receitas no livro/)
+  await expect(conta(page)).toContainText(/3\d\d receitas no livro/)
   await semEstouro(page)
 
   await page.getByLabel('Buscar receita').fill('acai')

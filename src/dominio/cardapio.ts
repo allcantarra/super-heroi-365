@@ -117,8 +117,8 @@ const RODIZIO: Record<Exclude<IdRefeicao, 'almoco' | 'lancheTarde' | 'trajeto'>,
   pre: { passo: 7, giro: 1 },
   cafe: { passo: 11, giro: 2 },
   lancheManha: { passo: 19, giro: 3 },
-  jantar: { passo: 13, giro: 4 },
-  ceia: { passo: 17, giro: 5 },
+  jantar: { passo: 29, giro: 7 },
+  ceia: { passo: 17, giro: 1 },
 }
 
 /** Prato que o rodízio do ano dá para uma refeição em uma data, antes de qualquer troca. */

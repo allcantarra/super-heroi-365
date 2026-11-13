@@ -13,7 +13,7 @@ await pagina.getByRole('button', { name: 'Continuar' }).click()
 await pagina.getByRole('button', { name: 'Continuar' }).click()
 await pagina.getByRole('button', { name: 'Começar' }).click()
 await pagina.getByText('DIA 1 DE 365').waitFor()
-const foto = (nome, inteira = false) => pagina.screenshot({ path: `docs/capturas/v2-3-${nome}.png`, fullPage: inteira })
+const foto = (nome, inteira = false) => pagina.screenshot({ path: `docs/capturas/${process.env.PREFIXO ?? "v2-3"}-${nome}.png`, fullPage: inteira })
 
 await pagina.getByRole('navigation').getByRole('button', { name: 'Cardápio' }).click()
 const almoco = pagina.locator('details.refeicao').nth(3)
