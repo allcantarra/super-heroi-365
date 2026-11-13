@@ -1,0 +1,295 @@
+/* Etapa 6: chefão, vilão da semana, conquistas, gibi e ajustes. Usa os tokens de app.css. */
+.chefao {
+  display: grid;
+  grid-template-columns: 1fr 96px;
+  gap: 10px;
+  align-items: center;
+  margin: 22px 0 14px;
+  padding: 12px;
+  background: #2a0f4a;
+  border: 4px solid var(--violeta);
+  box-shadow: 6px 6px 0 #000;
+}
+
+.chefao small {
+  font-weight: 800;
+  font-style: italic;
+  font-size: 15px;
+  color: #d9b8ff;
+}
+
+.chefao h2 {
+  margin: 2px 0 8px;
+  font: 400 24px/1 var(--titulo);
+}
+
+.chefao p {
+  margin-top: 6px;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.chefao svg {
+  width: 100%;
+  height: auto;
+}
+
+.vida {
+  height: 18px;
+  border: 3px solid var(--papel);
+  background: var(--fundo);
+}
+
+.vida > i {
+  display: block;
+  height: 100%;
+  background: repeating-linear-gradient(-45deg, var(--vermelho), var(--vermelho) 8px, #ff7b86 8px, #ff7b86 11px);
+  transition: width 0.35s;
+}
+
+.chefao.derrotado {
+  background: #10261d;
+  border-color: #2ec27e;
+}
+
+.desafio {
+  margin-bottom: 22px;
+  padding: 10px 12px;
+  background: var(--fundo);
+  border: 3px dashed var(--papel);
+}
+
+.desafio small {
+  font-weight: 800;
+  font-size: 15px;
+  color: var(--apagado);
+}
+
+.desafio p {
+  margin-top: 2px;
+  font-weight: 700;
+}
+
+.desafio b {
+  font: 400 20px var(--titulo);
+  color: var(--amarelo);
+  margin-right: 4px;
+}
+
+.desafio.vencido {
+  border-style: solid;
+  border-color: #2ec27e;
+}
+
+.lembrete-backup {
+  margin-bottom: 22px;
+}
+
+.lembrete-backup .link {
+  min-height: 0;
+  color: var(--amarelo);
+}
+
+/* ---------- conquistas ---------- */
+.conquistas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.conquistas li {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 8px;
+  background: var(--fundo);
+  border: 2px solid #ffffff30;
+  color: var(--apagado);
+}
+
+.conquistas li svg {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+}
+
+.conquistas li b {
+  display: block;
+  font-size: 16px;
+  line-height: 1.1;
+}
+
+.conquistas li small {
+  display: block;
+  font-size: 13px;
+  line-height: 1.15;
+}
+
+.conquistas li.feita {
+  border-color: var(--amarelo);
+  color: var(--papel);
+}
+
+.conquistas li.feita svg {
+  color: var(--amarelo);
+}
+
+/* ---------- gibi ---------- */
+.capitulo-gibi {
+  margin-bottom: 14px;
+  background: var(--fundo);
+  border: 3px solid var(--papel);
+  box-shadow: 5px 5px 0 #000;
+}
+
+.capitulo-gibi summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  list-style: none;
+  background: var(--vermelho);
+  background-image: radial-gradient(#00000030 1.5px, transparent 1.6px);
+  background-size: 8px 8px;
+}
+
+.capitulo-gibi summary::-webkit-details-marker {
+  display: none;
+}
+
+.capitulo-gibi .capa {
+  flex: 1;
+}
+
+.capitulo-gibi .capa small {
+  display: block;
+  font-weight: 800;
+  font-size: 14px;
+}
+
+.capitulo-gibi .capa b {
+  display: block;
+  font: 400 24px/1.05 var(--titulo);
+  margin: 2px 0 4px;
+}
+
+.capitulo-gibi > .nota {
+  padding: 0 12px 12px;
+}
+
+.quadros {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 0;
+  padding: 12px;
+  list-style: none;
+}
+
+.quadros li {
+  min-height: 74px;
+  padding: 6px;
+  background: var(--papel);
+  color: var(--tinta);
+  border: 3px solid var(--tinta);
+  transform: rotate(-1deg);
+}
+
+.quadros li:nth-child(even) {
+  transform: rotate(1deg);
+}
+
+.quadros li.com-treino {
+  background: var(--amarelo);
+}
+
+.quadros li b {
+  display: block;
+  font: 400 18px/1 var(--titulo);
+}
+
+.quadros li small {
+  display: block;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.quadros li span {
+  display: block;
+  margin-top: 4px;
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 1.1;
+}
+
+/* ---------- ajustes ---------- */
+.voltar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  margin-bottom: 8px;
+  font-weight: 700;
+  color: var(--apagado);
+}
+
+.voltar svg {
+  width: 20px;
+  height: 20px;
+}
+
+.ajuste {
+  margin-bottom: 30px;
+}
+
+.ajuste > p {
+  margin-bottom: 12px;
+}
+
+.ajuste .botao svg {
+  width: 22px;
+  height: 22px;
+}
+
+.escolhas {
+  margin: 0 0 14px;
+  padding: 0;
+  border: 0;
+}
+
+.escolhas .campo.marcar {
+  min-height: 44px;
+  font-weight: 600;
+}
+
+.hora-lembrete {
+  width: 46px;
+  font: 400 16px var(--titulo);
+  color: var(--amarelo);
+}
+
+.confirmar {
+  margin-top: 16px;
+  padding: 12px;
+  border: 3px solid var(--vermelho);
+  background: #2d0c12;
+}
+
+.confirmar h2 {
+  font: 400 22px/1.1 var(--titulo);
+  margin-bottom: 6px;
+}
+
+.botao.perigo {
+  background: var(--vermelho);
+  color: var(--papel);
+}
+
+.aviso.ok {
+  border-color: #2ec27e;
+}

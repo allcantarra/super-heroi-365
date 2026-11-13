@@ -6,6 +6,7 @@ import { diasComTreino } from './dominio/treino'
 import { Cardapio } from './telas/Cardapio'
 import { Hoje } from './telas/Hoje'
 import { PrimeiraAbertura } from './telas/PrimeiraAbertura'
+import { Ajustes } from './telas/Ajustes'
 import { Evolucao } from './telas/Evolucao'
 import { Treino } from './telas/Treino'
 import { AvisoInstalar } from './ui/AvisoInstalar'
@@ -28,6 +29,7 @@ function abaDoEndereco(): Aba {
 export function App() {
   const [aba, setAba] = useState<Aba>(abaDoEndereco)
   const [ajustando, setAjustando] = useState(false)
+  const [emAjustes, setEmAjustes] = useState(false)
   const { estado, erroAoSalvar, tentarDeNovo, salvarPerfil, mudarDia, mudarSessao, evolucao } = useDados()
   const agora = useAgora()
   const hoje = dataLocal(agora)
@@ -85,11 +87,24 @@ export function App() {
     )
   }
 
+  if (emAjustes) {
+    return (
+      <main className="app">
+        <Ajustes
+          perfil={dados.perfil}
+          hoje={hoje}
+          voltar={() => { setEmAjustes(false); window.scrollTo(0, 0) }}
+          editarPerfil={() => { setEmAjustes(false); setAjustando(true); window.scrollTo(0, 0) }}
+        />
+      </main>
+    )
+  }
+
   return (
     <>
       <main className="app">
         {aba === 'hoje' ? (
-          <Hoje dados={{ ...dados, dias: diasDoJogo! }} hoje={hoje} agora={agora} erroAoSalvar={erroAoSalvar} mudarDia={(d, m) => void mudarDia(d, m)} abrirAjustes={() => { setAjustando(true); window.scrollTo(0, 0) }} abrirTreino={() => ir('treino')} />
+          <Hoje dados={{ ...dados, dias: diasDoJogo! }} hoje={hoje} agora={agora} erroAoSalvar={erroAoSalvar} mudarDia={(d, m) => void mudarDia(d, m)} abrirAjustes={() => { setEmAjustes(true); window.scrollTo(0, 0) }} abrirTreino={() => ir('treino')} />
         ) : aba === 'cardapio' ? (
           <Cardapio perfil={dados.perfil} feitasHoje={diasDoJogo!.get(hoje)?.feitas ?? []} hoje={hoje} salvarPerfil={(p) => void salvarPerfil(p)} />
         ) : aba === 'treino' ? (

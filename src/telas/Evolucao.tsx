@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Camera, Trash2 } from 'lucide-react'
+import { Camera, ChevronDown, Lock, Trash2, Trophy } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { lerFotos } from '../dados/banco'
 import type { Dados } from '../dados/useDados'
@@ -16,6 +16,8 @@ import { FASES, dataCurta } from '../dominio/tempo'
 import { Avatar } from '../heroi/Avatar'
 import { ErroDeFoto, comprimirImagem } from '../ui/comprimirImagem'
 import { GraficoPeso } from '../ui/GraficoPeso'
+import { montarRegistros } from '../ui/registros'
+import { conquistas, gibi } from '../dominio/campanha'
 
 export interface AcoesDaEvolucao {
   salvarPesagem: (p: Pesagem) => Promise<boolean>
@@ -388,6 +390,10 @@ function Heroi({ dados, hoje }: { dados: Dados; hoje: string }) {
   const diaUm = perfil.diaUm!
   const dias = diasComTreino(dados.dias, dados.sessoes, hoje)
   const lista = atributos(diaUm, hoje, perfil.rotina, dias, dados.sessoes)
+  const registros = montarRegistros(dados, hoje)
+  const listaDeConquistas = conquistas(registros)
+  const conquistasFeitas = listaDeConquistas.filter((c) => c.feita)
+  const capitulos = gibi(registros)
   const xp = jornada(diaUm, hoje, perfil.rotina, dias).xpTotal + xpDaEvolucao(diaUm, hoje, dados.pesagens.keys(), dados.mesesComFoto)
   const progresso = progressoDe(xp)
   const estagio = estagioDoNivel(progresso.nivel)
@@ -419,6 +425,46 @@ function Heroi({ dados, hoje }: { dados: Dados; hoje: string }) {
             {a.pontos} {a.fonte} no total. {a.semana > 0 ? `+${a.semana} nos últimos 7 dias.` : 'Nada nos últimos 7 dias.'}
           </p>
         </article>
+      ))}
+
+      <h2 className="secao" style={{ marginTop: 30 }}>CONQUISTAS</h2>
+      <p className="nota" style={{ marginTop: 0 }}>{conquistasFeitas.length} de {listaDeConquistas.length} desbloqueadas.</p>
+      <ul className="conquistas">
+        {listaDeConquistas.map((c) => (
+          <li key={c.id} className={c.feita ? 'feita' : undefined}>
+            {c.feita ? <Trophy aria-hidden /> : <Lock aria-hidden />}
+            <span><b>{c.nome}</b><small>{c.descricao}</small></span>
+            <span className="so-leitor">{c.feita ? 'Desbloqueada' : 'Bloqueada'}</span>
+          </li>
+        ))}
+      </ul>
+
+      <h2 className="secao" style={{ marginTop: 30 }}>SEU GIBI</h2>
+      <p className="nota" style={{ marginTop: 0 }}>Cada dia vencido vira um quadro. Cada fase é um capítulo.</p>
+      {capitulos.map((c) => (
+        <details key={c.fase} className="capitulo-gibi" open={c.fase === capitulos.length}>
+          <summary>
+            <span className="capa">
+              <small>CAPÍTULO {c.fase}</small>
+              <b>{c.titulo.toUpperCase()}</b>
+              <small>{c.quadros.length} de {c.diasDaFase} dias vencidos. {c.chefao.derrotado ? `${c.chefao.vilao.nome} derrotado.` : c.chefao.terminou ? `${c.chefao.vilao.nome} escapou.` : `Contra ${c.chefao.vilao.nome}.`}</small>
+            </span>
+            <ChevronDown aria-hidden />
+          </summary>
+          {c.quadros.length === 0 ? (
+            <p className="nota">Nenhum dia vencido ainda neste capítulo. Vença o primeiro e ele aparece aqui.</p>
+          ) : (
+            <ol className="quadros">
+              {c.quadros.map((q) => (
+                <li key={q.numero} className={q.treino ? 'com-treino' : undefined}>
+                  <b>DIA {q.numero}</b>
+                  <small>{dataCurta(q.data)}</small>
+                  <span>{q.treino ? 'POW! treino' : 'Folga'} e {q.refeicoes} refeições</span>
+                </li>
+              ))}
+            </ol>
+          )}
+        </details>
       ))}
     </>
   )

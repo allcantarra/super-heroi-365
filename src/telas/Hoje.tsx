@@ -8,9 +8,12 @@ import { META_COPOS, ML_POR_COPO, XP_COPO, alternarMissao, cafeinaLiberada, jorn
 import { xpDaEvolucao } from '../dominio/evolucao'
 import { TITULOS, estagioDoNivel, progressoDe } from '../dominio/jogo'
 import { missoesDoDia, type Missao } from '../dominio/rotina'
-import { FASES, faseDoDia, horaLocal, numeroDoDia } from '../dominio/tempo'
+import { FASES, diasEntre, faseDoDia, horaLocal, numeroDoDia } from '../dominio/tempo'
 import { duracaoEstimada, treinoDaData, treinoFeito } from '../dominio/treino'
+import { chefaoAtual, desafioDaSemana } from '../dominio/campanha'
 import { Avatar } from '../heroi/Avatar'
+import { montarRegistros, ultimoBackup } from '../ui/registros'
+import { Vilao } from '../ui/Vilao'
 import { Pow, type Golpe } from '../ui/Pow'
 import { tocarAcerto } from '../ui/som'
 
@@ -40,6 +43,12 @@ export function Hoje({ dados, hoje, agora, erroAoSalvar, mudarDia, abrirAjustes,
   /** XP de pesagem semanal e foto mensal: vem dos registros da Evolução, não das missões do dia. */
   const xpExtra = xpDaEvolucao(diaUm, hoje, dados.pesagens.keys(), dados.mesesComFoto)
   const progresso = progressoDe(trilha.xpTotal + xpExtra)
+  const registros = montarRegistros(dados, hoje)
+  const chefe = chefaoAtual(registros)
+  const desafio = desafioDaSemana(registros)
+  // lembrete de backup: a partir do 14º dia, se o último backup tiver mais de 14 dias (ou nunca houve)
+  const backup = ultimoBackup()
+  const lembrarBackup = numeroDoDia(diaUm, hoje) > 14 && (!backup || diasEntre(backup, hoje) > 14)
   const estagio = estagioDoNivel(progresso.nivel)
   const numero = numeroDoDia(diaUm, hoje)
   const fase = faseDoDia(numero)
@@ -154,6 +163,30 @@ export function Hoje({ dados, hoje, agora, erroAoSalvar, mudarDia, abrirAjustes,
         {cafeina ? 'Guaraná e café liberados até 15:00.' : 'Cafeína encerrada por hoje: sem guaraná e sem café até amanhã.'}
       </div>
 
+      <section className={`chefao ${chefe.derrotado ? 'derrotado' : ''}`} aria-label="Chefão da fase">
+        <div>
+          <small>Chefão da fase {chefe.fase}</small>
+          <h2>{chefe.vilao.nome.toUpperCase()}</h2>
+          <div className="vida" role="progressbar" aria-label={`Vida de ${chefe.vilao.nome}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.floor(chefe.vida * 100)}>
+            <i style={{ width: `${chefe.vida * 100}%` }} />
+          </div>
+          <p>{chefe.derrotado ? 'Derrotado! O resto da fase é volta olímpica.' : `Vida ${chefe.vida === 1 ? 100 : Math.min(99, Math.floor(chefe.vida * 100))}%. Faltam ${chefe.meta - chefe.cumpridas} missões para derrubar.`}</p>
+        </div>
+        <Vilao cor={chefe.vilao.cor} nome={chefe.vilao.nome} derrotado={chefe.derrotado} />
+      </section>
+
+      <section className={`desafio ${desafio.vencido ? 'vencido' : ''}`} aria-label="Vilão da semana">
+        <small>Vilão da semana: {desafio.vilao}</small>
+        <p><b>{desafio.feito}/{desafio.alvo}</b> {desafio.meta}{desafio.vencido ? '. Vencido!' : '.'}</p>
+      </section>
+
+      {lembrarBackup && (
+        <p className="aviso lembrete-backup" role="status">
+          {backup ? `Último backup em ${backup.slice(8)}/${backup.slice(5, 7)}.` : 'Você ainda não fez backup.'} Seus registros e fotos ficam só neste aparelho.{' '}
+          <button className="link" onClick={abrirAjustes}>Fazer backup</button>
+        </p>
+      )}
+
       <h2 className="secao">MISSÕES DO DIA</h2>
       {missoes.map((m) => {
         const feita = registro.feitas.includes(m.id)
@@ -171,7 +204,7 @@ export function Hoje({ dados, hoje, agora, erroAoSalvar, mudarDia, abrirAjustes,
 
       <div className="rodape-tela">
         <p style={{ color: 'var(--apagado)', marginBottom: 12 }}>Fase {fase}: {FASES[fase].nome}.</p>
-        <button className="botao fantasma" onClick={abrirAjustes}><Settings aria-hidden />Ajustar rotina e perfil</button>
+        <button className="botao fantasma" onClick={abrirAjustes}><Settings aria-hidden />Ajustes</button>
       </div>
 
       <Pow golpe={golpe} aoTerminar={() => setGolpe(null)} />

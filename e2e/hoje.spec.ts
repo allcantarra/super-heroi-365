@@ -132,11 +132,13 @@ test.describe('dia de missões', () => {
   })
 
   test('ajustar a rotina muda os horários das missões e pode ser cancelado', async ({ page }) => {
-    await page.getByRole('button', { name: 'Ajustar rotina e perfil' }).tap()
+    await page.getByRole('button', { name: 'Ajustes', exact: true }).tap()
+    await page.getByRole('button', { name: 'Editar rotina, perfil e herói' }).tap()
     await expect(page.getByLabel('Peso de hoje (kg)')).toHaveValue('60,5')
     await page.getByRole('button', { name: 'Cancelar' }).tap()
     await expect(page.getByText('DIA 1 DE 365')).toBeVisible()
-    await page.getByRole('button', { name: 'Ajustar rotina e perfil' }).tap()
+    await page.getByRole('button', { name: 'Ajustes', exact: true }).tap()
+    await page.getByRole('button', { name: 'Editar rotina, perfil e herói' }).tap()
     await page.getByRole('button', { name: 'Continuar' }).tap()
     await page.getByLabel('Acordo às').fill('05:30')
     await page.getByRole('button', { name: 'Continuar' }).tap()
