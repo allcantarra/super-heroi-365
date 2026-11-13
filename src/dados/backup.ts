@@ -10,7 +10,7 @@ import { normalizarSessao, type Sessao } from '../dominio/treino'
 import { banco, normalizarDia, normalizarPerfil, type Perfil } from './banco'
 
 export const APP = 'super-heroi-365'
-export const VERSAO_DO_BACKUP = 1
+export const VERSAO_DO_BACKUP = 2
 /** Um ano de fotos reduzidas cabe com folga; acima disso o arquivo não é deste app. */
 export const TAMANHO_MAXIMO = 60 * 1024 * 1024
 

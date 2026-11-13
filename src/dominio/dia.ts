@@ -6,13 +6,16 @@ export interface RegistroDia {
   data: string
   feitas: IdMissao[]
   copos: number
+  /** Hora (HH:MM) do primeiro toque do dia; o dia se ajusta a ela. Ausente nos registros da versão 1. */
+  inicio?: string
 }
 
 export const META_COPOS = 12
 export const ML_POR_COPO = 250
 export const XP_COPO = 10
 export const XP_DIA_VENCIDO = 80
-export const REFEICOES_PARA_VENCER = 6
+/** Para vencer o dia: 3/4 das refeições que existem naquele dia, arredondado para cima (6 de 8, 6 de 7). */
+export const PARTE_DAS_REFEICOES = 0.75
 export const DIAS_POR_ESCUDO = 7
 export const MAXIMO_DE_ESCUDOS = 2
 export const HORA_CORTE_CAFEINA = 15
@@ -37,7 +40,7 @@ export function resumoDoDia(registro: RegistroDia, missoes: Missao[]): ResumoDia
   const refeicoesFeitas = refeicoes.filter((m) => feitas.has(m.id)).length
   const treinoFeito = !!treino && feitas.has(treino.id)
   const copos = Math.max(0, Math.min(META_COPOS, Math.floor(registro.copos)))
-  const vencido = refeicoesFeitas >= Math.min(REFEICOES_PARA_VENCER, refeicoes.length) && (!treino || treinoFeito)
+  const vencido = refeicoesFeitas >= Math.ceil(refeicoes.length * PARTE_DAS_REFEICOES) && (!treino || treinoFeito)
   const xpMissoes = missoes.filter((m) => feitas.has(m.id)).reduce((s, m) => s + m.xp, 0)
   return {
     refeicoesFeitas,
@@ -63,9 +66,22 @@ export function missaoDeAgora(registro: RegistroDia, missoes: Missao[], hora?: s
   return pendentes[0] ?? null
 }
 
-export function alternarMissao(registro: RegistroDia, id: IdMissao): RegistroDia {
-  const feitas = registro.feitas.includes(id) ? registro.feitas.filter((x) => x !== id) : [...registro.feitas, id]
+/**
+ * Marca ou desmarca uma missão. O primeiro toque do dia guarda a hora (`hora`), que ajusta os horários.
+ * Desmarcar tudo apaga a hora de início: o dia volta à rotina normal.
+ */
+export function alternarMissao(registro: RegistroDia, id: IdMissao, hora?: string): RegistroDia {
+  const marcando = !registro.feitas.includes(id)
+  const feitas = marcando ? [...registro.feitas, id] : registro.feitas.filter((x) => x !== id)
+  const { inicio: _inicio, ...semInicio } = registro
+  if (feitas.length === 0) return { ...semInicio, feitas }
+  if (marcando && !registro.inicio && registro.feitas.length === 0 && hora) return { ...registro, feitas, inicio: hora }
   return { ...registro, feitas }
+}
+
+/** Corrige a hora em que o dia começou, ou volta aos horários normais (`hora` igual à de acordar da rotina). */
+export function definirInicio(registro: RegistroDia, hora: string): RegistroDia {
+  return { ...registro, inicio: hora }
 }
 
 export function mudarCopos(registro: RegistroDia, delta: number): RegistroDia {
@@ -91,7 +107,8 @@ export interface Jornada {
 export function jornada(diaUm: string, hoje: string, rotina: Rotina, registros: Map<string, RegistroDia>): Jornada {
   let xpTotal = 0, sequencia = 0, escudos = 0, diasVencidos = 0
   for (let data = diaUm; data <= hoje; data = somarDias(data, 1)) {
-    const resumo = resumoDoDia(registros.get(data) ?? registroVazio(data), missoesDoDia(rotina, data))
+    const registro = registros.get(data) ?? registroVazio(data)
+    const resumo = resumoDoDia(registro, missoesDoDia(rotina, data, registro))
     xpTotal += resumo.xp
     if (resumo.vencido) {
       sequencia++

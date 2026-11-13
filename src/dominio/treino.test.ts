@@ -268,7 +268,9 @@ describe('missão de treino na tela Hoje', () => {
 
   it('não altera os registros originais e cria o dia quando só existe a sessão', () => {
     const efetivos = diasComTreino(dias, mapa(sessao('2026-11-12', 'choque-D', [['agachamento', 10]])))
-    expect(efetivos.get('2026-11-12')).toEqual({ data: '2026-11-12', feitas: ['treino'], copos: 0 })
+    // o treino foi o primeiro toque do dia: a hora em que começou vira o início do dia
+    expect(efetivos.get('2026-11-12')).toMatchObject({ data: '2026-11-12', feitas: ['treino'], copos: 0 })
+    expect(efetivos.get('2026-11-12')!.inicio).toMatch(/^\d{2}:\d{2}$/)
     expect(dias.has('2026-11-12')).toBe(false)
   })
 

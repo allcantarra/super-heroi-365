@@ -16,6 +16,7 @@ import { FASES, dataCurta } from '../dominio/tempo'
 import { Avatar } from '../heroi/Avatar'
 import { ErroDeFoto, comprimirImagem } from '../ui/comprimirImagem'
 import { GraficoPeso } from '../ui/GraficoPeso'
+import { useConfirmar } from '../ui/useConfirmar'
 import { montarRegistros } from '../ui/registros'
 import { conquistas, gibi } from '../dominio/campanha'
 
@@ -74,6 +75,7 @@ function CampoData({ diaUm, hoje, valor, aoMudar }: { diaUm: string; hoje: strin
 }
 
 function Peso({ dados, hoje, acoes }: PropsDaVisao) {
+  const { pedir, dialogo } = useConfirmar()
   const { perfil, pesagens } = dados
   const diaUm = perfil.diaUm!, pessoa = perfil.pessoa!
   const [data, setData] = useState(hoje)
@@ -111,7 +113,7 @@ function Peso({ dados, hoje, acoes }: PropsDaVisao) {
     }
   }
   const apagar = async (d: string) => {
-    if (!window.confirm(`Apagar a pesagem de ${dataCurta(d)}? Não dá para desfazer.`)) return
+    if (!(await pedir(`Apagar a pesagem de ${dataCurta(d)}? Não dá para desfazer.`))) return
     await acoes.apagarPesagem(d)
     if (d === data) setValor('')
   }
@@ -119,6 +121,7 @@ function Peso({ dados, hoje, acoes }: PropsDaVisao) {
   const falta = pessoa.metaPeso - ultimo.tendencia
   return (
     <>
+      {dialogo}
       <dl className="placar">
         <div><dt>Tendência</dt><dd>{kg(ultimo.tendencia)}</dd><small>kg</small></div>
         <div><dt>Desde o início</dt><dd>{sinal(ultimo.tendencia - pessoa.pesoInicial)}</dd><small>kg</small></div>
@@ -167,6 +170,7 @@ function Peso({ dados, hoje, acoes }: PropsDaVisao) {
 }
 
 function Medidas({ dados, hoje, acoes }: PropsDaVisao) {
+  const { pedir, dialogo } = useConfirmar()
   const { perfil, medidas } = dados
   const diaUm = perfil.diaUm!
   const [data, setData] = useState(hoje)
@@ -206,12 +210,13 @@ function Medidas({ dados, hoje, acoes }: PropsDaVisao) {
     }
   }
   const apagar = async (d: string) => {
-    if (!window.confirm(`Apagar as medidas de ${dataCurta(d)}? Não dá para desfazer.`)) return
+    if (!(await pedir(`Apagar as medidas de ${dataCurta(d)}? Não dá para desfazer.`))) return
     if (await acoes.apagarMedida(d) && d === data) setValores(vazio())
   }
 
   return (
     <>
+      {dialogo}
       {Object.keys(variacao).length > 0 && (
         <dl className="placar quatro">
           {PARTES.map((p) => {
@@ -281,6 +286,7 @@ function useUrls(fotos: Foto[] | undefined): Map<number, string> {
 }
 
 function Fotos({ dados, hoje, acoes }: PropsDaVisao) {
+  const { pedir, dialogo } = useConfirmar()
   const diaUm = dados.perfil.diaUm!
   const fotos = useLiveQuery(lerFotos, [dados.mesesComFoto.join(',')])
   const urls = useUrls(fotos)
@@ -297,7 +303,13 @@ function Fotos({ dados, hoje, acoes }: PropsDaVisao) {
 
   const escolher = async (arquivo: File | undefined) => {
     if (!arquivo) return
-    if (temDoMes && !window.confirm(`Trocar a foto do mês ${mesAtual}? A foto atual será substituída e não fica guardada em nenhum outro lugar.`)) {
+    // arquivo que não é imagem é recusado antes de perguntar se quer trocar a foto
+    if (!arquivo.type.startsWith('image/')) {
+      setErro('Esse arquivo não é uma imagem. Escolha uma foto.')
+      if (entrada.current) entrada.current.value = ''
+      return
+    }
+    if (temDoMes && !(await pedir(`Trocar a foto do mês ${mesAtual}? A foto atual será substituída e não fica guardada em nenhum outro lugar.`, 'Trocar a foto'))) {
       if (entrada.current) entrada.current.value = ''
       return
     }
@@ -314,12 +326,13 @@ function Fotos({ dados, hoje, acoes }: PropsDaVisao) {
     }
   }
   const apagar = async (mes: number) => {
-    if (!window.confirm(`Apagar a foto do mês ${mes}? Ela não está guardada em nenhum outro lugar.`)) return
+    if (!(await pedir(`Apagar a foto do mês ${mes}? Ela não está guardada em nenhum outro lugar.`))) return
     await acoes.apagarFoto(mes)
   }
 
   return (
     <>
+      {dialogo}
       <section className="painel azul">
         <span className="aba">FOTO DO MÊS {mesAtual}</span>
         <p>{temDoMes ? 'A foto deste mês já está guardada. Pode trocar se quiser uma melhor.' : `Mesma luz, mesma pose, de frente e sem camisa. A foto do mês rende +${XP_FOTO} XP.`}</p>

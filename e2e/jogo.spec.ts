@@ -37,7 +37,8 @@ test('lembretes: gera o .ics só com as missões escolhidas', async ({ page }) =
   const arquivo = await download
   expect(arquivo.suggestedFilename()).toBe('super-heroi-365-lembretes.ics')
   const ics = await readFile(await arquivo.path(), 'utf8')
-  expect(ics.match(/BEGIN:VEVENT/g)).toHaveLength(8)
+  // 8 missões, cada uma com evento de dias úteis e de fim de semana
+  expect(ics.match(/BEGIN:VEVENT/g)).toHaveLength(16)
   expect(ics).not.toContain('SUMMARY:Ceia')
   expect(ics).toContain('SUMMARY:Treino')
   await expect(page.getByText(/Abra no Calendário/)).toBeVisible()

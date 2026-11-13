@@ -22,7 +22,6 @@ async function fotoDeTeste(page: Page, cor: string): Promise<Buffer> {
 }
 
 test.beforeEach(async ({ page }) => {
-  page.on('dialog', (d) => void d.accept())
   await abrirEm(page) // segunda, 09/11/2026: dia 1; cadastro com 60,5 kg e meta de 70 kg
   await concluirAbertura(page)
   await irPara(page, 'Evolução')
@@ -62,6 +61,7 @@ test('peso: com 10 dias de pesagens aparece o ritmo; apagar uma pesagem pede con
   await expect(page.locator('.tabela tbody tr')).toHaveCount(3)
   await expect(page.getByText(/Ritmo: \+0,\d\d kg por semana\. .* para a fase 1/)).toBeVisible()
   await page.getByRole('button', { name: 'Apagar pesagem de 15/11' }).tap()
+  await page.getByRole('alertdialog').getByRole('button', { name: 'Apagar' }).tap()
   await expect(page.locator('.tabela tbody tr')).toHaveCount(2)
   // tocar perto de um ponto mostra o valor dele
   await page.locator('.grafico svg rect[fill="transparent"]').first().tap()
@@ -91,6 +91,7 @@ test('medidas: exige uma medida, salva, edita pela data e apaga', async ({ page 
   await expect(page.getByLabel('Braço (cm)')).toHaveValue('27,5')
   await expect(page.getByRole('button', { name: 'Atualizar medidas' })).toBeVisible()
   await page.getByRole('button', { name: 'Apagar medidas de 09/11' }).tap()
+  await page.getByRole('alertdialog').getByRole('button', { name: 'Apagar' }).tap()
   await expect(page.locator('.tabela tbody tr')).toHaveCount(1)
 })
 
@@ -102,11 +103,10 @@ test('fotos: guarda a foto do mês, dá XP, compara meses e apaga', async ({ pag
   expect(await page.getByRole('img', { name: /Foto do mês 1/ }).evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0)
   await expect(page.getByText('Trocar a foto do mês')).toBeVisible()
   // trocar a foto do mês pede confirmação; recusar mantém a atual
-  page.removeAllListeners('dialog')
-  page.once('dialog', (d) => void d.dismiss())
   await page.locator('#foto-do-mes').setInputFiles({ name: 'outra.png', mimeType: 'image/png', buffer: await fotoDeTeste(page, '#16a085') })
+  await page.getByRole('alertdialog').getByRole('button', { name: 'Cancelar' }).tap()
+  await expect(page.getByRole('alertdialog')).toHaveCount(0)
   await expect(page.locator('.galeria-fotos figure')).toHaveCount(1)
-  page.on('dialog', (d) => void d.accept())
   await semEstouro(page)
   await irPara(page, 'Hoje')
   await expect(page.getByText('100 XP', { exact: true })).toBeVisible()
@@ -131,6 +131,7 @@ test('fotos: guarda a foto do mês, dá XP, compara meses e apaga', async ({ pag
   await aba(page, 'Fotos').tap()
   await expect(page.locator('.galeria-fotos figure')).toHaveCount(2)
   await page.getByRole('button', { name: 'Apagar foto do mês 2' }).tap()
+  await page.getByRole('alertdialog').getByRole('button', { name: 'Apagar' }).tap()
   await expect(page.locator('.galeria-fotos figure')).toHaveCount(1)
   await expect(page.getByRole('heading', { name: 'ANTES E DEPOIS' })).toHaveCount(0)
 })

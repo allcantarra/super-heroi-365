@@ -53,13 +53,13 @@ function Lembretes({ perfil, hoje }: { perfil: Perfil; hoje: string }) {
   return (
     <section className="painel escuro ajuste">
       <span className="aba">LEMBRETES NO CALENDÁRIO</span>
-      <p>O app gera um arquivo com um alarme na hora de cada missão, até o fim do projeto. Você importa uma vez no Calendário do iPhone.</p>
+      <p>O app gera um arquivo com um alarme na hora de cada missão, nos dias úteis e no fim de semana, até o fim do projeto. Você importa uma vez no Calendário do iPhone. Os alarmes não acompanham o ajuste automático do dia.</p>
       <fieldset className="escolhas">
         <legend className="so-leitor">Missões com lembrete</legend>
         {opcoes.map((o) => (
           <label key={o.id} className="campo marcar">
             <input type="checkbox" checked={escolhidas.includes(o.id)} onChange={() => alternar(o.id)} />
-            <span className="hora-lembrete">{o.hora}</span>{o.nome}
+            <span className="hora-lembrete">{o.hora}<small>{o.horaFim} no fds</small></span>{o.nome}
           </label>
         ))}
       </fieldset>

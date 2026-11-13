@@ -65,7 +65,7 @@ export function chefao(r: Registros, fase: Fase): EstadoDoChefao {
   const numeroHoje = numeroDoDia(r.diaUm, r.hoje)
   let total = 0, cumpridas = 0
   for (let n = inicio; n <= fim; n++) {
-    const data = dataDoDia(r.diaUm, n), missoes = missoesDoDia(r.rotina, data)
+    const data = dataDoDia(r.diaUm, n), missoes = missoesDoDia(r.rotina, data, r.dias.get(data))
     total += missoes.length
     if (n <= numeroHoje) {
       const feitas = new Set(r.dias.get(data)?.feitas ?? [])
@@ -120,7 +120,7 @@ export const DESAFIOS: readonly ModeloDeDesafio[] = [
   { vilao: 'O Esquece-Marmita', meta: 'Comer a marmita do almoço em {n} dias', alvo: 6, conta: fez('almoco') },
   { vilao: 'O Fujão da Balança', meta: 'Pesar-se {n} vez na semana', alvo: 1, conta: 'pesagem' },
   { vilao: 'O Insone', meta: 'Tomar a ceia em {n} dias', alvo: 6, conta: fez('ceia') },
-  { vilao: 'O Desistente', meta: 'Vencer {n} dias', alvo: 5, conta: (registro, data, r) => resumoDoDia(registro, missoesDoDia(r.rotina, data)).vencido },
+  { vilao: 'O Desistente', meta: 'Vencer {n} dias', alvo: 5, conta: (registro, data, r) => resumoDoDia(registro, missoesDoDia(r.rotina, data, registro)).vencido },
   { vilao: 'O Beliscador', meta: 'Comer o lanche de trajeto em {n} dias', alvo: 5, conta: fez('trajeto') },
 ]
 
@@ -152,7 +152,8 @@ export interface Conquista {
 export function maiorSequencia(r: Registros): number {
   let atual = 0, maior = 0
   for (let data = r.diaUm; data <= r.hoje; data = somarDias(data, 1)) {
-    const vencido = resumoDoDia(r.dias.get(data) ?? registroVazio(data), missoesDoDia(r.rotina, data)).vencido
+    const registro = r.dias.get(data) ?? registroVazio(data)
+    const vencido = resumoDoDia(registro, missoesDoDia(r.rotina, data, registro)).vencido
     atual = vencido ? atual + 1 : 0
     maior = Math.max(maior, atual)
   }
@@ -217,7 +218,7 @@ export function gibi(r: Registros): Capitulo[] {
     const quadros: Quadro[] = []
     for (let n = primeiroDiaDaFase(f); n <= Math.min(FASES[f].ultimoDia, numeroHoje); n++) {
       const data = dataDoDia(r.diaUm, n), registro = r.dias.get(data) ?? registroVazio(data)
-      const resumo = resumoDoDia(registro, missoesDoDia(r.rotina, data))
+      const resumo = resumoDoDia(registro, missoesDoDia(r.rotina, data, registro))
       if (resumo.vencido) quadros.push({ numero: n, data, treino: resumo.treinoFeito, refeicoes: resumo.refeicoesFeitas })
     }
     return { fase: f, titulo: FASES[f].nome, chefao: chefao(r, f), quadros, diasDaFase: FASES[f].ultimoDia - primeiroDiaDaFase(f) + 1 }

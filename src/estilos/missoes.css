@@ -350,3 +350,46 @@
   width: 170px;
   margin: 0 auto 26px;
 }
+
+.selo-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 14px;
+  background: #10261d;
+  border: 3px solid #2ec27e;
+  font: 400 17px/1 var(--titulo);
+}
+
+.selo-meta svg {
+  width: 20px;
+  height: 20px;
+  color: #2ec27e;
+}
+
+.ajuste-dia {
+  margin-bottom: 26px;
+  padding: 10px 12px;
+  background: var(--fundo);
+  border: 3px solid var(--azul);
+}
+
+.ajuste-dia p {
+  font-weight: 600;
+}
+
+.ajuste-dia b {
+  color: var(--amarelo);
+}
+
+.ajuste-dia .campos {
+  margin-top: 8px;
+  align-items: end;
+}
+
+.ajuste-dia .botao {
+  min-height: 48px;
+  font-size: 15px;
+  padding: 0 10px;
+}

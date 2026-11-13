@@ -1,6 +1,6 @@
 import { EXERCICIOS, FICHAS, type Ficha, type IdExercicio, type IdFicha, type Unidade } from '../conteudo/treinos'
 import type { RegistroDia } from './dia'
-import { dataValida, diaDaSemana, numeroDoDia } from './tempo'
+import { dataValida, diaDaSemana, horaLocal, numeroDoDia } from './tempo'
 
 /** Regras do treino. Funções puras: nada aqui lê relógio nem banco. */
 
@@ -183,7 +183,10 @@ export function diasComTreino(dias: Map<string, RegistroDia>, sessoes: Map<strin
   for (const [data, sessao] of sessoes) {
     if (!treinoFeito(sessao, hoje)) continue
     const registro = resultado.get(data) ?? { data, feitas: [], copos: 0 }
-    if (!registro.feitas.includes('treino')) resultado.set(data, { ...registro, feitas: [...registro.feitas, 'treino'] })
+    if (registro.feitas.includes('treino')) continue
+    // treino foi o primeiro toque do dia: a hora em que ele começou vira o início do dia
+    const inicio = registro.inicio ?? (registro.feitas.length === 0 ? horaLocal(new Date(sessao.inicio)) : undefined)
+    resultado.set(data, { ...registro, feitas: [...registro.feitas, 'treino'], ...(inicio ? { inicio } : {}) })
   }
   return resultado
 }

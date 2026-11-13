@@ -4,10 +4,10 @@ import { alimento, textoQuantidade } from '../conteudo/alimentos'
 import type { IdRefeicao } from '../conteudo/cardapio'
 import type { Dados } from '../dados/useDados'
 import { cardapioDaData, macrosDoPrato, prato } from '../dominio/cardapio'
-import { META_COPOS, ML_POR_COPO, XP_COPO, alternarMissao, cafeinaLiberada, jornada, missaoDeAgora, mudarCopos, registroVazio, resumoDoDia, type RegistroDia } from '../dominio/dia'
+import { META_COPOS, ML_POR_COPO, XP_COPO, alternarMissao, definirInicio, cafeinaLiberada, jornada, missaoDeAgora, mudarCopos, registroVazio, resumoDoDia, type RegistroDia } from '../dominio/dia'
 import { xpDaEvolucao } from '../dominio/evolucao'
 import { TITULOS, estagioDoNivel, progressoDe } from '../dominio/jogo'
-import { missoesDoDia, type Missao } from '../dominio/rotina'
+import { acordarPrevisto, atrasoDoDia, missoesDoDia, type Missao } from '../dominio/rotina'
 import { FASES, diasEntre, faseDoDia, horaLocal, numeroDoDia } from '../dominio/tempo'
 import { duracaoEstimada, treinoDaData, treinoFeito } from '../dominio/treino'
 import { chefaoAtual, desafioDaSemana } from '../dominio/campanha'
@@ -28,6 +28,16 @@ interface Props {
 }
 
 const PALAVRAS = ['POW!', 'BAM!', 'ZAP!']
+
+/** Horas de 15 em 15 minutos, da hora de acordar até 6 horas depois, sempre incluindo a hora atual registrada. */
+function opcoesDeHora(acordar: string, atual: string): string[] {
+  const [h, m] = acordar.split(':').map(Number)
+  const lista = Array.from({ length: 25 }, (_, i) => {
+    const t = h * 60 + m + i * 15
+    return `${String(Math.floor(t / 60) % 24).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`
+  })
+  return lista.includes(atual) ? lista : [...lista, atual].sort()
+}
 const litros = (copos: number) => ((copos * ML_POR_COPO) / 1000).toFixed(2).replace('.', ',')
 
 export function Hoje({ dados, hoje, agora, erroAoSalvar, mudarDia, abrirAjustes, abrirTreino }: Props) {
@@ -36,8 +46,10 @@ export function Hoje({ dados, hoje, agora, erroAoSalvar, mudarDia, abrirAjustes,
   const [golpe, setGolpe] = useState<Golpe | null>(null)
   const serie = useRef(0)
 
-  const missoes = missoesDoDia(perfil.rotina, hoje)
   const registro = dias.get(hoje) ?? registroVazio(hoje)
+  const missoes = missoesDoDia(perfil.rotina, hoje, registro)
+  const atraso = atrasoDoDia(perfil.rotina, hoje, registro.inicio)
+  const acordarHoje = acordarPrevisto(perfil.rotina, hoje)
   const resumo = resumoDoDia(registro, missoes)
   const trilha = jornada(diaUm, hoje, perfil.rotina, dias)
   /** XP de pesagem semanal e foto mensal: vem dos registros da Evolução, não das missões do dia. */
@@ -78,7 +90,7 @@ export function Hoje({ dados, hoje, agora, erroAoSalvar, mudarDia, abrirAjustes,
     mudarDia(hoje, mudanca)
   }
   // O treino se cumpre registrando séries: o toque leva para a tela de treino em vez de marcar.
-  const alternar = (m: Missao) => (m.tipo === 'treino' && !treinoMarcadoAMao ? abrirTreino() : aplicar((r) => alternarMissao(r, m.id), !registro.feitas.includes(m.id)))
+  const alternar = (m: Missao) => (m.tipo === 'treino' && !treinoMarcadoAMao ? abrirTreino() : aplicar((r) => alternarMissao(r, m.id, horaLocal(agora)), !registro.feitas.includes(m.id)))
 
   return (
     <>
@@ -102,6 +114,21 @@ export function Hoje({ dados, hoje, agora, erroAoSalvar, mudarDia, abrirAjustes,
       </section>
 
       {erroAoSalvar && <p className="aviso" role="alert" style={{ marginBottom: 24 }}>Não deu para salvar neste aparelho. Toque de novo; se continuar, feche e abra o app.</p>}
+
+      {registro.inicio && atraso > 0 && (
+        <section className="ajuste-dia" aria-label="Horário do dia">
+          <p>Seu dia começou às <b>{registro.inicio}</b>, {atraso} minutos depois do previsto. Horários ajustados.</p>
+          <div className="campos">
+            <label className="campo">
+              Corrigir a hora
+              <select value={registro.inicio} onChange={(e) => { const hora = e.target.value; mudarDia(hoje, (r) => definirInicio(r, hora)) }}>
+                {opcoesDeHora(acordarHoje, registro.inicio).map((h) => <option key={h} value={h}>{h}</option>)}
+              </select>
+            </label>
+            <button className="botao fantasma" onClick={() => mudarDia(hoje, (r) => definirInicio(r, acordarHoje))}>Usar horários normais</button>
+          </div>
+        </section>
+      )}
 
       {proxima ? (
         <section className="painel" aria-label="Missão de agora">
@@ -165,9 +192,13 @@ export function Hoje({ dados, hoje, agora, erroAoSalvar, mudarDia, abrirAjustes,
       </div>
       <div className="agua">
         <button className="menos" aria-label="Tirar um copo de água" disabled={resumo.copos === 0} onClick={() => aplicar((r) => mudarCopos(r, -1), false)}><Minus aria-hidden /></button>
-        <button className="mais" disabled={resumo.copos >= META_COPOS} onClick={() => { if (perfil.som) tocarAcerto(); aplicar((r) => mudarCopos(r, 1), false) }}>
-          <Plus aria-hidden />{resumo.copos >= META_COPOS ? 'META BATIDA' : `UM COPO, +${XP_COPO} XP`}
-        </button>
+        {resumo.copos >= META_COPOS ? (
+          <span className="selo-meta" role="status"><Check aria-hidden />Meta de água batida</span>
+        ) : (
+          <button className="mais" onClick={() => { if (perfil.som) tocarAcerto(); aplicar((r) => mudarCopos(r, 1), false) }}>
+            <Plus aria-hidden />UM COPO, +{XP_COPO} XP
+          </button>
+        )}
       </div>
       <div className="barra-poder">
         <span>Treino</span>
@@ -175,7 +206,7 @@ export function Hoje({ dados, hoje, agora, erroAoSalvar, mudarDia, abrirAjustes,
         <span>{resumo.temTreino ? (resumo.treinoFeito ? '1/1' : '0/1') : 'folga'}</span>
       </div>
 
-      <p className="regra">{resumo.vencido ? 'Dia vencido.' : `Para vencer o dia: 6 das ${resumo.refeicoesTotal} refeições${resumo.temTreino ? ' e o treino' : ''}.`} A água vale XP extra.</p>
+      <p className="regra">{resumo.vencido ? 'Dia vencido.' : `Para vencer o dia: ${Math.ceil(resumo.refeicoesTotal * 0.75)} das ${resumo.refeicoesTotal} refeições${resumo.temTreino ? ' e o treino' : ''}.`} A água vale XP extra.</p>
 
       <div className={`cafeina ${cafeina ? '' : 'fechada'}`} role="status">
         <Coffee aria-hidden />

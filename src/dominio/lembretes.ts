@@ -10,12 +10,20 @@ export const DIAS_DO_PROJETO = 365
 export interface OpcaoDeLembrete {
   id: IdMissao
   nome: string
+  /** Horário de segunda a sexta. */
   hora: string
+  /** Horário no fim de semana (o treino só tem no sábado). */
+  horaFim: string
+  nomeFim: string
 }
 
-/** Missões que podem virar lembrete, com o horário da rotina. Usa uma segunda-feira, que tem todas (inclusive o treino). */
+const SEGUNDA = '2026-11-09', SABADO = '2026-11-14'
+
+/** Missões que podem virar lembrete, com os horários da semana e do fim de semana. */
 export function opcoesDeLembrete(rotina: Rotina): OpcaoDeLembrete[] {
-  return missoesDoDia(rotina, '2026-11-09').map((m) => ({ id: m.id, nome: m.id === 'pre' ? 'Pré-treino ou lanche ao acordar' : m.nome, hora: m.hora }))
+  const fim = new Map(missoesDoDia(rotina, SABADO).map((m) => [m.id, m]))
+  const nome = (id: IdMissao, n: string) => (id === 'pre' ? 'Pré-treino ou lanche ao acordar' : n)
+  return missoesDoDia(rotina, SEGUNDA).map((m) => ({ id: m.id, nome: nome(m.id, m.nome), hora: m.hora, horaFim: fim.get(m.id)!.hora, nomeFim: nome(m.id, fim.get(m.id)!.nome) }))
 }
 
 const escapar = (t: string) => t.replace(/\r\n?/g, '\n').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n')
@@ -49,23 +57,34 @@ function utc(d: Date): string {
 export function gerarIcs(rotina: Rotina, escolhidas: readonly IdMissao[], inicio: string, diaUm: string, agora: Date, endereco?: string): string {
   const fim = somarDias(diaUm, DIAS_DO_PROJETO - 1)
   const opcoes = opcoesDeLembrete(rotina).filter((o) => escolhidas.includes(o.id))
-  // o primeiro evento cai no primeiro dia válido a partir do início (treino nunca começa num domingo)
-  const primeiroDia = (id: IdMissao) => (id === 'treino' && diaDaSemana(inicio) === 0 ? somarDias(inicio, 1) : inicio)
+  // primeiro dia a partir do início que cai num dos dias da semana pedidos (0 = domingo)
+  const primeiroDia = (dias: readonly number[]) => {
+    let d = inicio
+    while (!dias.includes(diaDaSemana(d))) d = somarDias(d, 1)
+    return d
+  }
+  const SEMANA = [1, 2, 3, 4, 5], FIM = [6, 0]
+  const SIGLAS = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA']
   const linhas = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Super-Heroi 365//Lembretes//PT', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'X-WR-CALNAME:Super-Herói 365']
-  for (const o of opcoes) {
-    const hora = o.hora.replace(':', '') + '00'
-    const regra = o.id === 'treino' ? `RRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA;UNTIL=${compacta(fim)}T235959` : `RRULE:FREQ=DAILY;UNTIL=${compacta(fim)}T235959`
+  // um evento para os dias úteis e outro para o fim de semana, cada um no seu horário; treino só tem sábado no fim de semana
+  const eventos = opcoes.flatMap((o) => [
+    { o, parte: 'semana', dias: SEMANA, hora: o.hora, nome: o.nome },
+    { o, parte: 'fim', dias: o.id === 'treino' ? [6] : FIM, hora: o.horaFim, nome: o.nomeFim },
+  ])
+  for (const { o, parte, dias, hora: horaDoEvento, nome } of eventos) {
+    const hora = horaDoEvento.replace(':', '') + '00'
+    const regra = `RRULE:FREQ=WEEKLY;BYDAY=${dias.map((d) => SIGLAS[d]).join(',')};UNTIL=${compacta(fim)}T235959`
     linhas.push(
       'BEGIN:VEVENT',
-      `UID:${o.id}-${compacta(diaUm)}@super-heroi-365`,
+      `UID:${o.id}-${parte}-${compacta(diaUm)}@super-heroi-365`,
       `DTSTAMP:${utc(agora)}`,
-      `DTSTART:${compacta(primeiroDia(o.id))}T${hora}`,
+      `DTSTART:${compacta(primeiroDia(dias))}T${hora}`,
       `DURATION:PT${o.id === 'treino' ? 40 : 15}M`,
       regra,
-      `SUMMARY:${escapar(o.nome)}`,
+      `SUMMARY:${escapar(nome)}`,
       `DESCRIPTION:${escapar('Missão do Super-Herói 365. Abra o app para ver o que fazer e marcar como feita.')}`,
       ...(endereco ? [`URL:${endereco}`] : []),
-      'BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${escapar(o.nome)}`, 'TRIGGER:PT0M', 'END:VALARM',
+      'BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${escapar(nome)}`, 'TRIGGER:PT0M', 'END:VALARM',
       'END:VEVENT',
     )
   }

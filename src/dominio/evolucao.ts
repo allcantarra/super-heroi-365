@@ -237,7 +237,7 @@ export function atributos(diaUm: string, hoje: string, rotina: Rotina, dias: Map
   for (let data = diaUm; data <= hoje; data = somarDias(data, 1)) {
     const registro = dias.get(data)
     if (!registro) continue
-    const resumo = resumoDoDia(registro, missoesDoDia(rotina, data))
+    const resumo = resumoDoDia(registro, missoesDoDia(rotina, data, registro))
     somar('energia', resumo.refeicoesFeitas, data)
     if (resumo.vencido) somar('foco', 1, data)
   }

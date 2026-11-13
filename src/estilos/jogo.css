@@ -343,3 +343,13 @@
 .mais-conquistas[open] summary {
   margin-bottom: 8px;
 }
+
+.hora-lembrete small {
+  display: block;
+  font: 600 11px var(--texto);
+  color: var(--apagado);
+}
+
+.hora-lembrete {
+  width: 64px;
+}

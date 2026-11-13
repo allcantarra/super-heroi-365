@@ -3,7 +3,7 @@ import { ALIMENTOS } from '../conteudo/alimentos'
 import { normalizarTrocas, type Trocas } from '../dominio/cardapio'
 import { META_COPOS, registroVazio, type RegistroDia } from '../dominio/dia'
 import { normalizarRotina, type IdMissao, type Rotina } from '../dominio/rotina'
-import { dataValida } from '../dominio/tempo'
+import { dataValida, horaValida } from '../dominio/tempo'
 import { normalizarFoto, normalizarMedida, normalizarPesagem, type Foto, type Medida, type Pesagem } from '../dominio/evolucao'
 import { normalizarSessao, type Sessao } from '../dominio/treino'
 import { normalizarAparencia, type Aparencia } from '../heroi/aparencia'
@@ -87,7 +87,9 @@ export function normalizarPerfil(dado: unknown): Perfil {
 export function normalizarDia(dado: unknown, data: string): RegistroDia {
   const d = (dado ?? {}) as Partial<Record<keyof RegistroDia, unknown>>
   const feitas = Array.isArray(d.feitas) ? IDS.filter((id) => (d.feitas as unknown[]).includes(id)) : []
-  return { data, feitas, copos: numeroEntre(d.copos, 0, META_COPOS) === null ? 0 : Math.floor(d.copos as number) }
+  const copos = numeroEntre(d.copos, 0, META_COPOS) === null ? 0 : Math.floor(d.copos as number)
+  // hora do primeiro toque só vale com missão marcada; registro da versão 1 não tem e continua valendo
+  return horaValida(d.inicio) && feitas.length > 0 ? { data, feitas, copos, inicio: d.inicio } : { data, feitas, copos }
 }
 
 export async function lerPerfil(): Promise<Perfil> {

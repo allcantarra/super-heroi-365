@@ -106,7 +106,7 @@ export function App() {
         {aba === 'hoje' ? (
           <Hoje dados={{ ...dados, dias: diasDoJogo! }} hoje={hoje} agora={agora} erroAoSalvar={erroAoSalvar} mudarDia={(d, m) => void mudarDia(d, m)} abrirAjustes={() => { setEmAjustes(true); window.scrollTo(0, 0) }} abrirTreino={() => ir('treino')} />
         ) : aba === 'cardapio' ? (
-          <Cardapio perfil={dados.perfil} feitasHoje={diasDoJogo!.get(hoje)?.feitas ?? []} hoje={hoje} salvarPerfil={(p) => void salvarPerfil(p)} />
+          <Cardapio perfil={dados.perfil} feitasHoje={diasDoJogo!.get(hoje)?.feitas ?? []} inicioHoje={diasDoJogo!.get(hoje)?.inicio} hoje={hoje} salvarPerfil={(p) => void salvarPerfil(p)} />
         ) : aba === 'treino' ? (
           <Treino dados={dados} hoje={hoje} erroAoSalvar={erroAoSalvar} mudarSessao={(d, n, m) => void mudarSessao(d, n, m)} irParaHoje={() => ir('hoje')} />
         ) : (
