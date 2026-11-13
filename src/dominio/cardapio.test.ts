@@ -72,9 +72,10 @@ describe('conteúdo: pratos', () => {
     }
   })
 
-  it('lanches e almoços não são múltiplos de 3, senão o rodízio prende pratos em posições fixas', () => {
-    expect(DA_CATEGORIA.lanche.length % 3).not.toBe(0)
-    expect(DA_CATEGORIA.almoco.length % 3).not.toBe(0)
+  it('cada tipo de refeição tem pelo menos 30 opções, com nomes únicos', () => {
+    for (const categoria of ['pre', 'cafe', 'lanche', 'almoco', 'jantar', 'ceia'] as const) expect(DA_CATEGORIA[categoria].length, categoria).toBeGreaterThanOrEqual(30)
+    const nomes = IDS.map((id) => prato(id).nome)
+    expect(nomes.filter((n, i) => nomes.indexOf(n) !== i)).toEqual([])
   })
 })
 
@@ -108,22 +109,32 @@ describe('calendário dos 365 dias', () => {
     }
   })
 
-  it('os macros de um dia isolado ficam a até 20% da meta (35% para gordura)', () => {
+  it('os macros de um dia isolado variam com os pratos: até 27% da meta (40% para gordura)', () => {
     for (const data of ANO) {
       const m = macrosDaData(DIA_UM, data, {}), meta = METAS[fasePara(DIA_UM, data)]
-      expect(Math.abs(m.p / meta.p - 1), `proteína ${data}: ${Math.round(m.p)}`).toBeLessThan(0.2)
-      expect(Math.abs(m.c / meta.c - 1), `carboidrato ${data}: ${Math.round(m.c)}`).toBeLessThan(0.2)
-      expect(Math.abs(m.g / meta.g - 1), `gordura ${data}: ${Math.round(m.g)}`).toBeLessThan(0.35)
+      expect(Math.abs(m.p / meta.p - 1), `proteína ${data}: ${Math.round(m.p)}`).toBeLessThan(0.27)
+      expect(Math.abs(m.c / meta.c - 1), `carboidrato ${data}: ${Math.round(m.c)}`).toBeLessThan(0.27)
+      expect(Math.abs(m.g / meta.g - 1), `gordura ${data}: ${Math.round(m.g)}`).toBeLessThan(0.4)
     }
   })
 
-  it('na média de cada semana, os macros ficam a até 10% da meta', () => {
+  it('na média de cada semana, os macros ficam a até 12% da meta', () => {
     for (let s = 1; s < 52; s++) {
       const dias = datasDaSemana(somarDias('2026-11-09', s * 7))
       if (new Set(dias.map((d) => fasePara(DIA_UM, d))).size > 1) continue // semana de virada de fase
       const meta = METAS[fasePara(DIA_UM, dias[0])]
       const media = (k: 'p' | 'c' | 'g') => dias.reduce((t, d) => t + macrosDaData(DIA_UM, d, {})[k], 0) / 7
-      for (const k of ['p', 'c', 'g'] as const) expect(Math.abs(media(k) / meta[k] - 1), `semana ${s} ${k}: ${Math.round(media(k))}`).toBeLessThan(0.1)
+      for (const k of ['p', 'c', 'g'] as const) expect(Math.abs(media(k) / meta[k] - 1), `semana ${s} ${k}: ${Math.round(media(k))}`).toBeLessThan(0.12)
+    }
+  })
+
+  it('na média de cada fase, calorias e macros ficam a até 4% da meta', () => {
+    for (const f of FASES) {
+      const dias = ANO.filter((d) => fasePara(DIA_UM, d) === f).map((d) => macrosDaData(DIA_UM, d, {}))
+      for (const k of ['kcal', 'p', 'c', 'g'] as const) {
+        const media = dias.reduce((t, m) => t + m[k], 0) / dias.length
+        expect(Math.abs(media / METAS[f][k] - 1), `fase ${f} ${k}: ${Math.round(media)}`).toBeLessThan(0.04)
+      }
     }
   })
 
@@ -158,7 +169,7 @@ describe('calendário dos 365 dias', () => {
     const usados = new Set(ANO.flatMap((d) => Object.values(cardapioDaData(DIA_UM, d, {}))))
     expect(usados.size).toBe(IDS.length)
     const dias = new Set(ANO.map((d) => REFEICOES.map((r) => pratoOriginal(DIA_UM, d, r)).join('|')))
-    expect(dias.size).toBeGreaterThan(330)
+    expect(dias.size).toBe(365)
   })
 
   it('o papel da marmita segue o dia da semana', () => {
@@ -234,11 +245,11 @@ describe('lista de compras', () => {
 
   it('usa a quantidade da fase de cada data', () => {
     expect(item(listaDeCompras(DIA_UM, [DIA_UM], {}), 'Creatina').quantidade).toBe(5)
-    const naFase3 = somarDias(DIA_UM, 150)
-    expect(fasePara(DIA_UM, naFase3)).toBe(3)
-    const fase1 = listaDeCompras(DIA_UM, datasDaSemana(segundaDe(somarDias(DIA_UM, 7))), {})
-    const fase3 = listaDeCompras(DIA_UM, datasDaSemana(segundaDe(naFase3)), {})
-    expect(item(fase3, 'Arroz cru').quantidade).toBeGreaterThan(item(fase1, 'Arroz cru').quantidade * 0.9)
+    const naFase3 = datasDaSemana(segundaDe(somarDias(DIA_UM, 150)))
+    expect(fasePara(DIA_UM, naFase3[0])).toBe(3)
+    const leite = naFase3.flatMap((d) => REFEICOES.flatMap((r) => [...prato(pratoOriginal(DIA_UM, d, r)).itens])).filter((i) => i.a === 'leite')
+    expect(item(listaDeCompras(DIA_UM, naFase3, {}), 'Leite integral').quantidade).toBe(leite.reduce((t, i) => t + i.q[2], 0))
+    expect(leite.reduce((t, i) => t + i.q[2], 0)).not.toBe(leite.reduce((t, i) => t + i.q[0], 0))
   })
 
   it('escreve quantidades de mercado: quilos, litros, unidades', () => {

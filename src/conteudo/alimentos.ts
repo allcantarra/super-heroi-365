@@ -1,7 +1,7 @@
 /**
  * Tabela de alimentos. Valores por 100 g (ou 100 ml) do alimento pronto para comer.
  * Fonte: TACO 4ª edição (NEPA/Unicamp), conferida item a item em 2026-11-12.
- * Fora da TACO, por rótulo ou estimativa: creme de leite (valor da TACO citado de memória, não conferido), leite integral líquido, macarrão cozido (derivado do cru), purê, pizza,
+ * Fora da TACO, por rótulo ou estimativa: leite integral líquido, macarrão cozido (derivado do cru), purê, pizza,
  * esfiha, Mucilon, pasta de amendoim, whey, maca e beterraba em pó. Pão de forma usa a linha do integral.
  * Trate os totais como guia: a margem real, somando porção e preparo, é de cerca de 10%.
  * Lista fechada de propósito: nada de verdura, legume em pedaço, salada, peixe, fruto do mar ou feijão.
@@ -66,6 +66,47 @@ export const ALIMENTOS = {
   sucoLaranja: { nome: 'Suco de laranja natural', kcal: 33, p: 0.7, c: 7.6, g: 0.1, medida: 'ml', classe: 'carbo', setor: 'Hortifruti', compra: 'Laranja (para suco)', fatorCompra: 2 },
   molhoTomate: { nome: 'Molho de tomate liso', kcal: 38, p: 1.4, c: 7.7, g: 0.9, medida: 'g', classe: 'outro', setor: 'Mercearia' },
   azeite: { nome: 'Azeite', kcal: 884, p: 0, c: 0, g: 100, medida: 'g', classe: 'gordura', setor: 'Mercearia' },
+  // ---- ampliação para variedade: conferida na TACO em 2026-11-12. Fora da TACO, por rótulo ou estimativa:
+  // goma de tapioca, granola, bisnaguinha, pão de hambúrguer, wrap, barra de cereal, geleia, peito de peru, salsicha.
+  // Calabresa usa a linha de linguiça de porco grelhada; bolo usa a de bolo de milho.
+  tapioca: { nome: 'Tapioca (goma hidratada)', kcal: 240, p: 0, c: 60, g: 0, medida: 'g', classe: 'carbo', setor: 'Mercearia', compra: 'Goma de tapioca' },
+  cuscuz: { nome: 'Cuscuz de milho', kcal: 113, p: 2.2, c: 25.3, g: 0.7, medida: 'g', classe: 'carbo', setor: 'Mercearia', compra: 'Flocão de milho', fatorCompra: 0.4 },
+  polenta: { nome: 'Polenta cremosa', kcal: 103, p: 2.3, c: 23.3, g: 0.3, medida: 'g', classe: 'carbo', setor: 'Mercearia', compra: 'Fubá', fatorCompra: 0.25 },
+  nhoque: { nome: 'Nhoque de batata cozido', kcal: 181, p: 5.9, c: 36.8, g: 1.9, medida: 'g', classe: 'carbo', setor: 'Mercearia', compra: 'Nhoque de batata' },
+  granola: { nome: 'Granola', kcal: 420, p: 10.0, c: 68.0, g: 12.0, medida: 'g', classe: 'carbo', setor: 'Mercearia' },
+  cerealMatinal: { nome: 'Cereal matinal de milho', kcal: 365, p: 7.2, c: 83.8, g: 1.0, medida: 'g', classe: 'carbo', setor: 'Mercearia' },
+  torrada: { nome: 'Torrada', kcal: 377, p: 10.5, c: 74.6, g: 3.3, medida: un('torrada', 'torradas', 10), classe: 'carbo', setor: 'Padaria' },
+  bolo: { nome: 'Bolo simples', kcal: 311, p: 4.8, c: 45.1, g: 12.4, medida: un('fatia', 'fatias', 60), classe: 'carbo', setor: 'Padaria' },
+  maisena: { nome: 'Biscoito maisena', kcal: 443, p: 8.1, c: 75.2, g: 12.0, medida: 'g', classe: 'carbo', setor: 'Mercearia' },
+  bisnaguinha: { nome: 'Bisnaguinha', kcal: 300, p: 8.0, c: 55.0, g: 5.0, medida: un('unidade', 'unidades', 20), classe: 'carbo', setor: 'Padaria' },
+  paoHamburguer: { nome: 'Pão de hambúrguer', kcal: 280, p: 9.0, c: 50.0, g: 4.0, medida: un('pão', 'pães', 50), classe: 'carbo', setor: 'Padaria' },
+  wrap: { nome: 'Massa de wrap ou panqueca', kcal: 290, p: 8.0, c: 50.0, g: 6.0, medida: un('disco', 'discos', 40), classe: 'carbo', setor: 'Padaria' },
+  barraCereal: { nome: 'Barra de cereal', kcal: 400, p: 5.0, c: 75.0, g: 9.0, medida: un('barra', 'barras', 22), classe: 'carbo', setor: 'Mercearia' },
+  pacoca: { nome: 'Paçoca', kcal: 487, p: 16.0, c: 52.4, g: 26.1, medida: un('unidade', 'unidades', 20), classe: 'carbo', setor: 'Mercearia' },
+  amendoim: { nome: 'Amendoim torrado', kcal: 606, p: 22.5, c: 18.7, g: 54.0, medida: 'g', classe: 'gordura', setor: 'Mercearia' },
+  doceLeite: { nome: 'Doce de leite', kcal: 306, p: 5.5, c: 59.5, g: 6.0, medida: 'g', classe: 'carbo', setor: 'Mercearia' },
+  goiabada: { nome: 'Goiabada', kcal: 286, p: 0.4, c: 78.7, g: 0.1, medida: 'g', classe: 'carbo', setor: 'Mercearia' },
+  geleia: { nome: 'Geleia de fruta', kcal: 250, p: 0.3, c: 65.0, g: 0, medida: 'g', classe: 'carbo', setor: 'Mercearia' },
+  leitePo: { nome: 'Leite em pó integral', kcal: 497, p: 25.4, c: 39.2, g: 26.9, medida: 'g', classe: 'laticinio', setor: 'Mercearia' },
+  leiteCondensado: { nome: 'Leite condensado', kcal: 313, p: 7.7, c: 57.0, g: 6.7, medida: 'g', classe: 'carbo', setor: 'Mercearia' },
+  queijoPrato: { nome: 'Queijo prato', kcal: 360, p: 22.7, c: 1.9, g: 29.1, medida: un('fatia', 'fatias', 20), classe: 'proteina', setor: 'Frios e laticínios' },
+  peitoPeru: { nome: 'Peito de peru', kcal: 105, p: 20.0, c: 2.0, g: 2.0, medida: un('fatia', 'fatias', 15), classe: 'proteina', setor: 'Frios e laticínios' },
+  mortadela: { nome: 'Mortadela', kcal: 269, p: 12.0, c: 5.8, g: 21.6, medida: un('fatia', 'fatias', 15), classe: 'proteina', setor: 'Frios e laticínios' },
+  salsicha: { nome: 'Salsicha', kcal: 257, p: 13.0, c: 2.0, g: 22.0, medida: un('salsicha', 'salsichas', 50), classe: 'proteina', setor: 'Frios e laticínios' },
+  linguica: { nome: 'Linguiça de frango grelhada', kcal: 244, p: 18.2, c: 0, g: 18.5, medida: 'g', classe: 'proteina', setor: 'Açougue', compra: 'Linguiça de frango (crua)', fatorCompra: 1.3 },
+  calabresa: { nome: 'Linguiça calabresa', kcal: 296, p: 23.2, c: 0, g: 21.9, medida: 'g', classe: 'proteina', setor: 'Açougue' },
+  lombo: { nome: 'Lombo de porco assado', kcal: 210, p: 35.7, c: 0, g: 6.4, medida: 'g', classe: 'proteina', setor: 'Açougue', compra: 'Lombo de porco (cru)', fatorCompra: 1.4 },
+  bisteca: { nome: 'Bisteca de porco grelhada', kcal: 280, p: 28.9, c: 0, g: 17.4, medida: 'g', classe: 'proteina', setor: 'Açougue', compra: 'Bisteca de porco (crua)', fatorCompra: 1.6 },
+  costela: { nome: 'Costela bovina assada', kcal: 373, p: 28.8, c: 0, g: 27.7, medida: 'g', classe: 'proteina', setor: 'Açougue', compra: 'Costela bovina (crua, com osso)', fatorCompra: 2.2 },
+  carnePanela: { nome: 'Carne de panela', kcal: 194, p: 31.2, c: 0, g: 6.7, medida: 'g', classe: 'proteina', setor: 'Açougue', compra: 'Músculo ou acém em cubos (cru)', fatorCompra: 1.5 },
+  coxa: { nome: 'Coxa de frango assada', kcal: 215, p: 28.5, c: 0, g: 10.4, medida: 'g', classe: 'proteina', setor: 'Açougue', compra: 'Coxa de frango (crua, com osso)', fatorCompra: 1.9 },
+  milanesaFrango: { nome: 'Filé de frango à milanesa', kcal: 221, p: 28.5, c: 7.5, g: 7.8, medida: 'g', classe: 'proteina', setor: 'Açougue', compra: 'Filé de frango para empanar (cru)', fatorCompra: 1.1 },
+  milanesaBoi: { nome: 'Bife à milanesa', kcal: 352, p: 20.6, c: 12.2, g: 24.0, medida: 'g', classe: 'proteina', setor: 'Açougue', compra: 'Bife para empanar (cru)', fatorCompra: 1.1 },
+  macaFruta: { nome: 'Maçã', kcal: 56, p: 0.3, c: 15.2, g: 0, medida: un('maçã', 'maçãs', 130), classe: 'carbo', setor: 'Hortifruti' },
+  morango: { nome: 'Morango', kcal: 30, p: 0.9, c: 6.8, g: 0.3, medida: 'g', classe: 'carbo', setor: 'Hortifruti' },
+  manga: { nome: 'Manga', kcal: 72, p: 0.4, c: 19.4, g: 0.2, medida: 'g', classe: 'carbo', setor: 'Hortifruti' },
+  abacate: { nome: 'Abacate', kcal: 96, p: 1.2, c: 6.0, g: 8.4, medida: 'g', classe: 'gordura', setor: 'Hortifruti' },
+  mamao: { nome: 'Mamão', kcal: 40, p: 0.5, c: 10.4, g: 0.1, medida: 'g', classe: 'carbo', setor: 'Hortifruti' },
   whey: { nome: 'Whey protein', kcal: 400, p: 80.0, c: 7.0, g: 6.0, medida: 'g', classe: 'suplemento', setor: 'Suplementos' },
   creatina: { nome: 'Creatina', kcal: 0, p: 0, c: 0, g: 0, medida: 'g', classe: 'suplemento', setor: 'Suplementos' },
   guarana: { nome: 'Guaraná em pó', kcal: 0, p: 0, c: 0, g: 0, medida: 'g', classe: 'suplemento', setor: 'Suplementos', cafeina: true },

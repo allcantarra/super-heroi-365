@@ -73,23 +73,32 @@ export function pratoServe(id: unknown, refeicao: IdRefeicao): id is IdPrato {
   return typeof id === 'string' && id in PRATOS && PRATOS[id as IdPrato].categoria === CATEGORIA_DA_REFEICAO[refeicao]
 }
 
+/**
+ * Passo com que cada refeição anda pela sua lista de um dia para o outro. Passos diferentes fazem as refeições
+ * se combinarem de formas diferentes; a cada volta completa a lista ainda desloca um pouco (o "giro").
+ * Os passos não podem dividir o tamanho da lista, senão alguns pratos nunca aparecem: há teste para isso.
+ */
+const RODIZIO: Record<Exclude<IdRefeicao, 'almoco' | 'lancheTarde' | 'trajeto'>, { passo: number; giro: number }> = {
+  pre: { passo: 7, giro: 1 },
+  cafe: { passo: 11, giro: 2 },
+  lancheManha: { passo: 19, giro: 3 },
+  jantar: { passo: 13, giro: 4 },
+  ceia: { passo: 17, giro: 5 },
+}
+
 /** Prato que o rodízio do ano dá para uma refeição em uma data, antes de qualquer troca. */
 export function pratoOriginal(diaUm: string, data: string, refeicao: IdRefeicao): IdPrato {
-  const semana = semanaDe(diaUm, data)
-  // dias corridos desde a segunda da semana 0: cada lista tem tamanho diferente, então as combinações não se repetem
-  const t = diasEntre(segundaDe(diaUm), data)
-  switch (refeicao) {
-    case 'almoco':
-      return ciclo(DA_CATEGORIA.almoco, semana * 3 + PAPEIS.indexOf(papelDoDia(diaDaSemana(data))))
-    case 'lancheManha':
-      return ciclo(DA_CATEGORIA.lanche, t * 3)
-    case 'lancheTarde':
-      return ciclo(DA_CATEGORIA.lanche, t * 3 + 1)
-    case 'trajeto':
-      return ciclo(DA_CATEGORIA.lanche, t * 3 + 2)
-    default:
-      return ciclo(DA_CATEGORIA[CATEGORIA_DA_REFEICAO[refeicao]], t)
+  const lista = DA_CATEGORIA[CATEGORIA_DA_REFEICAO[refeicao]], n = lista.length, terco = Math.floor(n / 3)
+  if (refeicao === 'almoco') {
+    // três marmitas por semana, cada uma andando pela lista inteira ao longo do ano, sem repetir na semana seguinte
+    return ciclo(lista, semanaDe(diaUm, data) + PAPEIS.indexOf(papelDoDia(diaDaSemana(data))) * terco)
   }
+  // dias corridos desde a segunda da semana 0
+  const t = diasEntre(segundaDe(diaUm), data)
+  // os três lanches do dia saem da mesma lista, separados por um terço dela
+  const { passo, giro } = RODIZIO[refeicao === 'lancheTarde' || refeicao === 'trajeto' ? 'lancheManha' : refeicao]
+  const salto = refeicao === 'lancheTarde' ? terco : refeicao === 'trajeto' ? 2 * terco : 0
+  return ciclo(lista, t * passo + Math.floor(t / n) * giro + salto)
 }
 
 /** Prato de uma refeição em uma data, já com a troca do usuário, se houver. */

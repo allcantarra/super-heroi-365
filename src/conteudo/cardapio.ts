@@ -37,10 +37,10 @@ export interface MetaDaFase {
  * A proteína é alta (whey, carne, ovo e leite em quase toda refeição); quem quiser baixar tira o whey do café.
  */
 export const METAS: Record<Fase, MetaDaFase> = {
-  1: { kcal: 2750, p: 165, c: 320, g: 90, foco: 'Reativar o apetite e encher o músculo. Meta do mês: 2 a 3 kg a mais, sem barriga.', dicas: ['Sem fome? Troque a refeição por uma vitamina: líquido desce mais fácil.', 'Água o dia todo: músculo hidratado parece maior e mais firme.', 'Creatina todo dia, junto com o café reforçado.'] },
-  2: { kcal: 3050, p: 185, c: 350, g: 100, foco: 'Superávit limpo: ganhar de 0,6 a 1 kg por mês. Acima de 1,2 kg por mês é gordura.', dicas: ['Pese-se toda semana, em jejum, no mesmo dia.', 'Proteína em todas as refeições, não só no café.', 'Subiu rápido demais? Tire a ceia por uma semana.'] },
-  3: { kcal: 3250, p: 195, c: 370, g: 110, foco: 'Treino no volume máximo pede comida no máximo. É aqui que ombros, costas e pernas ganham densidade.', dicas: ['Peso parado por 2 semanas? Uma colher a mais de arroz no almoço.', 'Não pule o lanche de trajeto: são 3 horas até o jantar.', 'Refeição livre uma vez por semana, sem culpa.'] },
-  4: { kcal: 2600, p: 175, c: 280, g: 87, foco: 'Baixar a gordura sem perder músculo: menos carboidrato, mais proteína. Ritmo ideal: 0,3 a 0,5 kg a menos por semana.', dicas: ['Batata frita vira batata assada.', 'Refeição livre passa a ser quinzenal.', 'Sono e água em dia: sem isso a definição trava.'] },
+  1: { kcal: 2750, p: 160, c: 335, g: 88, foco: 'Reativar o apetite e encher o músculo. Meta do mês: 2 a 3 kg a mais, sem barriga.', dicas: ['Sem fome? Troque a refeição por uma vitamina: líquido desce mais fácil.', 'Água o dia todo: músculo hidratado parece maior e mais firme.', 'Creatina todo dia, junto com o café reforçado.'] },
+  2: { kcal: 3050, p: 180, c: 360, g: 100, foco: 'Superávit limpo: ganhar de 0,6 a 1 kg por mês. Acima de 1,2 kg por mês é gordura.', dicas: ['Pese-se toda semana, em jejum, no mesmo dia.', 'Proteína em todas as refeições, não só no café.', 'Subiu rápido demais? Tire a ceia por uma semana.'] },
+  3: { kcal: 3250, p: 190, c: 385, g: 108, foco: 'Treino no volume máximo pede comida no máximo. É aqui que ombros, costas e pernas ganham densidade.', dicas: ['Peso parado por 2 semanas? Uma colher a mais de arroz no almoço.', 'Não pule o lanche de trajeto: são 3 horas até o jantar.', 'Refeição livre uma vez por semana, sem culpa.'] },
+  4: { kcal: 2600, p: 165, c: 295, g: 87, foco: 'Baixar a gordura sem perder músculo: menos carboidrato, mais proteína. Ritmo ideal: 0,3 a 0,5 kg a menos por semana.', dicas: ['Batata frita vira batata assada.', 'Refeição livre passa a ser quinzenal.', 'Sono e água em dia: sem isso a definição trava.'] },
 }
 
 export const DIAS_DA_SEMANA = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'] as const

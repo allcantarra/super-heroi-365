@@ -30,7 +30,9 @@ Testes: Vitest (jsdom, fake-indexeddb) e Playwright (375 px). Lint: oxlint.
 - Nova coleção no banco: nova `version()` em `src/dados/banco.ts`; nunca editar versão publicada.
 - Seleção de opção conhecida: lista suspensa. Alvo de toque de 44 px ou mais.
 - Tela nova só é pronta depois de aberta em 375 px, tocada e capturada em `docs/capturas/`.
+- Cardápio: todo tipo de refeição tem pelo menos 30 pratos. Prato novo entra em `scripts/gerar-pratos.ts`; depois rode `node scripts/gerar-pratos.ts` (grava `src/conteudo/pratos.ts`) e `npx vite-node scripts/relatorio-macros.ts`.
+- O servidor de desenvolvimento já serviu arquivo antigo depois de edição por script. Se a tela não bater com o código, reinicie o `npm run dev` antes de investigar. Os roteiros `e2e` rodam contra o build e não sofrem disso.
 
 ## Etapas
-1. Fundação (feita): projeto, identidade, avatar, PWA, publicação automática.
-2. Primeira abertura e tela Hoje. 3. Cardápio, receitas e compras. 4. Treino. 5. Evolução. 6. Jogo completo, lembretes e backup.
+1. Fundação, 2. Primeira abertura e tela Hoje, 3. Cardápio dos 365 dias, receitas e compras: feitas.
+4. Treino. 5. Evolução. 6. Jogo completo, lembretes e backup.

@@ -78,6 +78,169 @@ const BASE: Base[] = [
   { id: 'ceia5', nome: 'Vitamina de banana com aveia', categoria: 'ceia', itens: [['leite', 250], ['banana', 1], ['aveia', 15]], preparo: 'Bata e beba devagar.' },
 ]
 
+
+// ---- variedade: pelo menos 30 opções por categoria ----
+type Linha = [nome: string, itens: Item[], preparo: string]
+const PO: Item[] = [['beterraba', 5], ['guarana', 2]]
+const WHEY: Item[] = [['whey', 30], ['creatina', 5]]
+const PO_TEXTO = 'Beterraba e guaraná em pó em meio copo de água.'
+
+function ampliar(categoria: Categoria, primeiro: number, linhas: Linha[], sufixo: Item[] = []) {
+  linhas.forEach(([nome, itens, preparo], i) => BASE.push({ id: `${categoria}${primeiro + i}`, nome, categoria, itens: [...itens, ...sufixo], preparo }))
+}
+
+ampliar('pre', 6, [
+  ['Maçã com pasta de amendoim', [['macaFruta', 1], ['pastaAmendoim', 10]], PO_TEXTO],
+  ['Tapioca com mel', [['tapioca', 50], ['mel', 10]], 'Tapioca na frigideira seca, 1 minuto de cada lado.'],
+  ['Torradas com geleia', [['torrada', 3], ['geleia', 20]], PO_TEXTO],
+  ['Banana com granola', [['banana', 1], ['granola', 20]], PO_TEXTO],
+  ['Iogurte com mel', [['iogurte', 150], ['mel', 15]], PO_TEXTO],
+  ['Vitamina de mamão', [['leite', 150], ['mamao', 100], ['mel', 10]], 'Bata tudo junto, com os pós.'],
+  ['Pão francês com geleia', [['paoFrances', 1], ['geleia', 10]], PO_TEXTO],
+  ['Cuscuz com manteiga', [['cuscuz', 120], ['manteiga', 5]], 'Cuscuz de micro-ondas: 3 minutos.'],
+  ['Bisnaguinha com requeijão', [['bisnaguinha', 2], ['requeijao', 15]], PO_TEXTO],
+  ['Suco de laranja com torradas', [['sucoLaranja', 200], ['torrada', 3]], 'Os pós vão dentro do suco.'],
+  ['Banana com doce de leite', [['banana', 1], ['doceLeite', 20]], PO_TEXTO],
+  ['Cereal com leite', [['cerealMatinal', 30], ['leite', 150]], PO_TEXTO],
+  ['Vitamina rápida de morango', [['leite', 150], ['morango', 100], ['mel', 10]], 'Bata tudo junto, com os pós.'],
+  ['Biscoito maisena com leite', [['maisena', 25], ['leite', 150]], PO_TEXTO],
+  ['Pão de forma com pasta de amendoim', [['paoForma', 1], ['pastaAmendoim', 15]], PO_TEXTO],
+  ['Manga com iogurte', [['manga', 120], ['iogurte', 100]], PO_TEXTO],
+  ['Torradas com requeijão', [['torrada', 3], ['requeijao', 15]], PO_TEXTO],
+  ['Paçoca com leite', [['pacoca', 1], ['leite', 100]], PO_TEXTO],
+  ['Barra de cereal e suco', [['barraCereal', 1], ['sucoLaranja', 200]], 'Os pós vão dentro do suco.'],
+  ['Tapioca com banana', [['tapioca', 40], ['banana', 1]], 'Banana amassada como recheio.'],
+  ['Mingau rápido de Farinha Láctea', [['leite', 150], ['farinhaLactea', 20]], 'Leite morno, mexa e beba.'],
+  ['Torradas com manteiga e mel', [['torrada', 3], ['manteiga', 5], ['mel', 5]], PO_TEXTO],
+  ['Vitamina rápida de abacate', [['leite', 150], ['abacate', 60], ['mel', 10]], 'Bata tudo junto, com os pós.'],
+  ['Aveia com leite e mel', [['leite', 150], ['aveia', 20], ['mel', 5]], 'Deixe a aveia amolecer 2 minutos.'],
+  ['Biscoito cream cracker com geleia', [['creamCracker', 25], ['geleia', 20]], PO_TEXTO],
+], PO)
+
+const SHAKE = 'Whey e creatina batidos no leite.'
+ampliar('cafe', 7, [
+  ['Tapioca com ovo e queijo e shake de whey', [['tapioca', 60], ['ovo', 1], ['mussarela', 1], ['leite', 200]], SHAKE],
+  ['Cuscuz com ovos e shake de whey', [['cuscuz', 150], ['ovo', 2], ['leite', 200]], SHAKE],
+  ['Pão com queijo minas e shake de whey', [['paoFrances', 1], ['minas', 40], ['leite', 200]], SHAKE],
+  ['Mingau de aveia com whey', [['leite', 300], ['aveia', 40], ['banana', 1]], 'Whey e creatina entram com o mingau já morno, para não empelotar.'],
+  ['Omelete de presunto e queijo com torradas', [['ovo', 2], ['presunto', 2], ['mussarela', 1], ['torrada', 1], ['leite', 150]], SHAKE],
+  ['Pão com peito de peru e shake de whey', [['paoForma', 2], ['requeijao', 15], ['peitoPeru', 3], ['leite', 200]], SHAKE],
+  ['Iogurte com granola, banana e whey', [['iogurte', 200], ['granola', 40], ['banana', 1]], 'Whey e creatina misturados no iogurte.'],
+  ['Crepioca de queijo e shake de whey', [['tapioca', 40], ['ovo', 2], ['queijoPrato', 1], ['leite', 200]], 'Ovo batido com a goma, na frigideira.'],
+  ['Torradas com ovos mexidos e shake de whey', [['torrada', 4], ['ovo', 2], ['leite', 200]], SHAKE],
+  ['Vitamina de morango com whey e aveia', [['leite', 300], ['morango', 150], ['aveia', 30]], 'Bata tudo no liquidificador.'],
+  ['Pão na chapa e shake de whey com achocolatado', [['paoFrances', 1], ['manteiga', 10], ['leite', 250], ['achocolatado', 10]], SHAKE],
+  ['Sanduíche de ovo e queijo prato e shake de whey', [['paoForma', 2], ['ovo', 1], ['queijoPrato', 1], ['leite', 200]], SHAKE],
+  ['Cereal com leite, banana e whey', [['cerealMatinal', 40], ['leite', 300], ['banana', 1]], 'Whey e creatina batidos no leite antes de pôr o cereal.'],
+  ['Vitamina de abacate com whey', [['leite', 300], ['abacate', 80], ['mel', 10]], 'Bata tudo no liquidificador.'],
+  ['Bolo simples, banana e shake de whey', [['bolo', 1], ['banana', 1], ['leite', 250]], SHAKE],
+  ['Cuscuz com queijo e shake de whey', [['cuscuz', 150], ['minas', 40], ['leite', 200]], SHAKE],
+  ['Pão de queijo com ovo e shake de whey', [['paoQueijo', 2], ['ovo', 1], ['leite', 150]], SHAKE],
+  ['Mingau de Mucilon com whey', [['leite', 300], ['mucilon', 35], ['banana', 1]], 'Whey e creatina entram com o mingau já morno.'],
+  ['Bisnaguinhas com presunto e queijo e shake de whey', [['bisnaguinha', 3], ['presunto', 2], ['mussarela', 1], ['leite', 200]], SHAKE],
+  ['Vitamina de mamão, aveia e whey', [['leite', 300], ['mamao', 150], ['aveia', 30]], 'Bata tudo no liquidificador.'],
+  ['Wrap de ovo e queijo e shake de whey', [['wrap', 1], ['ovo', 1], ['mussarela', 1], ['leite', 200]], SHAKE],
+  ['Pão com pasta de amendoim, banana e shake de whey', [['paoForma', 2], ['pastaAmendoim', 15], ['banana', 1], ['leite', 200]], SHAKE],
+  ['Iogurte batido com whey, banana e mel', [['iogurte', 250], ['banana', 1], ['mel', 10], ['aveia', 20]], 'Bata tudo no liquidificador.'],
+  ['Ovos mexidos com queijo, torradas e shake de whey', [['ovo', 2], ['mussarela', 1], ['torrada', 2], ['leite', 150]], SHAKE],
+], WHEY)
+
+ampliar('lanche', 12, [
+  ['Maçã com amendoim', [['macaFruta', 1], ['amendoim', 20]], 'Amendoim num potinho.'],
+  ['Barra de cereal e iogurte', [['barraCereal', 1], ['iogurte', 170]], 'Iogurte de garrafinha.'],
+  ['Sanduíche de peito de peru e requeijão', [['paoForma', 2], ['peitoPeru', 3], ['requeijao', 15]], 'Monte em casa e leve embrulhado.'],
+  ['Bisnaguinhas com requeijão', [['bisnaguinha', 3], ['requeijao', 20]], 'Já recheadas, num pote.'],
+  ['Paçoca e leite', [['pacoca', 1], ['leite', 200]], 'Leite em garrafa térmica.'],
+  ['Iogurte com granola', [['iogurte', 170], ['granola', 30]], 'Granola separada, mistura na hora.'],
+  ['Bolo simples e suco', [['bolo', 1], ['sucoLaranja', 100]], 'Fatia embrulhada em papel.'],
+  ['Torradas com queijo minas', [['torrada', 3], ['minas', 40]], 'Queijo em fatias num pote.'],
+  ['Wrap de frango', [['wrap', 1], ['frango', 50], ['requeijao', 10]], 'Frango desfiado com requeijão, enrolado e embrulhado.'],
+  ['Banana com doce de leite e leite', [['banana', 1], ['doceLeite', 20], ['leite', 100]], 'Doce de leite num potinho.'],
+  ['Vitamina de morango na garrafa', [['leite', 250], ['morango', 100], ['mel', 10]], 'Bata de manhã e leve em garrafa térmica.'],
+  ['Sanduíche de mortadela', [['paoForma', 2], ['mortadela', 1], ['requeijao', 10]], 'Monte em casa e leve embrulhado.'],
+  ['Biscoito maisena e iogurte', [['maisena', 25], ['iogurte', 170]], 'Iogurte de garrafinha.'],
+  ['Pão com doce de leite', [['paoFrances', 1], ['doceLeite', 20]], 'Monte em casa e leve embrulhado.'],
+  ['Queijo com goiabada e torradas', [['minas', 40], ['goiabada', 30], ['torrada', 2]], 'Queijo e goiabada em cubos, num pote.'],
+  ['Vitamina de abacate na garrafa', [['leite', 200], ['abacate', 60], ['mel', 10]], 'Bata de manhã e leve em garrafa térmica.'],
+  ['Amendoim com banana', [['amendoim', 20], ['banana', 1]], 'O lanche mais fácil de carregar.'],
+  ['Cuscuz com ovo no pote', [['cuscuz', 120], ['ovo', 1]], 'Ovo cozido picado por cima.'],
+  ['Pão com presunto e requeijão', [['paoFrances', 1], ['presunto', 2], ['requeijao', 15]], 'Monte em casa e leve embrulhado.'],
+])
+
+ampliar('almoco', 12, [
+  ['Arroz, frango grelhado e batata', [['arroz', 150], ['frango', 120], ['batata', 150]], 'Frango em tiras, batata em cubos assada.'],
+  ['Arroz com linguiça e ovo', [['arroz', 170], ['linguica', 90], ['ovo', 1]], 'Linguiça em rodelas, ovo cozido.'],
+  ['Nhoque à bolonhesa', [['nhoque', 220], ['moida', 100], ['molhoTomate', 80], ['mussarela', 1]], 'Molho por cima só na hora de esquentar.'],
+  ['Arroz, carne de panela e batata', [['arroz', 150], ['carnePanela', 110], ['batata', 150]], 'Carne e batata cozidas juntas na pressão, 25 minutos.'],
+  ['Frango à milanesa com arroz e purê', [['milanesaFrango', 110], ['arroz', 130], ['pure', 130]], 'Milanesa assada na airfryer, sem fritar.'],
+  ['Lombo assado com arroz e batata', [['lombo', 110], ['arroz', 150], ['batata', 150]], 'Lombo fatiado fino depois de frio.'],
+  ['Macarrão ao molho branco com frango', [['macarrao', 200], ['frango', 100], ['cremeLeite', 30], ['mussarela', 1]], 'Creme de leite e queijo derretidos sobre o frango.'],
+  ['Arroz carreteiro', [['arroz', 220], ['carnePanela', 100], ['calabresa', 20]], 'Carne desfiada e calabresa refogadas com o arroz.'],
+  ['Polenta com molho de carne moída', [['polenta', 300], ['moida', 110], ['molhoTomate', 80], ['mussarela', 1]], 'Polenta firme no fundo, molho por cima.'],
+  ['Bife à milanesa com arroz e batata', [['milanesaBoi', 90], ['arroz', 140], ['batata', 130]], 'Milanesa assada na airfryer, sem fritar.'],
+  ['Cuscuz com frango desfiado e ovo', [['cuscuz', 250], ['frango', 100], ['ovo', 1], ['requeijao', 15]], 'Frango com requeijão por cima do cuscuz.'],
+  ['Almôndegas ao sugo com arroz', [['moida', 110], ['molhoTomate', 80], ['arroz', 180]], 'Bolinhas de carne moída assadas e depois no molho.'],
+  ['Coxa de frango assada com arroz e batata', [['coxa', 120], ['arroz', 150], ['batata', 140]], 'Coxa desossada depois de assada, para caber no pote.'],
+  ['Macarrão com calabresa e queijo', [['macarrao', 220], ['calabresa', 60], ['molhoTomate', 60], ['mussarela', 1]], 'Calabresa em cubos pequenos, dourada antes do molho.'],
+  ['Bisteca de porco com arroz e purê', [['bisteca', 100], ['arroz', 140], ['pure', 120]], 'Bisteca sem osso, em tiras.'],
+  ['Arroz com frango desfiado e queijo', [['arroz', 220], ['frango', 110], ['mussarela', 1]], 'Tudo misturado, queijo por cima.'],
+  ['Panqueca de carne moída', [['wrap', 2], ['moida', 100], ['molhoTomate', 60], ['mussarela', 2]], 'Massa pronta, recheio de carne, molho e queijo por cima.'],
+  ['Costela assada com arroz e batata', [['costela', 80], ['arroz', 150], ['batata', 150]], 'Costela desfiada, sem osso.'],
+  ['Frango ao molho de tomate com macarrão', [['frango', 110], ['molhoTomate', 80], ['macarrao', 220]], 'Frango em cubos cozido no molho.'],
+])
+
+ampliar('jantar', 11, [
+  ['Pizza de pão de forma', [['paoForma', 3], ['molhoTomate', 30], ['mussarela', 3], ['presunto', 2], ['leite', 150]], 'Na frigideira tampada ou airfryer, 5 minutos. Leite para acompanhar.'],
+  ['Tapioca de frango e queijo', [['tapioca', 80], ['frango', 90], ['mussarela', 2]], 'Frango desfiado da semana como recheio.'],
+  ['Cachorro-quente caseiro com batata', [['paoFrances', 1], ['salsicha', 2], ['molhoTomate', 30], ['batata', 100]], 'Salsicha fervida 3 minutos no molho; batata de micro-ondas.'],
+  ['Misto quente duplo com leite', [['paoForma', 4], ['presunto', 3], ['mussarela', 3], ['leite', 100]], 'Dois sanduíches na frigideira.'],
+  ['Nhoque com frango e requeijão', [['nhoque', 200], ['frango', 90], ['requeijao', 20]], 'Nhoque pronto: 2 minutos na água fervente.'],
+  ['Linguiça com purê', [['linguica', 100], ['pure', 220]], 'Linguiça na airfryer, 12 minutos.'],
+  ['Wrap de carne moída e queijo', [['wrap', 2], ['moida', 90], ['mussarela', 2]], 'Carne moída da semana, enrola e doura.'],
+  ['Cuscuz com carne moída', [['cuscuz', 250], ['moida', 100]], 'Cuscuz de micro-ondas e a carne por cima.'],
+  ['Polenta cremosa com frango', [['polenta', 300], ['frango', 110], ['mussarela', 1], ['requeijao', 15]], 'Polenta instantânea: 5 minutos mexendo.'],
+  ['X-burguer com batata', [['paoHamburguer', 1], ['moida', 110], ['queijoPrato', 1], ['batataFrita', 60]], 'Disco de carne, 4 minutos de cada lado.'],
+  ['Frango à milanesa com purê', [['milanesaFrango', 120], ['pure', 200]], 'Milanesa na airfryer, 12 minutos.'],
+  ['Macarrão com almôndegas', [['macarrao', 180], ['moida', 90], ['molhoTomate', 80]], 'Almôndegas da semana, esquentadas no molho.'],
+  ['Omelete de presunto com batata', [['ovo', 3], ['presunto', 2], ['mussarela', 1], ['batata', 200]], 'Batata de micro-ondas, 6 minutos.'],
+  ['Lombo com arroz', [['lombo', 110], ['arroz', 180]], 'Sobra do lombo da semana.'],
+  ['Sanduíche quente de frango com requeijão', [['paoFrances', 2], ['frango', 90], ['requeijao', 20]], 'Frango com requeijão, pão aquecido.'],
+  ['Arroz de forno com carne moída', [['arroz', 180], ['moida', 90], ['mussarela', 2]], 'Micro-ondas até o queijo derreter.'],
+  ['Bisteca com batata assada', [['bisteca', 110], ['batata', 250]], 'Bisteca na frigideira, 4 minutos de cada lado.'],
+  ['Macarrão com queijo e frango', [['macarrao', 180], ['mussarela', 2], ['requeijao', 20], ['frango', 70]], 'Queijo e requeijão derretidos no macarrão quente.'],
+  ['Coxa de frango com purê', [['coxa', 130], ['pure', 200]], 'Coxa na airfryer, 25 minutos.'],
+  ['Pão com linguiça', [['paoFrances', 2], ['linguica', 90]], 'Linguiça aberta ao meio, na frigideira.'],
+])
+
+const BATA = 'Bata e beba devagar.'
+ampliar('ceia', 6, [
+  ['Vitamina de morango', [['leite', 250], ['morango', 150], ['mel', 10]], BATA],
+  ['Vitamina de mamão com aveia', [['leite', 250], ['mamao', 150], ['aveia', 15]], BATA],
+  ['Vitamina de abacate', [['leite', 250], ['abacate', 80], ['mel', 10]], BATA],
+  ['Leite com achocolatado e aveia', [['leite', 300], ['achocolatado', 15], ['aveia', 15]], 'Bata para a aveia sumir.'],
+  ['Iogurte batido com banana', [['iogurte', 250], ['banana', 1], ['mel', 10]], BATA],
+  ['Vitamina de maçã com aveia', [['leite', 250], ['macaFruta', 1], ['aveia', 15]], 'Maçã sem casca, para ficar lisa.'],
+  ['Mingau ralo de aveia', [['leite', 300], ['aveia', 25], ['mel', 5]], 'Morno, para dar sono.'],
+  ['Vitamina de manga', [['leite', 250], ['manga', 150]], BATA],
+  ['Leite com mel e pasta de amendoim', [['leite', 300], ['mel', 10], ['pastaAmendoim', 10]], 'Bata para dissolver a pasta.'],
+  ['Vitamina de banana com leite em pó', [['leite', 250], ['banana', 1], ['leitePo', 15]], BATA],
+  ['Iogurte batido com morango e mel', [['iogurte', 250], ['morango', 150], ['mel', 15]], BATA],
+  ['Shake de doce de leite', [['leite', 300], ['doceLeite', 25]], BATA],
+  ['Vitamina de mamão com Farinha Láctea', [['leite', 250], ['mamao', 100], ['farinhaLactea', 20]], BATA],
+  ['Leite com Mucilon e mel', [['leite', 300], ['mucilon', 20], ['mel', 5]], 'Morno, mexendo bem.'],
+  ['Vitamina de abacate com aveia', [['leite', 250], ['abacate', 60], ['aveia', 15]], BATA],
+  ['Iogurte batido com manga', [['iogurte', 250], ['manga', 150], ['mel', 5]], BATA],
+  ['Vitamina de banana e pasta de amendoim', [['leite', 250], ['banana', 1], ['pastaAmendoim', 10]], BATA],
+  ['Leite com leite condensado e aveia', [['leite', 250], ['leiteCondensado', 20], ['aveia', 15]], 'Morno, mexendo bem.'],
+  ['Vitamina de maçã e banana', [['leite', 200], ['macaFruta', 1], ['banana', 1]], BATA],
+  ['Iogurte batido com aveia e doce de leite', [['iogurte', 250], ['aveia', 15], ['doceLeite', 15]], BATA],
+  ['Shake de paçoca', [['leite', 300], ['pacoca', 1]], BATA],
+  ['Vitamina de morango com Farinha Láctea', [['leite', 250], ['morango', 100], ['farinhaLactea', 20]], BATA],
+  ['Vitamina de cereal', [['leite', 300], ['cerealMatinal', 25]], 'Bata até o cereal sumir.'],
+  ['Vitamina de mamão e banana', [['leite', 250], ['mamao', 100], ['banana', 1]], BATA],
+  ['Iogurte batido com granola', [['iogurte', 250], ['granola', 25], ['mel', 5]], 'Bata bem, para a granola não ficar em pedaços.'],
+])
+
 const kcalDe = (id: IdAlimento, q: number) => {
   const a = ALIMENTOS[id]
   return ((typeof a.medida === 'object' ? q * a.medida.gramas : q) * a.kcal) / 100

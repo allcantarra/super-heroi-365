@@ -128,16 +128,16 @@ test.describe('cardápio: semana e compras', () => {
 
   test('trocar a marmita muda o almoço de segunda, quarta e sexta, e só deles', async ({ page }) => {
     await aba(page, 'Semana').tap()
-    await page.getByLabel('Trocar marmita A').selectOption({ label: 'Lasanha de carne moída' })
-    await expect(page.locator('article.marmita').nth(0)).toContainText('Lasanha de carne moída')
-    for (const n of [0, 2, 4]) await expect(page.locator('.linha-dia').nth(n)).toContainText('Lasanha de carne moída')
-    for (const n of [1, 3, 5, 6]) await expect(page.locator('.linha-dia').nth(n)).not.toContainText('Lasanha')
-    await expect.poll(async () => (await perfilGravado(page)).trocas).toEqual({ 's0:A': 'almoco11' })
+    await page.getByLabel('Trocar marmita A').selectOption({ label: 'Estrogonofe de frango com arroz' })
+    await expect(page.locator('article.marmita').nth(0)).toContainText('Estrogonofe de frango com arroz')
+    for (const n of [0, 2, 4]) await expect(page.locator('.linha-dia').nth(n)).toContainText('Estrogonofe de frango com arroz')
+    for (const n of [1, 3, 5, 6]) await expect(page.locator('.linha-dia').nth(n)).not.toContainText('Estrogonofe')
+    await expect.poll(async () => (await perfilGravado(page)).trocas).toEqual({ 's0:A': 'almoco8' })
     // tocar num dia leva ao cardápio daquele dia
     await page.locator('.linha-dia').nth(2).tap()
     await expect(aba(page, 'Dia')).toHaveAttribute('aria-selected', 'true')
     await expect(page.getByText('Dia 3 de 365, quarta')).toBeVisible()
-    await expect(refeicao(page, 3).locator('summary')).toContainText('Lasanha de carne moída')
+    await expect(refeicao(page, 3).locator('summary')).toContainText('Estrogonofe de frango com arroz')
   })
 
   test('a próxima semana tem outras marmitas', async ({ page }) => {
