@@ -17,4 +17,6 @@ export async function concluirAbertura(page: Page) {
   await page.getByRole('button', { name: 'Continuar' }).tap()
   await page.getByRole('button', { name: 'Continuar' }).tap()
   await page.getByRole('button', { name: 'Começar' }).tap()
+  // só segue quando o perfil foi gravado e a tela Hoje apareceu; recarregar antes disso perde o cadastro
+  await page.getByText('DIA 1 DE 365').waitFor()
 }
