@@ -26,7 +26,9 @@ Testes: Vitest (jsdom, fake-indexeddb) e Playwright (375 px). Lint: oxlint.
 - Nomes de código, comentários e textos em português. Zero emoji. Ícones: Lucide.
 - XP, nível, sequência e atributos são sempre derivados dos registros; nunca gravados.
 - Dado lido do banco passa por função de normalização antes de usar.
-- Nenhum dado pessoal no repositório (ele é público): perfil fica só no aparelho.
+- Nenhum dado pessoal no repositório (ele é público): perfil fica só no aparelho. Scripts de captura e testes usam valores fictícios (60,5 kg, meta 70 kg, 175 cm, 30 anos), nunca os do Leonardo.
+- Evolução: regras em `src/dominio/evolucao.ts`. Fotos ficam no IndexedDB como Blob reduzido (`src/ui/comprimirImagem.ts`); a tela lê as imagens sob demanda, o resto do app só lê os meses (`lerMesesComFoto`).
+- Testes com relógio falso: depois de `clock.fastForward` e `reload`, chame `clock.runFor(1000)`, senão o app fica em "Abrindo seu gibi..." (o relógio falso para).
 - Conteúdo alimentar: proibido verdura, legume em pedaço, salada, peixe, fruto do mar e feijão. Há teste que barra.
 - Nova coleção no banco: nova `version()` em `src/dados/banco.ts`; nunca editar versão publicada.
 - Seleção de opção conhecida: lista suspensa. Alvo de toque de 44 px ou mais.
@@ -38,5 +40,5 @@ Testes: Vitest (jsdom, fake-indexeddb) e Playwright (375 px). Lint: oxlint.
 - O servidor de desenvolvimento já serviu arquivo antigo depois de edição por script. Se a tela não bater com o código, reinicie o `npm run dev` antes de investigar. Os roteiros `e2e` rodam contra o build e não sofrem disso.
 
 ## Etapas
-1. Fundação, 2. Primeira abertura e tela Hoje, 3. Cardápio dos 365 dias, receitas e compras, 4. Treino: feitas.
-5. Evolução. 6. Jogo completo, lembretes e backup.
+1. Fundação, 2. Primeira abertura e tela Hoje, 3. Cardápio dos 365 dias, receitas e compras, 4. Treino, 5. Evolução: feitas.
+6. Jogo completo, lembretes e backup.
