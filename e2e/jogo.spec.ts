@@ -15,7 +15,9 @@ test('chefão e vilão da semana na tela Hoje reagem às missões', async ({ pag
   const chefao = page.getByLabel('Chefão da fase')
   await expect(chefao).toContainText('A PREGUIÇA')
   await expect(chefao).toContainText('Vida 100%')
+  await expect(chefao).toContainText('Cada missão cumprida é um golpe.')
   await page.getByRole('button', { name: /Café reforçado/ }).tap()
+  await expect(chefao).toContainText('Hoje você acertou 1 golpe nele.')
   await expect(chefao).toContainText('Vida 99%')
   const desafio = page.getByLabel('Vilão da semana')
   await expect(desafio).toContainText('O Desidratado')
@@ -57,6 +59,7 @@ test('backup: exporta, recusa arquivo errado, pede confirmação e restaura subs
   expect(conteudo.app).toBe('super-heroi-365')
   expect(conteudo.dias[0].feitas).toContain('cafe')
   await expect(page.getByText('Último backup: 09/11 (hoje).')).toBeVisible()
+  await expect(page.getByText(/Backup salvo\. Confira em Arquivos/)).toBeVisible()
 
   // depois do backup, marca outra missão: ela deve sumir ao restaurar
   await page.getByRole('button', { name: 'Voltar para o dia' }).tap()
@@ -68,7 +71,8 @@ test('backup: exporta, recusa arquivo errado, pede confirmação e restaura subs
 
   await page.locator('#arquivo-backup').setInputFiles(caminho)
   const confirmar = page.getByRole('alertdialog', { name: 'Substituir tudo neste aparelho?' })
-  await expect(confirmar).toContainText('1 dia, 0 treinos, 0 pesagens, 0 medidas, 0 fotos')
+  await expect(confirmar).toContainText('No arquivo: 1 dia, 0 treinos, 0 pesagens, 0 medidas, 0 fotos')
+  await expect(confirmar).toContainText('Neste aparelho: 1 dia')
   await confirmar.getByRole('button', { name: 'Cancelar' }).tap()
   await expect(confirmar).toHaveCount(0)
 

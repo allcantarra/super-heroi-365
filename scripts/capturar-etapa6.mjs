@@ -30,7 +30,7 @@ await foto('etapa6-hoje-chefao', false)
 
 await pagina.getByRole('button', { name: 'Evolução', exact: true }).click()
 await pagina.getByRole('tab', { name: 'Herói' }).click()
-await pagina.locator('.conquistas').scrollIntoViewIfNeeded()
+await pagina.locator('.capitulo-gibi').first().scrollIntoViewIfNeeded()
 await foto('etapa6-heroi-conquistas-gibi')
 
 await pagina.getByRole('button', { name: 'Hoje', exact: true }).click()

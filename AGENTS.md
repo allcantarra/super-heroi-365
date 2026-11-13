@@ -28,6 +28,8 @@ Testes: Vitest (jsdom, fake-indexeddb) e Playwright (375 px). Lint: oxlint.
 - Dado lido do banco passa por função de normalização antes de usar.
 - Nenhum dado pessoal no repositório (ele é público): perfil fica só no aparelho. Scripts de captura e testes usam valores fictícios (60,5 kg, meta 70 kg, 175 cm, 30 anos), nunca os do Leonardo.
 - Evolução: regras em `src/dominio/evolucao.ts`. Fotos ficam no IndexedDB como Blob reduzido (`src/ui/comprimirImagem.ts`); a tela lê as imagens sob demanda, o resto do app só lê os meses (`lerMesesComFoto`).
+- Jogo: chefões, vilão da semana, conquistas e gibi em `src/dominio/campanha.ts`, sempre derivados (`montarRegistros` em `src/ui/registros.ts`).
+- Backup (`src/dados/backup.ts`): o arquivo de restauração é entrada não confiável; tudo passa pelas normalizações, foto tem limite de tamanho e assinatura conferida, e a gravação é uma transação só. Mudou o formato? Suba `VERSAO_DO_BACKUP` e mantenha a leitura das versões antigas.
 - Testes com relógio falso: depois de `clock.fastForward` e `reload`, chame `clock.runFor(1000)`, senão o app fica em "Abrindo seu gibi..." (o relógio falso para).
 - Conteúdo alimentar: proibido verdura, legume em pedaço, salada, peixe, fruto do mar e feijão. Há teste que barra.
 - Nova coleção no banco: nova `version()` em `src/dados/banco.ts`; nunca editar versão publicada.
@@ -40,5 +42,5 @@ Testes: Vitest (jsdom, fake-indexeddb) e Playwright (375 px). Lint: oxlint.
 - O servidor de desenvolvimento já serviu arquivo antigo depois de edição por script. Se a tela não bater com o código, reinicie o `npm run dev` antes de investigar. Os roteiros `e2e` rodam contra o build e não sofrem disso.
 
 ## Etapas
-1. Fundação, 2. Primeira abertura e tela Hoje, 3. Cardápio dos 365 dias, receitas e compras, 4. Treino, 5. Evolução: feitas.
-6. Jogo completo, lembretes e backup.
+1. Fundação, 2. Primeira abertura e tela Hoje, 3. Cardápio dos 365 dias, receitas e compras, 4. Treino, 5. Evolução,
+6. Jogo completo, lembretes e backup: feitas. A versão 1 da spec está completa.

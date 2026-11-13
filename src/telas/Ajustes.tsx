@@ -4,7 +4,7 @@ import { ErroDeBackup, TAMANHO_MAXIMO, lerArquivoDeBackup, montarBackup, nomeDoA
 import type { Perfil } from '../dados/banco'
 import { gerarIcs, opcoesDeLembrete } from '../dominio/lembretes'
 import type { IdMissao } from '../dominio/rotina'
-import { dataCurta, dataLocal } from '../dominio/tempo'
+import { dataCurta, dataLocal, diasEntre } from '../dominio/tempo'
 import { entregarArquivo, lerTexto } from '../ui/arquivo'
 import { registrarBackup, ultimoBackup } from '../ui/registros'
 
@@ -73,11 +73,13 @@ function Lembretes({ perfil, hoje }: { perfil: Perfil; hoje: string }) {
 type Restauracao = { fase: 'nada' } | { fase: 'erro'; mensagem: string } | { fase: 'confirmar'; conteudo: ConteudoRestauravel } | { fase: 'restaurando' } | { fase: 'feito'; resumo: string }
 
 function Backup({ hoje }: { hoje: string }) {
+  // o diálogo de restaurar compara o aparelho com o arquivo
   const [aparelho, setAparelho] = useState<Resumo | null>(null)
   const [ultimo, setUltimo] = useState(ultimoBackup)
   const [exportando, setExportando] = useState(false)
   /** Arquivo pronto, esperando o segundo toque: o iPhone só abre a folha de compartilhar direto de um toque. */
   const [pronto, setPronto] = useState<{ nome: string; texto: string; data: string } | null>(null)
+  const [salvo, setSalvo] = useState(false)
   const [erroExportar, setErroExportar] = useState<string | null>(null)
   const [restauracao, setRestauracao] = useState<Restauracao>({ fase: 'nada' })
   const entrada = useRef<HTMLInputElement>(null)
@@ -93,6 +95,7 @@ function Backup({ hoje }: { hoje: string }) {
   const montar = async () => {
     setExportando(true)
     setErroExportar(null)
+    setSalvo(false)
     try {
       const agora = new Date()
       setPronto({ nome: nomeDoArquivo(agora), texto: JSON.stringify(await montarBackup(agora)), data: dataLocal(agora) })
@@ -110,6 +113,7 @@ function Backup({ hoje }: { hoje: string }) {
     registrarBackup(pronto.data)
     setUltimo(pronto.data)
     setPronto(null)
+    setSalvo(true)
   }
 
   const escolher = async (arquivo: File | undefined) => {
@@ -141,7 +145,8 @@ function Backup({ hoje }: { hoje: string }) {
       <span className="aba">BACKUP</span>
       <p>Tudo fica só neste aparelho. O backup junta dias, treinos, pesos, medidas e fotos num arquivo para guardar no iCloud Drive ou no computador.</p>
       {aparelho && <p className="nota" style={{ marginTop: 0 }}>Neste aparelho: {descrever(aparelho)}.</p>}
-      <p className="nota" style={{ marginTop: 0 }} role="status">{ultimo ? `Último backup: ${dataCurta(ultimo)}${ultimo === hoje ? ' (hoje)' : ''}.` : 'Nenhum backup feito neste aparelho.'}</p>
+      <p className={!ultimo || diasEntre(ultimo, hoje) > 7 ? 'aviso' : 'estado-backup'} role="status">{ultimo ? `Último backup: ${dataCurta(ultimo)}${ultimo === hoje ? ' (hoje)' : ''}.` : 'Nenhum backup feito neste aparelho.'}</p>
+      {salvo && <p className="aviso ok" role="status">Backup salvo. Confira em Arquivos se ele está lá antes de confiar nele.</p>}
       {pronto ? (
         <>
           <p className="aviso ok" role="status">Backup pronto ({(pronto.texto.length / 1024 / 1024).toFixed(1).replace('.', ',')} MB). Toque para guardar em Arquivos ou no iCloud Drive. Ele tem suas fotos: não mande por aplicativo de mensagem.</p>
@@ -159,9 +164,10 @@ function Backup({ hoje }: { hoje: string }) {
       {restauracao.fase === 'confirmar' && (
         <div className="confirmar" role="alertdialog" aria-labelledby="titulo-restaurar" aria-describedby="texto-restaurar">
           <h2 id="titulo-restaurar">Substituir tudo neste aparelho?</h2>
+          {aparelho && <p className="comparacao"><b>Neste aparelho:</b> {descrever(aparelho)}.</p>}
           <p id="texto-restaurar">
-            O arquivo tem {descrever({ dias: restauracao.conteudo.dias.length, treinos: restauracao.conteudo.sessoes.length, pesagens: restauracao.conteudo.pesagens.length, medidas: restauracao.conteudo.medidas.length, fotos: restauracao.conteudo.fotos.length })}.
-            Tudo o que está no aparelho agora será apagado e trocado por ele. Não dá para desfazer.
+            <b>No arquivo:</b> {descrever({ dias: restauracao.conteudo.dias.length, treinos: restauracao.conteudo.sessoes.length, pesagens: restauracao.conteudo.pesagens.length, medidas: restauracao.conteudo.medidas.length, fotos: restauracao.conteudo.fotos.length })}.
+            Tudo o que está no aparelho agora será apagado e trocado pelo arquivo. Não dá para desfazer. Na dúvida, cancele e faça um backup do aparelho antes.
             {restauracao.conteudo.descartados > 0 && ` ${plural(restauracao.conteudo.descartados, 'registro estava danificado e vai ficar', 'registros estavam danificados e vão ficar')} de fora.`}
           </p>
           <div className="acoes">

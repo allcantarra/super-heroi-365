@@ -423,22 +423,10 @@ function Heroi({ dados, hoje }: { dados: Dados; hoje: string }) {
             <i style={{ width: `${(a.noNivel / a.doNivel) * 100}%` }} />
           </div>
           <p className="nota" style={{ margin: '6px 0 0' }}>
-            {a.pontos} {a.pontos === 1 ? SINGULAR[a.id] : a.fonte} no total. {a.semana > 0 ? `+${a.semana} nos últimos 7 dias.` : 'Nada nos últimos 7 dias.'}
+            {a.pontos} {a.pontos === 1 ? SINGULAR[a.id] : a.fonte} no total. {a.semana > 0 ? `+${a.semana} nos últimos 7 dias.` : ''}
           </p>
         </article>
       ))}
-
-      <h2 className="secao" style={{ marginTop: 30 }}>CONQUISTAS</h2>
-      <p className="nota" style={{ marginTop: 0 }}>{conquistasFeitas.length} de {listaDeConquistas.length} desbloqueadas.</p>
-      <ul className="conquistas">
-        {listaDeConquistas.map((c) => (
-          <li key={c.id} className={c.feita ? 'feita' : undefined}>
-            {c.feita ? <Trophy aria-hidden /> : <Lock aria-hidden />}
-            <span><b>{c.nome}</b><small>{c.descricao}</small></span>
-            <span className="so-leitor">{c.feita ? 'Desbloqueada' : 'Bloqueada'}</span>
-          </li>
-        ))}
-      </ul>
 
       <h2 className="secao" style={{ marginTop: 30 }}>SEU GIBI</h2>
       <p className="nota" style={{ marginTop: 0 }}>Cada dia vencido vira um quadro. Cada fase é um capítulo.</p>
@@ -467,6 +455,23 @@ function Heroi({ dados, hoje }: { dados: Dados; hoje: string }) {
           )}
         </details>
       ))}
+      <h2 className="secao" style={{ marginTop: 30 }}>CONQUISTAS</h2>
+      <p className="nota" style={{ marginTop: 0 }}>{conquistasFeitas.length} de {listaDeConquistas.length} desbloqueadas.</p>
+      {conquistasFeitas.length > 0 && (
+        <ul className="conquistas">
+          {conquistasFeitas.map((c) => (
+            <li key={c.id} className="feita"><Trophy aria-hidden /><span><b>{c.nome}</b><small>{c.descricao}</small></span></li>
+          ))}
+        </ul>
+      )}
+      <details className="mais-conquistas">
+        <summary>Ver as {listaDeConquistas.length - conquistasFeitas.length} que faltam<ChevronDown aria-hidden /></summary>
+        <ul className="conquistas">
+          {listaDeConquistas.filter((c) => !c.feita).map((c) => (
+            <li key={c.id}><Lock aria-hidden /><span><b>{c.nome}</b><small>{c.descricao}</small></span></li>
+          ))}
+        </ul>
+      </details>
     </>
   )
 }

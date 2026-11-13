@@ -46,6 +46,7 @@ export function Hoje({ dados, hoje, agora, erroAoSalvar, mudarDia, abrirAjustes,
   const registros = montarRegistros(dados, hoje)
   const chefe = chefaoAtual(registros)
   const desafio = desafioDaSemana(registros)
+  const golpesHoje = missoes.filter((m) => registro.feitas.includes(m.id)).length
   // lembrete de backup: a partir do 14º dia, se o último backup tiver mais de 14 dias (ou nunca houve)
   const backup = ultimoBackup()
   const lembrarBackup = numeroDoDia(diaUm, hoje) > 14 && (!backup || diasEntre(backup, hoje) > 14)
@@ -134,6 +135,24 @@ export function Hoje({ dados, hoje, agora, erroAoSalvar, mudarDia, abrirAjustes,
         </section>
       )}
 
+      <section className={`chefao ${chefe.derrotado ? 'derrotado' : ''}`} aria-label="Chefão da fase">
+        <div>
+          <small>Chefão da fase {chefe.fase}</small>
+          <h2>{chefe.vilao.nome.toUpperCase()}</h2>
+          <div className="vida" role="progressbar" aria-label={`Vida de ${chefe.vilao.nome}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.floor(chefe.vida * 100)}>
+            <i style={{ width: `${chefe.vida * 100}%` }} />
+          </div>
+          <p>{chefe.derrotado ? 'Derrotado! O resto da fase é volta olímpica.' : golpesHoje > 0 ? `Hoje você acertou ${golpesHoje} ${golpesHoje === 1 ? 'golpe' : 'golpes'} nele.` : 'Cada missão cumprida é um golpe.'}</p>
+          {!chefe.derrotado && <small className="detalhe-chefao">Vida {chefe.vida === 1 ? 100 : Math.min(99, Math.floor(chefe.vida * 100))}%, faltam {chefe.meta - chefe.cumpridas} golpes.</small>}
+        </div>
+        <Vilao cor={chefe.vilao.cor} nome={chefe.vilao.nome} derrotado={chefe.derrotado} />
+      </section>
+
+      <section className={`desafio ${desafio.vencido ? 'vencido' : ''}`} aria-label="Vilão da semana">
+        <small>Vilão da semana: {desafio.vilao}</small>
+        <p><b>{desafio.feito}/{desafio.alvo}</b> {desafio.meta}{desafio.vencido ? '. Vencido!' : '.'}</p>
+      </section>
+
       <div className="barra-poder">
         <span>Comida</span>
         <div className="trilho"><i style={{ '--cor': 'var(--amarelo)', width: `${(resumo.refeicoesFeitas / resumo.refeicoesTotal) * 100}%` } as CSSProperties} /></div>
@@ -162,23 +181,6 @@ export function Hoje({ dados, hoje, agora, erroAoSalvar, mudarDia, abrirAjustes,
         <Coffee aria-hidden />
         {cafeina ? 'Guaraná e café liberados até 15:00.' : 'Cafeína encerrada por hoje: sem guaraná e sem café até amanhã.'}
       </div>
-
-      <section className={`chefao ${chefe.derrotado ? 'derrotado' : ''}`} aria-label="Chefão da fase">
-        <div>
-          <small>Chefão da fase {chefe.fase}</small>
-          <h2>{chefe.vilao.nome.toUpperCase()}</h2>
-          <div className="vida" role="progressbar" aria-label={`Vida de ${chefe.vilao.nome}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.floor(chefe.vida * 100)}>
-            <i style={{ width: `${chefe.vida * 100}%` }} />
-          </div>
-          <p>{chefe.derrotado ? 'Derrotado! O resto da fase é volta olímpica.' : `Vida ${chefe.vida === 1 ? 100 : Math.min(99, Math.floor(chefe.vida * 100))}%. Faltam ${chefe.meta - chefe.cumpridas} missões para derrubar.`}</p>
-        </div>
-        <Vilao cor={chefe.vilao.cor} nome={chefe.vilao.nome} derrotado={chefe.derrotado} />
-      </section>
-
-      <section className={`desafio ${desafio.vencido ? 'vencido' : ''}`} aria-label="Vilão da semana">
-        <small>Vilão da semana: {desafio.vilao}</small>
-        <p><b>{desafio.feito}/{desafio.alvo}</b> {desafio.meta}{desafio.vencido ? '. Vencido!' : '.'}</p>
-      </section>
 
       {lembrarBackup && (
         <p className="aviso lembrete-backup" role="status">
