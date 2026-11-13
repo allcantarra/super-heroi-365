@@ -55,14 +55,35 @@ if (await comecar.waitFor({ timeout: 5000 }).then(() => true, () => false)) {
   treino = await pagina.getByRole('button', { name: /CONTINUAR TREINO/ }).waitFor({ timeout: 10000 }).then(() => 'série gravada', () => 'série perdida')
 }
 
+// Evolução: registra um peso e uma foto (gerada no navegador) e confere que sobrevivem a recarregar.
+await pagina.getByRole('button', { name: 'Evolução', exact: true }).click()
+await pagina.getByLabel('Peso (kg)').fill('61,2')
+await pagina.getByRole('button', { name: 'Salvar peso' }).click()
+await pagina.getByText(/salvo\./).waitFor()
+await pagina.getByRole('tab', { name: 'Fotos' }).click()
+const png = Buffer.from(await pagina.evaluate(() => {
+  const t = document.createElement('canvas')
+  t.width = 40
+  t.height = 60
+  t.getContext('2d').fillRect(0, 0, 40, 60)
+  return t.toDataURL('image/png').split(',')[1]
+}), 'base64')
+await pagina.locator('#foto-do-mes').setInputFiles({ name: 'teste.png', mimeType: 'image/png', buffer: png })
+await pagina.locator('.galeria-fotos figure').first().waitFor()
+await pagina.reload()
+await pagina.getByRole('tab', { name: 'Fotos' }).click()
+const fotoAposRecarregar = await pagina.locator('.galeria-fotos img').first().waitFor({ timeout: 10000 }).then(() => pagina.locator('.galeria-fotos img').first().evaluate((i) => i.complete && i.naturalWidth > 0), () => false)
+await pagina.getByRole('tab', { name: 'Peso' }).click()
+const pesoAposRecarregar = await pagina.getByLabel('Peso (kg)').inputValue()
+
 await pagina.getByRole('button', { name: 'Hoje', exact: true }).click()
 await pagina.reload()
-const xpAposRecarregar = await pagina.getByText('40 XP', { exact: true }).waitFor({ timeout: 10000 }).then(() => true, () => false)
+const xpAposRecarregar = await pagina.getByText('200 XP', { exact: true }).waitFor({ timeout: 10000 }).then(() => true, () => false)
 await pagina.evaluate(() => navigator.serviceWorker.ready)
 await pagina.waitForFunction(() => navigator.serviceWorker.controller !== null)
 await contexto.setOffline(true)
 await pagina.reload()
 const offline = await pagina.getByText('DIA 1 DE 365').waitFor({ timeout: 10000 }).then(() => true, () => false)
 await contexto.setOffline(false)
-console.log(JSON.stringify({ url: URL, refeicoes, dia2, marmitas, itensDeCompra, treino, xpAposRecarregar, offline, erros, falhas }))
+console.log(JSON.stringify({ url: URL, refeicoes, dia2, marmitas, itensDeCompra, treino, pesoAposRecarregar, fotoAposRecarregar, xpAposRecarregar, offline, erros, falhas }))
 await navegador.close()
