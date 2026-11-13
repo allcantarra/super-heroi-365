@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { abrirEm, concluirAbertura } from './apoio'
+import { abrirEm, concluirAbertura, perfilGravado } from './apoio'
 
 const semEstouro = async (page: Page) =>
   expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBe(0)
@@ -58,6 +58,7 @@ test.describe('cardápio', () => {
     await jantar.locator('summary').tap()
     await page.getByLabel('Trocar Jantar').selectOption({ label: 'Churrasco com arroz' })
     await expect(jantar.locator('summary')).toContainText('Churrasco com arroz')
+    await expect.poll(async () => (await perfilGravado(page)).trocas).toEqual({ '1:jantar': 'jantar7' })
     await page.reload()
     await page.getByRole('button', { name: 'Hoje' }).tap()
     await expect(page.getByRole('button', { name: /Jantar.*Churrasco com arroz/ })).toBeVisible()
@@ -70,7 +71,9 @@ test.describe('cardápio', () => {
   })
 
   test('o lanche de trabalho só oferece opção portátil', async ({ page }) => {
-    const opcoes = await page.getByLabel('Trocar Lanche da manhã').locator('option').allInnerTexts()
+    await page.locator('details.refeicao').nth(2).locator('summary').tap()
+    await expect(page.getByLabel('Trocar Lanche da manhã')).toBeVisible()
+    const opcoes = await page.getByLabel('Trocar Lanche da manhã').locator('option').allTextContents()
     expect(opcoes.length).toBeGreaterThanOrEqual(8)
     expect(opcoes.join('|')).not.toMatch(/Arroz|Macarrão|Omelete|Purê/)
   })
@@ -91,6 +94,7 @@ test.describe('cardápio', () => {
     await expect(page.locator('.contador')).toHaveText(/^0 de \d+ itens no carrinho$/)
     await page.getByLabel(/Arroz cru/).check()
     await expect(page.locator('.contador')).toHaveText(/^1 de \d+ itens no carrinho$/)
+    await expect.poll(async () => (await perfilGravado(page)).comprados).toEqual(['arroz'])
     await page.reload()
     await page.getByRole('button', { name: 'Cardápio' }).tap()
     await page.getByRole('tab', { name: 'Compras' }).tap()

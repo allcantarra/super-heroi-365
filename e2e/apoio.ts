@@ -20,3 +20,20 @@ export async function concluirAbertura(page: Page) {
   // só segue quando o perfil foi gravado e a tela Hoje apareceu; recarregar antes disso perde o cadastro
   await page.getByText('DIA 1 DE 365').waitFor()
 }
+
+/** Lê o perfil direto do banco do navegador. A tela responde antes de a gravação terminar; quem vai recarregar precisa esperar o banco. */
+export function perfilGravado(page: Page): Promise<{ trocas?: Record<string, string>; comprados?: string[] }> {
+  return page.evaluate(
+    () =>
+      new Promise((resolver) => {
+        const pedido = indexedDB.open('super-heroi-365')
+        pedido.onsuccess = () => {
+          const leitura = pedido.result.transaction('perfil').objectStore('perfil').get('eu')
+          leitura.onsuccess = () => {
+            resolver(leitura.result ?? {})
+            pedido.result.close()
+          }
+        }
+      }),
+  )
+}
