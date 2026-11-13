@@ -60,36 +60,99 @@
   margin-top: 6px;
 }
 
+.resumo-fase,
 .refeicao {
-  margin-bottom: 26px;
-  padding-bottom: 22px;
-  border-bottom: 3px dashed #ffffff30;
+  margin-bottom: 12px;
+  padding: 0 12px;
+  background: var(--fundo);
+  border: 3px solid #ffffff40;
 }
 
-.refeicao header {
+.resumo-fase {
+  margin-bottom: 22px;
+  border-color: var(--azul);
+}
+
+.resumo-fase summary,
+.refeicao summary {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 4px;
+  min-height: 60px;
+  padding: 8px 0;
+  cursor: pointer;
+  list-style: none;
+}
+
+.resumo-fase summary::-webkit-details-marker,
+.refeicao summary::-webkit-details-marker {
+  display: none;
+}
+
+.resumo-fase summary > span {
+  flex: 1;
+  font-weight: 600;
+}
+
+.resumo-fase summary b {
+  font: 400 20px var(--titulo);
+  color: var(--amarelo);
+}
+
+details > summary > svg {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  color: var(--apagado);
+  transition: transform 0.2s;
+}
+
+details[open] > summary > svg {
+  transform: rotate(180deg);
+}
+
+.resumo-fase[open],
+.refeicao[open] {
+  padding-bottom: 14px;
+}
+
+.refeicao.agora {
+  border-color: var(--amarelo);
+  box-shadow: 5px 5px 0 #000;
 }
 
 .refeicao .hora {
+  flex: none;
+  width: 52px;
   font: 400 19px/1 var(--titulo);
   color: var(--amarelo);
 }
 
-.refeicao .qual {
+.refeicao .titulo {
+  flex: 1;
+  min-width: 0;
   font-weight: 700;
+  font-size: 19px;
+  line-height: 1.1;
+}
+
+.refeicao .titulo small {
+  display: block;
+  font-size: 14px;
   color: var(--apagado);
 }
 
+.refeicao.agora .titulo small {
+  color: var(--amarelo);
+}
+
 .refeicao .formato {
-  margin-left: auto;
-  padding: 2px 8px;
+  flex: none;
+  padding: 2px 6px;
   border: 2px solid var(--apagado);
   color: var(--apagado);
   font-weight: 700;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .refeicao .formato.fora {
@@ -97,9 +160,16 @@
   color: #9cc4ff;
 }
 
-.refeicao h3 {
-  font: 400 25px/1.1 var(--titulo);
-  margin-bottom: 8px;
+.refeicao .trocar {
+  margin-top: 12px;
+  font-size: 15px;
+  color: var(--apagado);
+}
+
+.refeicao .botao {
+  width: 100%;
+  margin-top: 10px;
+  min-height: 48px;
 }
 
 .itens {
@@ -125,26 +195,6 @@
 .resumo {
   color: var(--apagado);
   font-size: 16px;
-}
-
-.acoes-refeicao {
-  display: flex;
-  gap: 10px;
-  align-items: flex-end;
-  margin-top: 12px;
-}
-
-.acoes-refeicao .campo {
-  flex: 1;
-  min-width: 0;
-  font-size: 15px;
-  color: var(--apagado);
-}
-
-.acoes-refeicao .botao {
-  flex: none;
-  min-height: 48px;
-  padding: 0 12px;
 }
 
 .nota {
@@ -175,6 +225,10 @@
 
 .receita summary::-webkit-details-marker {
   display: none;
+}
+
+.receita summary > span {
+  flex: 1;
 }
 
 .receita summary small {
@@ -252,4 +306,29 @@
 .painel .itens li.cortado {
   text-decoration: line-through;
   opacity: 0.7;
+}
+
+.contador {
+  margin-bottom: 6px;
+  font-weight: 700;
+  font-size: 19px;
+}
+
+.contador b {
+  font: 400 24px var(--titulo);
+  color: var(--amarelo);
+}
+
+/* amarelo sobre vermelho não passa em contraste para texto pequeno: no painel de missão, quantidades e recompensa em claro */
+.painel:not(.azul):not(.escuro) .itens li span,
+.painel:not(.azul):not(.escuro) .recompensa {
+  color: var(--papel);
+}
+
+.painel:not(.azul):not(.escuro) .itens li span {
+  font-weight: 800;
+}
+
+.refeicao + .painel {
+  margin-top: 34px;
 }

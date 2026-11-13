@@ -41,7 +41,7 @@ export const ALIMENTOS = {
   picanha: { nome: 'Churrasco de picanha', kcal: 289, p: 26.4, c: 0, g: 19.5, medida: 'g', classe: 'proteina', setor: 'Açougue', compra: 'Picanha (crua)', fatorCompra: 1.4 },
   frango: { nome: 'Peito de frango grelhado', kcal: 159, p: 32.0, c: 0, g: 2.5, medida: 'g', classe: 'proteina', setor: 'Açougue', compra: 'Peito de frango (cru)', fatorCompra: 1.4 },
   sobrecoxa: { nome: 'Sobrecoxa de frango assada', kcal: 233, p: 29.2, c: 0, g: 12.0, medida: 'g', classe: 'proteina', setor: 'Açougue', compra: 'Sobrecoxa sem osso (crua)', fatorCompra: 1.4 },
-  ovo: { nome: 'Ovo', kcal: 146, p: 13.3, c: 0.6, g: 9.5, medida: un('ovo', 'ovos', 50), classe: 'proteina', setor: 'Mercearia' },
+  ovo: { nome: 'Ovo', compra: 'Ovos', kcal: 146, p: 13.3, c: 0.6, g: 9.5, medida: un('ovo', 'ovos', 50), classe: 'proteina', setor: 'Mercearia' },
   leite: { nome: 'Leite integral', kcal: 61, p: 3.2, c: 4.7, g: 3.3, medida: 'ml', classe: 'laticinio', setor: 'Frios e laticínios' },
   iogurte: { nome: 'Iogurte natural', kcal: 51, p: 4.1, c: 1.9, g: 3.0, medida: 'g', classe: 'laticinio', setor: 'Frios e laticínios' },
   mussarela: { nome: 'Mussarela', kcal: 330, p: 22.6, c: 3.0, g: 25.2, medida: un('fatia', 'fatias', 20), classe: 'proteina', setor: 'Frios e laticínios' },

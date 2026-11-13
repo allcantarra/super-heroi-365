@@ -77,7 +77,8 @@ function textoDeCompra(id: IdAlimento, quantidade: number): string {
   const a = alimento(id)
   if (typeof a.medida === 'object') {
     const n = Math.ceil(quantidade)
-    return id === 'ovo' && n >= 12 ? `${Math.ceil(n / 12)} dz` : `${n} ${n === 1 ? a.medida.singular : a.medida.plural}`
+    if (id === 'ovo') return n >= 12 ? `${Math.ceil(n / 12)} dz` : `${n} un`
+    return `${n} ${n === 1 ? a.medida.singular : a.medida.plural}`
   }
   const grande = a.medida === 'ml' ? 'L' : 'kg'
   if (quantidade >= 1000) return `${(Math.ceil(quantidade / 100) / 10).toFixed(1).replace('.', ',')} ${grande}`

@@ -31,36 +31,42 @@ test.describe('cardápio', () => {
   test('abre na fase atual e no dia de hoje, com as 8 refeições e o total perto da meta', async ({ page }) => {
     await expect(page.getByLabel('Fase', { exact: true })).toHaveValue('1')
     await expect(page.getByLabel('Dia da semana')).toHaveValue('1')
-    await expect(page.locator('article.refeicao')).toHaveCount(8)
+    await expect(page.locator('details.refeicao')).toHaveCount(8)
+    await expect(page.locator('details.refeicao[open]')).toHaveCount(1)
+    await expect(page.locator('details.refeicao.agora')).toContainText('Pré-treino, agora')
+    await page.getByLabel('Metas da fase').tap()
     await expect(page.getByText('meta 2750')).toBeVisible()
     const kcal = Number(await page.locator('.macros dd').first().innerText())
     expect(Math.abs(kcal - 2750) / 2750).toBeLessThan(0.05)
-    await expect(page.locator('article.refeicao').nth(3)).toContainText('marmita')
-    await expect(page.locator('article.refeicao').nth(2)).toContainText('portátil')
+    await expect(page.locator('details.refeicao').nth(3)).toContainText('marmita')
+    await expect(page.locator('details.refeicao').nth(2)).toContainText('portátil')
     await semEstouro(page)
   })
 
   test('mudar a fase muda as quantidades e a meta', async ({ page }) => {
-    const almoco = page.locator('article.refeicao').nth(3)
+    const almoco = page.locator('details.refeicao').nth(3)
+    await almoco.locator('summary').tap()
     const antes = await almoco.locator('.itens').innerText()
     await page.getByLabel('Fase', { exact: true }).selectOption('3')
+    await page.getByLabel('Metas da fase').tap()
     await expect(page.getByText('meta 3250')).toBeVisible()
     expect(await almoco.locator('.itens').innerText()).not.toBe(antes)
   })
 
   test('trocar uma refeição vale no cardápio, na tela Hoje e depois de recarregar', async ({ page }) => {
+    const jantar = page.locator('details.refeicao').nth(6)
+    await jantar.locator('summary').tap()
     await page.getByLabel('Trocar Jantar').selectOption({ label: 'Churrasco com arroz' })
-    const jantar = page.locator('article.refeicao').nth(6)
-    await expect(jantar.getByRole('heading')).toHaveText('Churrasco com arroz')
-    await expect(page.getByText('meta 2750')).toBeVisible()
+    await expect(jantar.locator('summary')).toContainText('Churrasco com arroz')
     await page.reload()
     await page.getByRole('button', { name: 'Hoje' }).tap()
     await expect(page.getByRole('button', { name: /Jantar.*Churrasco com arroz/ })).toBeVisible()
     await page.getByRole('button', { name: 'Cardápio' }).tap()
-    await expect(page.locator('article.refeicao').nth(6).getByRole('heading')).toHaveText('Churrasco com arroz')
+    await expect(page.locator('details.refeicao').nth(6).locator('summary')).toContainText('Churrasco com arroz')
     // voltar ao prato original
-    await page.getByLabel('Trocar Jantar').selectOption({ label: 'Macarrão alho e óleo com frango (do cardápio)' })
-    await expect(page.locator('article.refeicao').nth(6).getByRole('heading')).toHaveText('Macarrão alho e óleo com frango')
+    await page.locator('details.refeicao').nth(6).locator('summary').tap()
+    await page.getByLabel('Trocar Jantar').selectOption({ label: 'Macarrão alho e óleo com frango (original)' })
+    await expect(page.locator('details.refeicao').nth(6).locator('summary')).toContainText('Macarrão alho e óleo com frango')
   })
 
   test('o lanche de trabalho só oferece opção portátil', async ({ page }) => {
@@ -70,7 +76,8 @@ test.describe('cardápio', () => {
   })
 
   test('ver receita abre a receita do prato', async ({ page }) => {
-    await page.locator('article.refeicao').nth(3).getByRole('button', { name: 'Ver receita' }).tap()
+    await page.locator('details.refeicao').nth(3).locator('summary').tap()
+    await page.locator('details.refeicao').nth(3).getByRole('button', { name: 'Ver receita' }).tap()
     await expect(page.getByRole('tab', { name: 'Receitas' })).toHaveAttribute('aria-selected', 'true')
     await expect(page.locator('details[open] summary')).toContainText('Batata assada crocante')
     await expect(page.locator('details[open]')).toContainText('Modo de preparo')
@@ -81,9 +88,9 @@ test.describe('cardápio', () => {
     await page.getByRole('tab', { name: 'Compras' }).tap()
     await expect(page.getByText('Arroz cru')).toBeVisible()
     await expect(page.getByText('Peito de frango (cru)')).toBeVisible()
-    await expect(page.getByText(/0 de \d+ itens no carrinho/)).toBeVisible()
+    await expect(page.locator('.contador')).toHaveText(/^0 de \d+ itens no carrinho$/)
     await page.getByLabel(/Arroz cru/).check()
-    await expect(page.getByText(/1 de \d+ itens no carrinho/)).toBeVisible()
+    await expect(page.locator('.contador')).toHaveText(/^1 de \d+ itens no carrinho$/)
     await page.reload()
     await page.getByRole('button', { name: 'Cardápio' }).tap()
     await page.getByRole('tab', { name: 'Compras' }).tap()
@@ -100,7 +107,7 @@ test.describe('cardápio', () => {
     const proibido = /feij|verdura|salada |alface|cenoura|peixe|atum|camar/i
     for (const dia of ['0', '1', '2', '3', '4', '5', '6']) {
       await page.getByLabel('Dia da semana').selectOption(dia)
-      expect(await page.locator('article.refeicao').allInnerTexts().then((t) => t.join(' '))).not.toMatch(proibido)
+      expect(await page.locator('details.refeicao').allTextContents().then((t) => t.join(' '))).not.toMatch(proibido)
     }
     await page.getByRole('tab', { name: 'Receitas' }).tap()
     expect(await page.locator('main').innerText()).not.toMatch(proibido)

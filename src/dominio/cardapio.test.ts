@@ -145,7 +145,7 @@ describe('lista de compras', () => {
 
   it('escreve quantidades de mercado: quilos, litros, dúzias', () => {
     expect(item('leite').texto).toMatch(/^\d+,\d L$/)
-    expect(item('ovo').texto).toMatch(/^\d+ ovos$/)
+    expect(item('ovo').texto).toMatch(/^\d+ un$/)
     expect(listaDeCompras(1, {}, 4).flatMap((s) => s.itens).find((i) => i.id === 'ovo')!.texto).toMatch(/^\d+ dz$/)
     expect(item('creatina').texto).toBe('40 g')
   })

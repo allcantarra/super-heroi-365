@@ -93,7 +93,7 @@ export function App() {
         {aba === 'hoje' ? (
           <Hoje dados={dados} hoje={hoje} agora={agora} erroAoSalvar={erroAoSalvar} mudarDia={(d, m) => void mudarDia(d, m)} abrirAjustes={() => { setAjustando(true); window.scrollTo(0, 0) }} />
         ) : aba === 'cardapio' ? (
-          <Cardapio perfil={dados.perfil} hoje={hoje} salvarPerfil={(p) => void salvarPerfil(p)} />
+          <Cardapio perfil={dados.perfil} feitasHoje={dados.dias.get(hoje)?.feitas ?? []} hoje={hoje} salvarPerfil={(p) => void salvarPerfil(p)} />
         ) : (
           <div className="vazio">
             <atual.icone aria-hidden />
