@@ -307,7 +307,7 @@ describe('receitas completas (versão 2)', () => {
   })
 
   it('os lotes 1 e 2 trouxeram uns 170 pratos novos, chegando a 350', () => {
-    expect(IDS.length).toBeGreaterThanOrEqual(470)
+    expect(IDS.length).toBeGreaterThanOrEqual(595)
   })
 })
 

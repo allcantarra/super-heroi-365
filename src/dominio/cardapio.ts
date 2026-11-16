@@ -114,11 +114,11 @@ export function pratoServe(id: unknown, refeicao: IdRefeicao): id is IdPrato {
  * Os passos não podem dividir o tamanho da lista, senão alguns pratos nunca aparecem: há teste para isso.
  */
 const RODIZIO: Record<Exclude<IdRefeicao, 'almoco' | 'lancheTarde' | 'trajeto'>, { passo: number; giro: number }> = {
-  pre: { passo: 27, giro: 8 },
-  cafe: { passo: 11, giro: 4 },
+  pre: { passo: 27, giro: 0 },
+  cafe: { passo: 27, giro: 0 },
   lancheManha: { passo: 11, giro: 0 },
-  jantar: { passo: 11, giro: 0 },
-  ceia: { passo: 3, giro: 8 },
+  jantar: { passo: 19, giro: 4 },
+  ceia: { passo: 11, giro: 8 },
 }
 
 /** Prato que o rodízio do ano dá para uma refeição em uma data, antes de qualquer troca. */

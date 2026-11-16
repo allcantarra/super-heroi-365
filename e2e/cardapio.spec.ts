@@ -177,7 +177,7 @@ test.describe('cardápio: semana e compras', () => {
 
   test('nada proibido aparece em 30 dias de cardápio, nas receitas nem nas compras', async ({ page }) => {
     // desde a versão 2: alface, tomate e cenoura ralada entram no preparo, e a salada caesar é a única salada
-    const proibido = /feij|verdura|salada (?!caesar)|couve|legume|peixe|atum|camar/i
+    const proibido = /feij|verdura|salada (?!caesar)|couve|legume|peixe|\batum|\bcamar/i // \b: o texto das etiquetas cola nas palavras ("carne seca" + "marmita")
     for (let i = 0; i < 30; i++) {
       expect(await page.locator('details.refeicao').allTextContents().then((t) => t.join(' '))).not.toMatch(proibido)
       await page.getByRole('button', { name: 'Próximo dia' }).tap()
